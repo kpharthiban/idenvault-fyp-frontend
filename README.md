@@ -1,36 +1,126 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛡️ IdenVault – Decentralized Academic Identity
 
-## Getting Started
+<!-- ![IdenVault Banner](public/assets/landing.png) -->
+> **Final Year Project (2025/2026)** > **Multimedia University (MMU)** > *A Self-Sovereign Identity Framework for Academic & Student Credentials on the Ethereum Blockchain.*
 
-First, run the development server:
+## 📖 Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**IdenVault** is a next-generation decentralized application (dApp) that allows academic institutions to issue tamper-proof digital credentials directly to a student's blockchain wallet.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Unlike traditional PDF certificates, IdenVault credentials are **verifiable**, **portable**, and **owned by the student**. The platform features a high-fidelity "Cyber-Institutional" UI, real-time QR scanning, and a mock blockchain consensus layer for demonstration purposes.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ✨ Key Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 🎓 For Students (The Wallet)
+* **Secure Login:** Authenticate via MetaMask (Hardware Wallet aesthetic).
+* **Credential Wallet:** View degrees, transcripts, and awards in a visual card grid.
+* **Detail View:** Inspect blockchain metadata (Transaction Hash, Block Timestamp).
+* **Sharing:** Generate time-sensitive QR codes for third-party verification.
 
-## Learn More
+### 🏛️ For Institutions (The Issuer)
+* **Dashboard:** Track all issued credentials and their active status.
+* **Issuance Portal:** Mint new credentials with metadata (GPA, Expiry) and attach supporting documents (IPFS simulation).
+* **Revocation:** Admin controls to revoke credentials in case of error or fraud.
 
-To learn more about Next.js, take a look at the following resources:
+### 🔍 For Verifiers (Employers/Public)
+* **Instant Verification:** Verify credentials via Reference ID or QR Scan.
+* **AR Scanner:** Custom-built HUD scanner for mobile/camera devices.
+* **AI Assistant:** Generates technical interview questions based on the verified credential using a simulated AI agent.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### ⚖️ Governance (Admin)
+* **System Oversight:** Monitor total system throughput.
+* **Allowlist:** Approve or Block issuer smart contract addresses.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🛠️ Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* **Framework:** [Next.js 14](https://nextjs.org/) (App Router)
+* **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
+* **Animations:** [Framer Motion](https://www.framer.com/motion/) (Page transitions, micro-interactions)
+* **Icons:** [Lucide React](https://lucide.dev/)
+* **Web3:** Ethers.js / Context API (MetaMask Integration)
+* **Utilities:** `html5-qrcode` (Scanner), `clsx` (Dynamic classes)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🚀 Getting Started
+
+Follow these steps to set up the project locally.
+
+### Prerequisites
+* Node.js (v18 or higher)
+* MetaMask Browser Extension
+
+### Installation
+
+1.  **Clone the repository**
+    ```bash
+    git clone [https://github.com/kpharthiban/idenvault-fyp-frontend.git](https://github.com/kpharthiban/idenvault-fyp-frontend.git)
+    cd idenvault-fyp
+    ```
+
+2.  **Install dependencies**
+    ```bash
+    npm install
+    ```
+
+3.  **Run the development server**
+    ```bash
+    npm run dev
+    ```
+
+4.  Open [http://localhost:3000](http://localhost:3000) with your browser.
+
+---
+
+## 🎮 Usage Guide
+
+### 1. Student Flow
+* Click **"I am a Student"** on the landing page.
+* Connect your MetaMask wallet.
+* Browse your credentials and click **"Share"** to generate a QR code.
+
+### 2. Issuer Flow
+* Click **"I am an Issuer"** on the landing page.
+* Connect a different wallet account (or the same one).
+* Navigate to **"Issue New"** to fill out the credential form.
+
+### 3. Admin Flow (Governance)
+To access the Admin Dashboard, you must set your wallet address as the Admin.
+1.  Open `src/context/AuthContext.tsx`.
+2.  Locate the line: `const ADMIN_WALLET_ADDRESS = "..."`.
+3.  Replace the string with your MetaMask wallet address.
+4.  Reconnect your wallet. You will now see the **Admin Dashboard** link in the sidebar.
+
+---
+
+<!-- ## 📸 Screenshots
+
+| Student Wallet | Verification Portal |
+|:---:|:---:|
+| ![Student](public/assets/dashboard.png) | ![Verify](public/assets/verify.png) |
+| *Manage digital assets* | *Public verification check* |
+
+| AR Scanner | Issuer Console |
+|:---:|:---:|
+| ![Scanner](public/assets/scanner.png) | ![Issuer](public/assets/issuer.png) |
+| *Futuristic QR HUD* | *Minting & Management* |
+
+--- -->
+
+## 🔮 Future Roadmap
+
+* [ ] **Smart Contract Integration:** Replace mock logic with Solidity contracts (Sepolia Testnet).
+* [ ] **IPFS Storage:** Store actual PDF files on Pinata/IPFS.
+* [ ] **Verifiable Credentials (VC):** Implement W3C standard DID format.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+**Developed with ❤️ by [Pharthiban Kumarhesan]** *Faculty of Computing & Informatics, Multimedia University*

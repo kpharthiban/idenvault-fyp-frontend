@@ -10,7 +10,9 @@ import {
   LogOut, 
   GraduationCap, 
   Building2, 
-  Settings 
+  Settings,
+  Globe,
+  FileBox
 } from "lucide-react";
 import { motion } from "framer-motion";
 import clsx from "clsx";
@@ -126,17 +128,36 @@ export default function DashboardLayout({
 
           {role === "issuer" && (
             <>
+              {/* 1. Issued List */}
               <NavItem 
                 href="/issuer" 
                 icon={<LayoutDashboard size={20} />} 
                 label="Issued Credentials" 
                 active={isActive("/issuer")} 
               />
+
+              {/* 2. TEMPLATES (NEW POSITION) */}
+              <NavItem 
+                href="/issuer/templates" 
+                icon={<FileBox size={20} />} 
+                label="Credential Templates" 
+                active={isActive("/issuer/templates")} 
+              />
+
+              {/* 3. Issue Actions */}
               <NavItem 
                 href="/issuer/issue" 
                 icon={<FilePlus size={20} />} 
-                label="Issue New" 
-                active={isActive("/issuer/issue")} 
+                label="Issue Credential" 
+                active={isActive("/issuer/issue") || isActive("/issuer/issue/bulk")} 
+              />
+
+              {/* 4. External Systems */}
+              <NavItem 
+                href="/issuer/external-systems" 
+                icon={<Globe size={20} />} 
+                label="External Systems" 
+                active={isActive("/issuer/external-systems")} 
               />
             </>
           )}

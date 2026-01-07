@@ -1,7 +1,7 @@
 # 🛡️ IdenVault – Decentralized Academic Identity
 
 <!-- ![IdenVault Banner](public/assets/landing.png) -->
-> **Final Year Project (2025/2026)** > **Multimedia University (MMU)** > *A Self-Sovereign Identity Framework for Academic & Student Credentials on the Ethereum Blockchain.*
+> **Final Year Project (2025/2026)** > **Multimedia University (MMU)** > *A Decentralized Self-Sovereign Identity Framework For Academic & Student Credentials On The Ethereum Blockchain*
 
 ## 📖 Overview
 
@@ -56,7 +56,7 @@ Follow these steps to set up the project locally.
 
 1.  **Clone the repository**
     ```bash
-    git clone [https://github.com/kpharthiban/idenvault-fyp-frontend.git](https://github.com/kpharthiban/idenvault-fyp-frontend.git)
+    git clone https://github.com/kpharthiban/idenvault-fyp-frontend.git
     cd idenvault-fyp
     ```
 

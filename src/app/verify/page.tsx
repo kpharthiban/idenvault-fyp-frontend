@@ -181,6 +181,16 @@ export default function VerifyPage() {
                         </div>
                     </div>
 
+                    {/* NEW: Verification Logic Explanation */}
+                    <div className="mt-6 p-4 bg-slate-950 rounded-xl border border-slate-800">
+                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Verification Logic</h4>
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                            This result is valid because the issuer 
+                            <span className="text-slate-300 font-medium"> Multimedia University </span> 
+                            is currently active on the Admin Allowlist, and the credential hash matches the immutable record on the Ethereum Sepolia network.
+                        </p>
+                    </div>
+
                     <div className="pt-4 border-t border-slate-800">
                         {!showAI ? (
                             <button

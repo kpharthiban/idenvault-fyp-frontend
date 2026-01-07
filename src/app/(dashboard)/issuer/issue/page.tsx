@@ -17,9 +17,11 @@ import {
   Star,
   Upload,
   X,
-  Paperclip
+  Paperclip,
+  Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { CREDENTIAL_TEMPLATES } from "@/lib/credentialTemplates";
 
 export default function IssueCredentialPage() {
   const router = useRouter();
@@ -32,8 +34,23 @@ export default function IssueCredentialPage() {
     type: "degree", 
     grade: "",
     expiryDate: "",
-    description: ""
+    description: "",
+    templateId: "", // Replaces 'title' and 'type' manual entry
   });
+
+  const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const tId = e.target.value;
+    const template = CREDENTIAL_TEMPLATES.find(t => t.id === tId);
+    
+    if (template) {
+        setFormData(prev => ({
+            ...prev,
+            templateId: tId,
+            title: template ? template.title : "", 
+            type: template ? template.type : "degree"
+        }));
+    }
+  };
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
@@ -59,6 +76,14 @@ export default function IssueCredentialPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 🔍 DEBUGGING: Check what is actually in the state
+    console.log("Form Submission State:", formData);
+
+    // Specific checks to see which one fails
+    if (!formData.studentId) console.error("Missing Student ID");
+    if (!formData.title) console.error("Missing Title");
+    if (!formData.description) console.error("Missing Description");
+
     if (!formData.studentId || !formData.title || !formData.description) {
       alert("Please fill in all required fields");
       return;
@@ -74,14 +99,26 @@ export default function IssueCredentialPage() {
 
   return (
     <RequireAuth allowedRole="issuer">
-      <div className="max-w-3xl mx-auto">
-        <button
-          onClick={() => router.push("/issuer")}
-          className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors text-sm font-medium group"
-        >
-          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          Back to Dashboard
-        </button>
+      <div className="max-w-3xl mx-auto">        
+        {/* Navigation Bar */}
+        <div className="flex items-center justify-between mb-6">
+            <button
+            onClick={() => router.push("/issuer")}
+            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium group"
+            >
+                <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                Back to Dashboard
+            </button>
+
+            {/* NEW: Bulk Issuance Button */}
+            <button
+                onClick={() => router.push("/issuer/issue/bulk")}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg border border-slate-700 transition-all text-sm font-medium"
+            >
+                <Users size={16} />
+                Switch to Bulk Mode
+            </button>
+        </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
            {/* Top Accent */}
@@ -117,7 +154,8 @@ export default function IssueCredentialPage() {
                                 type: "degree",
                                 grade: "",
                                 expiryDate: "",
-                                description: ""
+                                description: "",
+                                templateId: "",
                             });
                             setSelectedFile(null);
                         }}
@@ -141,7 +179,39 @@ export default function IssueCredentialPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     
-                    {/* Row 1: Student ID & Type */}
+                    <div>
+                        <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
+                            Credential Template *
+                        </label>
+                        <div className="relative">
+                            <Award className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+                            <select
+                                name="templateId"
+                                value={formData.templateId}
+                                onChange={handleTemplateChange}
+                                disabled={status === "submitting"}
+                                className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all appearance-none"
+                            >
+                                <option value="">-- Select a Template --</option>
+                                {CREDENTIAL_TEMPLATES.map(t => {
+                                    // LOGIC: Disable if mode is 'bulk' only
+                                    const isDisabled = t.issuanceMode === 'bulk'; 
+                                    return (
+                                        <option 
+                                            key={t.id} 
+                                            value={t.id} 
+                                            disabled={isDisabled}
+                                            className={isDisabled ? "text-slate-600 bg-slate-900" : ""}
+                                        >
+                                            {t.title} {isDisabled ? "(Bulk Mode Only)" : ""}
+                                        </option>
+                                    );
+                                })}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Student ID & Type */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
@@ -162,25 +232,10 @@ export default function IssueCredentialPage() {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                                Credential Type
+                             <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                                Template Type (Locked)
                             </label>
-                            <div className="relative">
-                                <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-                                <select
-                                    name="type"
-                                    value={formData.type}
-                                    onChange={handleChange}
-                                    disabled={status === "submitting"}
-                                    className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all appearance-none"
-                                >
-                                    <option value="degree">Bachelor Degree</option>
-                                    <option value="master">Master's Degree</option>
-                                    <option value="diploma">Diploma</option>
-                                    <option value="certificate">Professional Certificate</option>
-                                    <option value="award">Academic Award</option>
-                                </select>
-                            </div>
+                            <input disabled value={formData.type} className="w-full bg-slate-900/50 border border-slate-800 text-slate-500 rounded-xl py-3 px-4" />
                         </div>
                     </div>
 
@@ -261,23 +316,30 @@ export default function IssueCredentialPage() {
                     </div>
 
                     {/* NEW: File Upload Section */}
-                    <div>
-                        <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                            Supporting Documents (PDF/Image)
-                        </label>
+                    <div className="pt-2 border-t border-slate-800 mt-6">
+                        <div className="flex items-center justify-between mb-2">
+                            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider ml-1">
+                                Supporting Documents
+                            </label>
+                            <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">
+                                Single Issuance Feature
+                            </span>
+                        </div>
                         
                         {!selectedFile ? (
                             <div 
                                 onClick={() => fileInputRef.current?.click()}
                                 onDragOver={(e) => e.preventDefault()}
                                 onDrop={handleDrop}
-                                className="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all bg-slate-900/50 hover:bg-slate-900 group"
+                                className="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all bg-slate-900/50 hover:bg-slate-900 group"
                             >
                                 <div className="p-3 bg-slate-800 rounded-full mb-3 group-hover:bg-emerald-500/10 group-hover:text-emerald-400 transition-colors text-slate-400">
                                     <Upload size={24} />
                                 </div>
-                                <p className="text-sm text-slate-300 font-medium">Click to upload or drag & drop</p>
-                                <p className="text-xs text-slate-500 mt-1">Official Transcripts, Certificates, or Proof of Completion</p>
+                                <p className="text-sm text-slate-300 font-medium">Click to upload transcript or evidence</p>
+                                <p className="text-xs text-slate-500 mt-1">
+                                    {formData.type === "Degree" ? "Required for Degree issuance" : "Optional for this credential type"}
+                                </p>
                                 <input 
                                     type="file" 
                                     ref={fileInputRef} 

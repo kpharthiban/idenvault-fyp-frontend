@@ -1,7 +1,7 @@
 export type CredentialTemplate = {
   id: string;
   title: string;
-  type: "Degree" | "Award" | "Certificate";
+  type: "Degree" | "Award" | "Certificate" | "Status";
   description: string;
   issuanceMode: "single" | "bulk" | "both";
   requiresCertificate: boolean; // Does it need a PDF upload?
@@ -31,5 +31,13 @@ export const CREDENTIAL_TEMPLATES: CredentialTemplate[] = [
     description: "Professional certification validating skills in penetration testing and vulnerability assessment.",
     issuanceMode: "single", // Single only!
     requiresCertificate: true,
+  },
+  {
+    id: "TEMP-004",
+    title: "Student Identification Credential",
+    type: "Status",
+    description: "Verifies active student enrollment status for the current academic session.",
+    issuanceMode: "single", // Single issuance makes sense for IDs
+    requiresCertificate: false,
   },
 ];

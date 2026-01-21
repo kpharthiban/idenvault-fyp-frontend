@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link"; // Import Link
+import Link from "next/link";
 import { 
   Search, 
   ShieldCheck, 
@@ -10,15 +10,53 @@ import {
   ArrowRight, 
   CheckCircle, 
   XCircle, 
-  Bot, 
   Loader2,
   Building2,
   User,
   Calendar,
   ArrowLeft,
-  Home
+  FileText,
+  Clock,
+  Bot
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+// 1. Expanded Mock Registry (The "Database")
+const MOCK_REGISTRY = [
+  {
+    id: "cred-1",
+    title: "Bachelor of Computer Science",
+    studentName: "John Doe",
+    studentId: "STU2023001",
+    issuer: "Multimedia University",
+    issuedDate: "12 August 2024",
+    expiryDate: "Never",
+    status: "Verified",
+    type: "degree"
+  },
+  {
+    id: "cred-2",
+    title: "Dean’s List Award",
+    studentName: "John Doe",
+    studentId: "STU2023001",
+    issuer: "Faculty of Computing",
+    issuedDate: "05 February 2024",
+    expiryDate: "Never",
+    status: "Verified",
+    type: "award"
+  },
+  {
+    id: "cred-status-1",
+    title: "Student Identification Credential",
+    studentName: "John Doe",
+    studentId: "STU2023001",
+    issuer: "Multimedia University",
+    issuedDate: "01 Jan 2024",
+    expiryDate: "31 Dec 2026",
+    status: "Active",
+    type: "status"
+  }
+];
 
 export default function VerifyPage() {
   const router = useRouter();
@@ -27,9 +65,10 @@ export default function VerifyPage() {
 
   const [credentialId, setCredentialId] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "valid" | "invalid">("idle");
+  const [record, setRecord] = useState<any>(null); // Store the found credential here
   const [showAI, setShowAI] = useState(false);
 
-  // Auto-fill from URL if present
+  // 2. Auto-fill and Verify if URL has ?ref=...
   useEffect(() => {
     if (refParam) {
       setCredentialId(refParam);
@@ -45,14 +84,28 @@ export default function VerifyPage() {
 
     setStatus("loading");
 
-    // SIMULATE BLOCKCHAIN LOOKUP DELAY
+    // Simulate Blockchain Network Delay
     setTimeout(() => {
-        if (idToVerify.toLowerCase().includes("invalid")) {
-            setStatus("invalid");
-        } else {
+        // 3. LOOKUP LOGIC: Check the Mock Registry
+        const foundRecord = MOCK_REGISTRY.find(
+            (r) => r.id.toLowerCase() === idToVerify.toLowerCase()
+        );
+
+        if (foundRecord) {
+            setRecord(foundRecord);
             setStatus("valid");
+        } else {
+            setRecord(null);
+            setStatus("invalid");
         }
     }, 1500); 
+  };
+
+  const resetVerification = () => {
+      setStatus("idle");
+      setCredentialId("");
+      setRecord(null);
+      router.replace("/verify"); // Clear URL param
   };
 
   return (
@@ -64,7 +117,7 @@ export default function VerifyPage() {
         <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px]" />
       </div>
 
-      {/* NEW: Navigation Bar (Top Left) */}
+      {/* Navigation Bar */}
       <div className="absolute top-6 left-6 z-20">
         <Link 
           href="/" 
@@ -77,7 +130,7 @@ export default function VerifyPage() {
 
       <div className="w-full max-w-2xl relative z-10">
         
-        {/* Header - Now Clickable */}
+        {/* Header */}
         <div className="text-center mb-8">
             <Link href="/">
               <div className="inline-flex items-center justify-center p-3 bg-slate-900 rounded-xl border border-slate-800 mb-4 shadow-xl hover:border-blue-500/50 hover:shadow-blue-500/20 transition-all cursor-pointer group">
@@ -88,11 +141,12 @@ export default function VerifyPage() {
             <p className="text-slate-400">Verify the authenticity of digital academic records on the blockchain.</p>
         </div>
 
-        {/* Input Card */}
-        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl p-6 shadow-2xl">
+        {/* Main Content Card */}
+        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl p-6 shadow-2xl transition-all">
           
           <AnimatePresence mode="wait">
-            {status === "idle" || status === "loading" ? (
+            {/* STATE 1: INPUT FORM (Idle or Loading) */}
+            {(status === "idle" || status === "loading") && (
                 <motion.div
                     key="input-form"
                     initial={{ opacity: 0, y: 10 }}
@@ -125,7 +179,7 @@ export default function VerifyPage() {
                             {!status && <ArrowRight size={18} />}
                         </button>
                         <button
-                            onClick={() => router.push("/scan")}
+                            onClick={() => router.push("/scan")} // Assuming you have a scan page
                             disabled={status === "loading"}
                             className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-xl font-medium transition-all border border-slate-700"
                         >
@@ -134,16 +188,17 @@ export default function VerifyPage() {
                         </button>
                     </div>
                 </motion.div>
-            ) : null}
+            )}
 
-            {/* SUCCESS RESULT */}
-            {status === "valid" && (
+            {/* STATE 2: VALID RESULT (Rich Details) */}
+            {status === "valid" && record && (
                 <motion.div
                     key="valid-result"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="space-y-6"
                 >
+                    {/* Success Banner */}
                     <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
                         <CheckCircle className="text-emerald-500 w-6 h-6" />
                         <div>
@@ -152,103 +207,121 @@ export default function VerifyPage() {
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div>
-                            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Credential Title</p>
-                            <h2 className="text-xl font-bold text-white">Bachelor of Computer Science</h2>
+                    {/* Credential Details Card */}
+                    <div className="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden">
+                        <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex items-center gap-2">
+                            <FileText size={16} className="text-blue-400" />
+                            <span className="text-sm font-bold text-slate-300">Credential Data</span>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="p-3 bg-slate-950 rounded-lg border border-slate-800">
-                                <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                                    <Building2 size={12} /> Issuer
+                        <div className="p-5 space-y-4">
+                            <div>
+                                <label className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Credential Title</label>
+                                <p className="text-white font-medium text-lg leading-tight">{record.title}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block mb-1">Issued To</label>
+                                    <div className="flex items-center gap-2 text-slate-300 text-sm">
+                                        <User size={14} />
+                                        <span>{record.studentName}</span>
+                                    </div>
                                 </div>
-                                <p className="text-sm text-slate-200 font-medium">Multimedia University</p>
-                            </div>
-                            <div className="p-3 bg-slate-950 rounded-lg border border-slate-800">
-                                <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                                    <User size={12} /> Recipient
+                                <div>
+                                    <label className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block mb-1">Issued By</label>
+                                    <div className="flex items-center gap-2 text-slate-300 text-sm">
+                                        <Building2 size={14} />
+                                        <span>{record.issuer}</span>
+                                    </div>
                                 </div>
-                                <p className="text-sm text-slate-200 font-medium">John Doe</p>
                             </div>
-                        </div>
-
-                        <div className="p-3 bg-slate-950 rounded-lg border border-slate-800">
-                             <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                                <Calendar size={12} /> Issue Date
+                            {/* Date Row */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block mb-1">Issued Date</label>
+                                    <div className="flex items-center gap-2 text-slate-300 text-sm">
+                                        <Calendar size={14} />
+                                        <span>{record.issuedDate}</span>
+                                    </div>
+                                </div>
+                                {record.expiryDate !== "Never" && (
+                                    <div>
+                                        <label className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block mb-1">Valid Until</label>
+                                        <div className="flex items-center gap-2 text-emerald-400 text-sm">
+                                            <Clock size={14} />
+                                            <span>{record.expiryDate}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <p className="text-sm text-slate-200 font-medium">12 August 2024</p>
                         </div>
                     </div>
 
-                    {/* NEW: Verification Logic Explanation */}
-                    <div className="mt-6 p-4 bg-slate-950 rounded-xl border border-slate-800">
-                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Verification Logic</h4>
-                        <p className="text-xs text-slate-400 leading-relaxed">
-                            This result is valid because the issuer 
-                            <span className="text-slate-300 font-medium"> Multimedia University </span> 
-                            is currently active on the Admin Allowlist, and the credential hash matches the immutable record on the Ethereum Sepolia network.
+                    {/* Verification Summary (The A+ Logic) */}
+                    <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
+                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Verification Summary</h4>
+                        <p className="text-[10px] text-slate-400 mb-4 italic">
+                            *Verification reflects the credential’s current validity period and the issuer’s trust status on the blockchain allowlist.
+                        </p>
+                        <ul className="space-y-2">
+                            <li className="flex items-center gap-2 text-sm text-slate-300">
+                                <CheckCircle size={14} className="text-emerald-500" />
+                                <span><strong>Issuer Trust:</strong> Verified ({record.issuer})</span>
+                            </li>
+                            <li className="flex items-center gap-2 text-sm text-slate-300">
+                                <CheckCircle size={14} className="text-emerald-500" />
+                                <span><strong>Status:</strong> {record.status} & Unrevoked</span>
+                            </li>
+                            <li className="flex items-center gap-2 text-sm text-slate-300">
+                                <CheckCircle size={14} className="text-emerald-500" />
+                                <span><strong>Integrity:</strong> Blockchain Hash Match</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {/* Context Note */}
+                    <div className="text-center px-2">
+                        <p className="text-[10px] text-slate-500 leading-relaxed">
+                            Live QR codes support active credential presentation by the holder. Shared links enable asynchronous verification. Both methods verify the same immutable credential data.
                         </p>
                     </div>
 
-                    <div className="pt-4 border-t border-slate-800">
-                        {!showAI ? (
-                            <button
-                                onClick={() => setShowAI(true)}
-                                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-lg"
-                            >
-                                <Bot size={18} />
-                                Generate Interview Questions (AI)
-                            </button>
-                        ) : (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                className="bg-indigo-950/30 border border-indigo-500/30 rounded-xl p-5"
-                            >
-                                <div className="flex items-center gap-2 text-indigo-400 font-bold mb-3">
-                                    <Bot size={18} />
-                                    <span>AI Interview Assistant</span>
-                                </div>
-                                <ul className="space-y-3 text-sm text-indigo-200/80">
-                                    <li className="flex gap-2">
-                                        <span className="text-indigo-500">•</span>
-                                        Explain how you applied software engineering principles in your final year project.
-                                    </li>
-                                    <li className="flex gap-2">
-                                        <span className="text-indigo-500">•</span>
-                                        Describe a challenging system design decision you made and how you justified it.
-                                    </li>
-                                    <li className="flex gap-2">
-                                        <span className="text-indigo-500">•</span>
-                                        How would you improve the scalability of a decentralized identity system?
-                                    </li>
-                                </ul>
-                                <button 
-                                    onClick={() => setShowAI(false)}
-                                    className="mt-4 text-xs text-indigo-400 hover:text-indigo-300 underline"
-                                >
-                                    Hide Assistant
-                                </button>
-                            </motion.div>
-                        )}
+                    {/* Action Buttons */}
+                    <div className="pt-2 flex flex-col gap-3">
+                        <button 
+                            onClick={() => setShowAI(!showAI)}
+                            className="w-full py-3 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+                        >
+                            <Bot size={18} />
+                            {showAI ? "Hide Interview Questions" : "Generate Interview Questions"}
+                        </button>
+
+                        <button
+                            onClick={resetVerification}
+                            className="w-full py-2 text-sm text-slate-500 hover:text-white transition-colors"
+                        >
+                            Verify Another Credential
+                        </button>
                     </div>
 
-                    <button
-                        onClick={() => {
-                            setStatus("idle");
-                            setCredentialId("");
-                            setShowAI(false);
-                            router.replace("/verify");
-                        }}
-                        className="w-full py-2 text-sm text-slate-500 hover:text-white transition-colors"
-                    >
-                        Verify Another Credential
-                    </button>
+                    {/* AI Section (Collapsible) */}
+                    {showAI && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            className="bg-indigo-950/30 border border-indigo-500/30 rounded-xl p-5 mt-4"
+                        >
+                            <h4 className="text-indigo-400 font-bold text-sm mb-3">AI Interview Assistant</h4>
+                            <ul className="space-y-3 text-sm text-indigo-200/80 list-disc pl-4">
+                                <li>Explain how you applied software engineering principles in your final year project.</li>
+                                <li>Describe a challenging system design decision you made and how you justified it.</li>
+                                <li>How would you improve the scalability of a decentralized identity system?</li>
+                            </ul>
+                        </motion.div>
+                    )}
                 </motion.div>
             )}
 
-            {/* INVALID RESULT */}
+            {/* STATE 3: INVALID RESULT */}
             {status === "invalid" && (
                  <motion.div
                     key="invalid-result"
@@ -260,11 +333,11 @@ export default function VerifyPage() {
                         <XCircle className="w-10 h-10 text-red-500" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-2">Credential Not Found</h3>
-                    <p className="text-slate-400 mb-6">
-                        The reference ID provided does not exist on the blockchain or has been revoked.
+                    <p className="text-slate-400 mb-6 text-sm">
+                        The reference ID <span className="font-mono text-red-400">{credentialId}</span> could not be found on the blockchain or has been revoked by the issuer.
                     </p>
                     <button
-                        onClick={() => setStatus("idle")}
+                        onClick={resetVerification}
                         className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors"
                     >
                         Try Again

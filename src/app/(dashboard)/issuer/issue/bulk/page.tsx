@@ -167,6 +167,13 @@ export default function BulkIssuePage() {
                         </button>
                     </div>
 
+                    <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg flex items-center gap-2 mb-6">
+                        <Database size={16} className="text-blue-400" />
+                        <p className="text-xs text-blue-200">
+                            <strong>Data Source:</strong> Recipients are retrieved from connected institutional systems (Student Information System).
+                        </p>
+                    </div>
+
                     <div className="bg-slate-950 rounded-xl overflow-hidden border border-slate-800">
                         <table className="w-full text-left text-sm">
                             <thead className="bg-slate-900 text-slate-400 uppercase">

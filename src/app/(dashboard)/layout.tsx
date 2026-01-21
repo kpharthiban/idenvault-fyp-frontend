@@ -3,6 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { useEffect, useState } from "react"; // Added imports
 import { 
   ShieldCheck, 
   LayoutDashboard, 
@@ -12,19 +13,20 @@ import {
   Building2, 
   Settings,
   Globe,
-  FileBox
+  FileBox,
+  UserCog // New Icon
 } from "lucide-react";
 import { motion } from "framer-motion";
 import clsx from "clsx";
 
-// --- Mock Data (As you requested) ---
-const studentProfile = {
+// --- Mock Data Defaults ---
+const defaultStudentProfile = {
   name: "John Doe",
   studentId: "STU2023001",
   institution: "Multimedia University",
 };
 
-const issuerProfile = {
+const defaultIssuerProfile = {
   institution: "Multimedia University",
   department: "Faculty of Computing & Informatics",
 };
@@ -37,6 +39,26 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { walletAddress, role, logout } = useAuth();
+
+  // State for dynamic Issuer Profile (Simulating persistence)
+  const [issuerData, setIssuerData] = useState(defaultIssuerProfile);
+
+  // Load updated profile from session storage if it exists
+  useEffect(() => {
+    const stored = sessionStorage.getItem("issuer_profile_mock");
+    if (stored) {
+      setIssuerData(JSON.parse(stored));
+    }
+
+    // Listen for custom update event (triggered by Profile Page)
+    const handleProfileUpdate = () => {
+        const updated = sessionStorage.getItem("issuer_profile_mock");
+        if (updated) setIssuerData(JSON.parse(updated));
+    };
+
+    window.addEventListener("issuerProfileUpdated", handleProfileUpdate);
+    return () => window.removeEventListener("issuerProfileUpdated", handleProfileUpdate);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -66,32 +88,38 @@ export default function DashboardLayout({
           </Link>
         </div>
 
-        {/* 2. THE NEW PROFILE CARD (Your Logic + New Design) */}
+        {/* 2. PROFILE CARD (Updated Logic) */}
         <div className="px-6 mb-2">
           <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm relative overflow-hidden">
             
-            {/* Background Decor inside card */}
+            {/* Background Decor */}
             <div className="absolute top-0 right-0 p-2 opacity-10">
               {role === "student" ? <GraduationCap size={40} /> : <Building2 size={40} />}
             </div>
 
             {role === "student" && (
               <div>
-                 <p className="text-xs text-blue-400 font-bold uppercase tracking-wide mb-1">Student ID</p>
-                 <h3 className="text-white font-semibold">{studentProfile.name}</h3>
-                 <p className="text-sm text-slate-400 font-mono mb-2">{studentProfile.studentId}</p>
+                 {/* UPDATED LABEL & HELPER TEXT */}
+                 <p className="text-xs text-blue-400 font-bold uppercase tracking-wide mb-1">Student Profile</p>
+                 <h3 className="text-white font-semibold">{defaultStudentProfile.name}</h3>
+                 <p className="text-sm text-slate-400 font-mono mb-2">{defaultStudentProfile.studentId}</p>
                  <div className="flex items-center gap-1 text-xs text-slate-500">
                     <Building2 size={10} />
-                    {studentProfile.institution}
+                    {defaultStudentProfile.institution}
                  </div>
+                 {/* NEW HELPER TEXT */}
+                 <p className="text-[10px] text-slate-500 mt-3 pt-2 border-t border-slate-700/50 leading-tight">
+                    Primary institution derived from active Student ID credential.
+                 </p>
               </div>
             )}
 
             {role === "issuer" && (
                <div>
                   <p className="text-xs text-emerald-400 font-bold uppercase tracking-wide mb-1">Issuer ID</p>
-                  <h3 className="text-white font-semibold">{issuerProfile.institution}</h3>
-                  <p className="text-xs text-slate-400">{issuerProfile.department}</p>
+                  {/* Dynamic Data from State */}
+                  <h3 className="text-white font-semibold line-clamp-1">{issuerData.institution}</h3>
+                  <p className="text-xs text-slate-400 line-clamp-1">{issuerData.department}</p>
                </div>
             )}
 
@@ -128,7 +156,6 @@ export default function DashboardLayout({
 
           {role === "issuer" && (
             <>
-              {/* 1. Issued List */}
               <NavItem 
                 href="/issuer" 
                 icon={<LayoutDashboard size={20} />} 
@@ -136,7 +163,6 @@ export default function DashboardLayout({
                 active={isActive("/issuer")} 
               />
 
-              {/* 2. TEMPLATES (NEW POSITION) */}
               <NavItem 
                 href="/issuer/templates" 
                 icon={<FileBox size={20} />} 
@@ -144,7 +170,14 @@ export default function DashboardLayout({
                 active={isActive("/issuer/templates")} 
               />
 
-              {/* 3. Issue Actions */}
+              {/* NEW: Institution Profile Link */}
+              <NavItem 
+                href="/issuer/profile" 
+                icon={<UserCog size={20} />} 
+                label="Institution Profile" 
+                active={isActive("/issuer/profile")} 
+              />
+
               <NavItem 
                 href="/issuer/issue" 
                 icon={<FilePlus size={20} />} 
@@ -152,7 +185,6 @@ export default function DashboardLayout({
                 active={isActive("/issuer/issue") || isActive("/issuer/issue/bulk")} 
               />
 
-              {/* 4. External Systems */}
               <NavItem 
                 href="/issuer/external-systems" 
                 icon={<Globe size={20} />} 
@@ -163,7 +195,7 @@ export default function DashboardLayout({
           )}
         </nav>
 
-        {/* 4. Wallet & Logout (Bottom) */}
+        {/* 4. Wallet & Logout */}
         <div className="p-6 border-t border-slate-800">
           <div className="mb-4">
             <p className="text-xs text-slate-500 mb-1">Connected Wallet</p>
@@ -189,7 +221,6 @@ export default function DashboardLayout({
 
       {/* Main Content Area */}
       <main className="flex-1 ml-72 p-8 relative">
-        {/* Gradient Glow Effect */}
         <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[100px] pointer-events-none" />
         
         <motion.div
@@ -205,7 +236,6 @@ export default function DashboardLayout({
   );
 }
 
-// Sub-component for clean Navigation Items
 function NavItem({ href, icon, label, active }: { href: string; icon: React.ReactNode; label: string; active: boolean }) {
   return (
     <Link

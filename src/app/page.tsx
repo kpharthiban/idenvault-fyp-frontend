@@ -35,22 +35,6 @@ export default function Home() {
         {/* Role Selection Grid */}
         <div className="grid md:grid-cols-3 gap-6">
           
-          {/* Student Card */}
-          <Link href="/connect?role=student" className="group">
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="h-full p-8 bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl text-left hover:border-blue-500/50 hover:bg-slate-900/80 transition-all duration-300 shadow-xl"
-            >
-              <div className="w-12 h-12 bg-blue-900/30 rounded-lg flex items-center justify-center mb-6 text-blue-400 group-hover:scale-110 transition-transform">
-                <GraduationCap size={24} />
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2">Student Portal</h2>
-              <p className="text-slate-400 text-sm">
-                Access your wallet to view, manage, and share your earned academic credentials.
-              </p>
-            </motion.div>
-          </Link>
-
           {/* Issuer Card */}
           <Link href="/connect?role=issuer" className="group">
             <motion.div 
@@ -63,6 +47,22 @@ export default function Home() {
               <h2 className="text-xl font-bold text-white mb-2">Institution Portal</h2>
               <p className="text-slate-400 text-sm">
                 Issue tamper-proof certificates directly to student wallets on the blockchain.
+              </p>
+            </motion.div>
+          </Link>
+
+          {/* Student Card */}
+          <Link href="/connect?role=student" className="group">
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="h-full p-8 bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl text-left hover:border-blue-500/50 hover:bg-slate-900/80 transition-all duration-300 shadow-xl"
+            >
+              <div className="w-12 h-12 bg-blue-900/30 rounded-lg flex items-center justify-center mb-6 text-blue-400 group-hover:scale-110 transition-transform">
+                <GraduationCap size={24} />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Student Portal</h2>
+              <p className="text-slate-400 text-sm">
+                Access your wallet to view, manage, and share your earned academic credentials.
               </p>
             </motion.div>
           </Link>
@@ -88,7 +88,7 @@ export default function Home() {
       
       {/* Footer Text */}
       <div className="absolute bottom-6 text-slate-600 text-sm font-mono">
-        Secured by Ethereum • Built for MMU FYP
+        Secured by Ethereum • Built for FYP 1 • By Pharthiban Kumarhesan
       </div>
     </main>
   );

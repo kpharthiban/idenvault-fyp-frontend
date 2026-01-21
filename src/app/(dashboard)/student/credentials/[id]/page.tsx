@@ -1,24 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import RequireAuth from "@/lib/RequireAuth";
-import QRCodeModal from "@/components/QRCodeModal";
+import { QRCodeSVG } from "qrcode.react";
 import { 
   ArrowLeft, 
   ShieldCheck, 
   Calendar, 
   User, 
   Fingerprint, 
-  Share2, 
   ExternalLink, 
   Building2,
-  FileCheck
+  FileCheck,
+  Copy,
+  CheckCircle,
+  Clock // Imported Clock
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Expanded Mock Data to include 'Blockchain' details
+// Expanded Mock Data
 const mockCredentials = [
+  {
+    id: "cred-status-1",
+    title: "Student Identification Credential",
+    issuer: "Multimedia University",
+    status: "Active",
+    studentId: "STU2023001",
+    studentName: "John Doe",
+    issuedDate: "01 Jan 2024",
+    expiryDate: "31 Dec 2026",
+    description: "Verifies active student enrollment status for the current academic session. This credential does not constitute identity authentication.",
+    txHash: "0x9a2...3b1c",
+    network: "Ethereum Sepolia",
+    certificateUrl: "#",
+    type: "status"
+  },
   {
     id: "cred-1",
     title: "Bachelor of Computer Science",
@@ -31,7 +48,8 @@ const mockCredentials = [
     description: "This credential certifies that the holder has successfully completed the Bachelor of Computer Science programme with Honours, demonstrating proficiency in software engineering, algorithms, and system design.",
     txHash: "0x71c...9a2b",
     network: "Ethereum Sepolia",
-    certificateUrl: "/certificates/cred-1.pdf"
+    certificateUrl: "/certificates/cred-1.pdf",
+    type: "degree"
   },
   {
     id: "cred-2",
@@ -45,7 +63,8 @@ const mockCredentials = [
     description: "Awarded for achieving a GPA of 3.8 and above in the Trimester 1 2023/2024 academic session, recognizing outstanding academic performance and dedication.",
     txHash: "0x3d2...1f8c",
     network: "Ethereum Sepolia",
-    certificateUrl: "/certificates/cred-2.pdf"
+    certificateUrl: "/certificates/cred-2.pdf",
+    type: "award"
   },
   {
     id: "cred-3",
@@ -59,7 +78,8 @@ const mockCredentials = [
     description: "Validates the candidate's skills in identifying, countering, and preventing network attacks. The holder has demonstrated proficiency in system hacking, enumeration, and vulnerability analysis under live test conditions.",
     txHash: "0x8f2...b4e1",
     network: "Ethereum Sepolia",
-    certificateUrl: "/certificates/cred-3.pdf"
+    certificateUrl: "/certificates/cred-3.pdf",
+    type: "cert"
   },
 ];
 
@@ -67,11 +87,39 @@ export default function CredentialDetailPage() {
   const params = useParams();
   const router = useRouter();
   const credentialId = params.id as string;
-  const [qrUrl, setQrUrl] = useState<string | null>(null);
+  
+  // State for "Share & Present" Tabs
+  const [activeTab, setActiveTab] = useState<"link" | "qr">("link");
+  const [copied, setCopied] = useState(false);
+  
+  // State for QR Timer
+  const [secondsLeft, setSecondsLeft] = useState(30);
 
   const credential = mockCredentials.find(
     (cred) => cred.id === credentialId
   );
+
+  // Timer Logic (Refreshes periodically for "Live" feel)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+             return 30; // Loop back to 30 to simulate "Refresh"
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleCopyLink = () => {
+    if (!credential) return;
+    const link = `${window.location.origin}/verify?ref=${credential.id}`;
+    navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (!credential) {
     return (
@@ -83,6 +131,11 @@ export default function CredentialDetailPage() {
       </RequireAuth>
     );
   }
+
+  // Determine styles based on credential type
+  const isStatusCred = credential.type === "status";
+  const accentColor = isStatusCred ? "text-emerald-400" : "text-emerald-400";
+  const badgeBg = isStatusCred ? "bg-emerald-500/10 border-emerald-500/20" : "bg-emerald-500/10 border-emerald-500/20";
 
   return (
     <RequireAuth allowedRole="student">
@@ -100,7 +153,7 @@ export default function CredentialDetailPage() {
         {/* Main Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* LEFT COL: The Visual Certificate */}
+          {/* LEFT COL: The Visual Credential */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -114,11 +167,11 @@ export default function CredentialDetailPage() {
                 <ShieldCheck size={300} />
               </div>
 
-              {/* Certificate Header */}
+              {/* Credential Header */}
               <div className="relative z-10 text-center mb-10">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-6">
-                  <ShieldCheck size={12} />
-                  Blockchain Verified
+                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-medium mb-6 ${badgeBg} ${accentColor}`}>
+                  {isStatusCred ? <Clock size={12} /> : <ShieldCheck size={12} />}
+                  {isStatusCred ? "Active Status" : "Blockchain Verified"}
                 </div>
                 
                 <h1 className="text-3xl md:text-4xl font-serif font-bold text-white mb-4 tracking-wide">
@@ -132,7 +185,7 @@ export default function CredentialDetailPage() {
                 </div>
               </div>
 
-              {/* Certificate Body */}
+              {/* Credential Body */}
               <div className="relative z-10 bg-slate-950/50 rounded-xl p-6 border border-slate-800/50 backdrop-blur-sm">
                 <p className="text-slate-300 leading-relaxed text-center font-serif text-lg italic">
                   &quot;{credential.description}&quot;
@@ -147,30 +200,130 @@ export default function CredentialDetailPage() {
                   <p className="text-xs text-slate-500 font-mono">{credential.studentId}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Date of Issue</p>
-                  <p className="text-white font-medium">{credential.issuedDate}</p>
+                  <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                    {isStatusCred ? "Valid Until" : "Date of Issue"}
+                  </p>
+                  <p className="text-white font-medium">
+                    {isStatusCred ? credential.expiryDate : credential.issuedDate}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-4">
-              <button
-                onClick={() => setQrUrl(`${window.location.origin}/verify?ref=${credential.id}`)}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2"
-              >
-                <Share2 size={18} />
-                Share Credential
-              </button>
-              <a
-                href={credential.certificateUrl}
-                download
-                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-3 rounded-xl font-medium border border-slate-700 transition-all flex items-center justify-center gap-2"
-                >
-                <FileCheck size={18} />
-                Download PDF
-              </a>
+            {/* Share & Present Credential Section */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 className="text-xl font-bold text-white mb-1">Share & Present Credential</h3>
+                        <p className="text-slate-400 text-sm">
+                            Choose a method to present this credential for verification.
+                        </p>
+                    </div>
+                    {/* Only show PDF download if it's not a status card or if URL exists */}
+                    {!isStatusCred && credential.certificateUrl !== "#" && (
+                        <a
+                            href={credential.certificateUrl}
+                            download
+                            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm font-medium border border-slate-700 transition-all flex items-center gap-2"
+                        >
+                            <FileCheck size={16} />
+                            PDF
+                        </a>
+                    )}
+                </div>
+
+                <div className="flex gap-6 border-b border-slate-800 mb-6">
+                    <button
+                        onClick={() => setActiveTab("link")}
+                        className={`pb-2 text-sm font-medium transition-colors relative ${
+                            activeTab === "link" ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
+                        }`}
+                    >
+                        Verification Link (Shareable)
+                        {activeTab === "link" && <motion.div layoutId="underline" className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-500" />}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("qr")}
+                        className={`pb-2 text-sm font-medium transition-colors relative ${
+                            activeTab === "qr" ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
+                        }`}
+                    >
+                        Live Presentation QR
+                        {activeTab === "qr" && <motion.div layoutId="underline" className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-500" />}
+                    </button>
+                </div>
+
+                <AnimatePresence mode="wait">
+                    {activeTab === "link" ? (
+                        <motion.div
+                            key="link"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="space-y-4"
+                        >
+                            <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between gap-4">
+                                <code className="text-sm text-slate-300 font-mono truncate flex-1">
+                                    {typeof window !== 'undefined' ? `${window.location.origin}/verify?ref=${credential.id}` : `.../verify?ref=${credential.id}`}
+                                </code>
+                                <button
+                                    onClick={handleCopyLink}
+                                    className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+                                    title="Copy to Clipboard"
+                                >
+                                    {copied ? <CheckCircle size={20} className="text-emerald-500" /> : <Copy size={20} />}
+                                </button>
+                            </div>
+                            <p className="text-xs text-slate-500">
+                                Use this link to share your credential for online or asynchronous verification (e.g., on LinkedIn or resumes).
+                            </p>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="qr"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="flex flex-col items-center"
+                        >
+                            {/* Timer Badge */}
+                            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium mb-4 transition-colors ${
+                                secondsLeft < 10 ? "bg-red-500/10 text-red-400" : "bg-blue-500/10 text-blue-400"
+                            }`}>
+                                <Clock size={12} />
+                                QR refreshes in {secondsLeft}s
+                            </div>
+
+                            <div className="bg-white p-4 rounded-xl mb-4 relative overflow-hidden group">
+                                {/* Visual scanner line effect */}
+                                <motion.div 
+                                    animate={{ top: ["0%", "100%", "0%"] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                    className="absolute left-0 w-full h-0.5 bg-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.5)] pointer-events-none"
+                                />
+                                <QRCodeSVG 
+                                    value={typeof window !== 'undefined' ? `${window.location.origin}/verify?ref=${credential.id}` : ""} 
+                                    size={200} 
+                                />
+                            </div>
+                            <p className="text-sm text-slate-300 text-center max-w-xs mb-2">
+                                Scan to verify immediately.
+                            </p>
+                            <p className="text-xs text-slate-500 text-center max-w-sm">
+                                This QR code refreshes periodically and is intended for live, in-person verification to demonstrate active credential presentation.
+                            </p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                
+                {/* Trust Note */}
+                <div className="mt-6 pt-4 border-t border-slate-800 text-center">
+                    <p className="text-[10px] text-slate-600">
+                        Verification results depend on issuer trust status and credential validity.
+                    </p>
+                </div>
             </div>
+
           </motion.div>
 
 
@@ -227,6 +380,18 @@ export default function CredentialDetailPage() {
                     </div>
                   </div>
                 </div>
+                
+                {/* Expiry if exists */}
+                {credential.expiryDate !== "Never" && (
+                     <div className="group mt-4">
+                        <div className="flex items-center gap-2 text-slate-500 text-xs uppercase tracking-wider mb-1">
+                            <Clock size={12} /> Expiry Date
+                        </div>
+                        <div className="text-sm text-slate-300 font-medium">
+                            {credential.expiryDate}
+                        </div>
+                     </div>
+                )}
 
                 {/* Divider */}
                 <div className="h-px bg-slate-800 my-4" />
@@ -244,14 +409,6 @@ export default function CredentialDetailPage() {
           </motion.div>
         </div>
       </div>
-
-      {qrUrl && (
-        <QRCodeModal
-            url={qrUrl}
-            onClose={() => setQrUrl(null)}
-        />
-      )}
-
     </RequireAuth>
   );
 }

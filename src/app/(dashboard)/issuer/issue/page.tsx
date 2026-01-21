@@ -337,8 +337,8 @@ export default function IssueCredentialPage() {
                                     <Upload size={24} />
                                 </div>
                                 <p className="text-sm text-slate-300 font-medium">Click to upload transcript or evidence</p>
-                                <p className="text-xs text-slate-500 mt-1">
-                                    {formData.type === "Degree" ? "Required for Degree issuance" : "Optional for this credential type"}
+                                <p className="text-xs text-slate-500 mt-1 max-w-xs text-center">
+                                    Used for archival or reference purposes. Verification does not depend on uploaded files.
                                 </p>
                                 <input 
                                     type="file" 

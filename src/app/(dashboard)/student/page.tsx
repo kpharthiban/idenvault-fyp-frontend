@@ -2,42 +2,50 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import QRCodeModal from "@/components/QRCodeModal";
+// REMOVED: import QRCodeModal (Sharing is now handled in Detail Page for security context)
 import RequireAuth from "@/lib/RequireAuth";
-import { Search, Eye, Share2, CheckCircle, Shield, Award } from "lucide-react";
+import { Search, Eye, CheckCircle, Shield, Award, User, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 
-// Enhanced Mock Data
+// Enhanced Mock Data including the new "Status" Credential
 const mockCredentials = [
+  {
+    id: "cred-status-1",
+    title: "Student Identification Credential",
+    issuer: "Multimedia University",
+    date: "Expires: 31 Dec 2026", // Showing expiry is crucial for status
+    status: "Active",
+    type: "status", // New Type
+  },
   {
     id: "cred-1",
     title: "Bachelor of Computer Science",
     issuer: "Multimedia University",
-    date: "12 Aug 2024",
-    status: "Valid",
+    date: "Issued: 12 Aug 2024",
+    status: "Active",
     type: "degree", 
   },
   {
     id: "cred-2",
     title: "Dean’s List Award",
     issuer: "Faculty of Computing",
-    date: "05 Feb 2024",
-    status: "Valid",
+    date: "Issued: 05 Feb 2024",
+    status: "Active",
     type: "award",
   },
   {
     id: "cred-3",
     title: "Certified Ethical Hacker (Practical)",
     issuer: "EC-Council",
-    date: "20 Dec 2023",
-    status: "Valid",
+    date: "Issued: 20 Dec 2023",
+    status: "Active",
     type: "cert",
   },
 ];
 
 export default function StudentDashboard() {
   const router = useRouter();
-  const [qrUrl, setQrUrl] = useState<string | null>(null);
+  // REMOVED: qrUrl state (Moved to detail page)
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredCredentials = mockCredentials.filter((cred) =>
@@ -52,7 +60,7 @@ export default function StudentDashboard() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold text-white tracking-tight">My Wallet</h2>
-            <p className="text-slate-400 mt-1">Manage and share your verified academic assets.</p>
+            <p className="text-slate-400 mt-1">Manage your verified academic assets and identity claims.</p>
           </div>
 
           {/* Search Bar */}
@@ -78,49 +86,57 @@ export default function StudentDashboard() {
               transition={{ duration: 0.3, delay: index * 0.1 }}
               className="group relative bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl overflow-hidden hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300"
             >
-              {/* Card Decoration (Top Gradient) */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500 opacity-50 group-hover:opacity-100 transition-opacity" />
+              {/* Card Decoration (Dynamic Gradient based on Type) */}
+              <div className={`absolute top-0 left-0 w-full h-1 opacity-50 group-hover:opacity-100 transition-opacity bg-gradient-to-r ${
+                  cred.type === 'status' ? 'from-emerald-500 to-teal-500' : 
+                  cred.type === 'award' ? 'from-purple-500 to-pink-500' :
+                  'from-blue-500 to-cyan-500'
+              }`} />
 
               <div className="p-6">
-                {/* Header: Icon & Status */}
+                {/* Header: Icon & Badge */}
                 <div className="flex justify-between items-start mb-4">
-                  <div className="p-3 bg-slate-800 rounded-lg text-blue-400 group-hover:text-blue-300 group-hover:bg-blue-500/20 transition-colors">
-                    {cred.type === "award" ? <Award size={24} /> : <Shield size={24} />}
+                  <div className={`p-3 rounded-lg transition-colors ${
+                      cred.type === 'status' ? 'bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20' :
+                      cred.type === 'award' ? 'bg-purple-500/10 text-purple-400 group-hover:bg-purple-500/20' :
+                      'bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20'
+                  }`}>
+                    {cred.type === "award" ? <Award size={24} /> : 
+                     cred.type === "status" ? <User size={24} /> :
+                     <Shield size={24} />}
                   </div>
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
-                    <CheckCircle size={12} />
-                    {cred.status}
+                  
+                  {/* Type Badge */}
+                  <div className="px-2.5 py-1 rounded-full border text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
+                    {<CheckCircle size={12} />}
+                    {'Active'}
                   </div>
                 </div>
 
                 {/* Content: Title & Issuer */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-blue-200 transition-colors">
+                <div className="mb-6 min-h-[5rem]">
+                  <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-blue-200 transition-colors line-clamp-2">
                     {cred.title}
                   </h3>
                   <p className="text-sm text-slate-400 flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
                     {cred.issuer}
                   </p>
-                  <p className="text-xs text-slate-500 mt-2 font-mono">Issued: {cred.date}</p>
+                  
+                  <div className="flex items-center gap-1.5 mt-3 text-xs text-slate-500 font-mono">
+                    {cred.type === 'status' ? <Clock size={12} /> : null}
+                    {cred.date}
+                  </div>
                 </div>
 
-                {/* Actions: Buttons */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* Actions: Single 'View' Button */}
+                <div>
                   <button
                     onClick={() => router.push(`/student/credentials/${cred.id}`)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm rounded-lg transition-colors border border-slate-700"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors border border-slate-700 hover:border-slate-600"
                   >
                     <Eye size={16} />
-                    View
-                  </button>
-
-                  <button
-                    onClick={() => setQrUrl(`${window.location.origin}/verify?ref=${cred.id}`)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors shadow-lg shadow-blue-500/20"
-                  >
-                    <Share2 size={16} />
-                    Share
+                    View Details & Share
                   </button>
                 </div>
               </div>
@@ -128,20 +144,13 @@ export default function StudentDashboard() {
           ))}
         </div>
 
-        {/* Empty State (If search yields no results) */}
+        {/* Empty State */}
         {filteredCredentials.length === 0 && (
           <div className="text-center py-20 border border-dashed border-slate-800 rounded-xl bg-slate-900/30">
             <p className="text-slate-500">No credentials found.</p>
           </div>
         )}
       </div>
-
-      {qrUrl && (
-        <QRCodeModal
-            url={qrUrl}
-            onClose={() => setQrUrl(null)}
-        />
-      )}
     </RequireAuth>
   );
 }

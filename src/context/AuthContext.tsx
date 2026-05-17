@@ -1,17 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import { ethers } from "ethers";
 
-const ADMIN_WALLET_ADDRESS = "0x761bAa235206EE9107f09777608A021824bc10fD";
-
-/**
- * Allowed user roles in the system
- */
 export type UserRole = "student" | "issuer" | "admin";
 
-/**
- * Shape of authentication state
- */
 interface AuthState {
   walletAddress: string | null;
   role: UserRole | null;
@@ -20,109 +13,79 @@ interface AuthState {
   isInitializing: boolean;
 }
 
-/**
- * Context contract (what the rest of the app can use)
- */
 interface AuthContextType extends AuthState {
-  connectWallet: (role: UserRole) => Promise<void>;
+  connectWallet: (roleHint?: UserRole) => Promise<void>;
   logout: () => void;
 }
 
-/**
- * Initial empty context
- */
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-/**
- * Key used for sessionStorage persistence
- */
 const STORAGE_KEY = "idenvault_session";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-/**
- * AuthProvider wraps the entire application
- */
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
   const [loginTimestamp, setLoginTimestamp] = useState<number | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
+  // Restore session on mount (single useEffect, no duplicate)
   useEffect(() => {
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-
-    if (stored) {
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      if (stored) {
         const parsed = JSON.parse(stored);
-
         setWalletAddress(parsed.walletAddress);
         setRole(parsed.role);
         setLoginTimestamp(parsed.loginTimestamp);
-    }
-
-    setIsInitializing(false);
-  }, []);
-
-  /**
-   * Restore session from sessionStorage on app load
-   */
-  useEffect(() => {
-    const storedSession = sessionStorage.getItem(STORAGE_KEY);
-    if (!storedSession) return;
-
-    try {
-      const parsed = JSON.parse(storedSession);
-      setWalletAddress(parsed.walletAddress);
-      setRole(parsed.role);
-      setLoginTimestamp(parsed.loginTimestamp);
+      }
     } catch {
       sessionStorage.removeItem(STORAGE_KEY);
+    } finally {
+      setIsInitializing(false);
     }
   }, []);
 
-  /**
-   * Connect MetaMask wallet and start session
-   */
-  const connectWallet = async (selectedRole: UserRole) => {
-    if (!window.ethereum) {
-        throw new Error("MetaMask not installed");
-    }
+  const connectingRef = useRef(false);
 
-    const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-    });
+  const connectWallet = async (_roleHint?: UserRole) => {
+    if (connectingRef.current) return;  // ← block double invocation
+    connectingRef.current = true;
 
-    if (!accounts || accounts.length === 0) {
-        throw new Error("No wallet accounts found");
-    }
+    try {
+      if (!window.ethereum) throw new Error("MetaMask not installed");
 
-    const address = accounts[0];
-    const timestamp = Date.now();
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const address = (await signer.getAddress()).toLowerCase();
 
-    const normalizedAddress = address.toLowerCase();
+      const nonceRes = await fetch(`${API_URL}/api/auth/nonce?wallet=${address}`);
+      if (!nonceRes.ok) throw new Error("Failed to fetch nonce from server");
+      const { nonce } = await nonceRes.json();
 
-    let finalRole = selectedRole;
+      const signature = await signer.signMessage(nonce);
 
-    if (normalizedAddress === ADMIN_WALLET_ADDRESS.toLowerCase()) {
-    finalRole = "admin";
-    }
+      const verifyRes = await fetch(`${API_URL}/api/auth/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet: address, signature }),
+      });
+      if (!verifyRes.ok) throw new Error("Wallet verification failed");
+      const { wallet, role: backendRole } = await verifyRes.json();
 
-    setWalletAddress(address);
-    setRole(finalRole);
-    setLoginTimestamp(timestamp);
-
-    sessionStorage.setItem(
+      const timestamp = Date.now();
+      setWalletAddress(wallet);
+      setRole(backendRole);
+      setLoginTimestamp(timestamp);
+      sessionStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({
-        walletAddress: address,
-        role: finalRole,
-        loginTimestamp: timestamp,
-        })
-    );
+        JSON.stringify({ walletAddress: wallet, role: backendRole, loginTimestamp: timestamp })
+      );
+    } finally {
+      connectingRef.current = false;  // ← always release the lock
+    }
   };
 
-
-  /**
-   * Logout: clear session and reset state
-   */
   const logout = () => {
     setWalletAddress(null);
     setRole(null);
@@ -143,13 +106,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-/**
- * Custom hook for consuming AuthContext safely
- */
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };

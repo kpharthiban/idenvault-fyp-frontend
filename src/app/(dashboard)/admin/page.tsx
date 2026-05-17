@@ -1,195 +1,342 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { ethers } from "ethers";
 import RequireAuth from "@/lib/RequireAuth";
-import { 
-  Search, 
-  ShieldAlert, 
-  ShieldCheck, 
-  Ban, 
-  CheckCircle, 
-  Building2, 
-  Wallet,
-  Activity
+import { useAuth } from "@/context/AuthContext";
+import {
+  Search, ShieldAlert, ShieldCheck, Ban, CheckCircle,
+  Wallet, Activity, Plus, Loader2, AlertCircle, AlertTriangle
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-// Mock Data
-const mockIssuers = [
-  {
-    id: "ISSUER-MMU",
-    name: "Multimedia University",
-    wallet: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
-    allowed: true,
-    region: "Cyberjaya, MY",
-  },
-  {
-    id: "ISSUER-UM",
-    name: "Universiti Malaya",
-    wallet: "0x2546BcD3c84621e976D8185a91A922aE77ECEc30",
-    allowed: true,
-    region: "Kuala Lumpur, MY",
-  },
-  {
-    id: "ISSUER-FAKE",
-    name: "Diploma Mill Institute",
-    wallet: "0x8888888888888888888888888888888888888888",
-    allowed: false,
-    region: "Unknown",
-  },
+const REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_ISSUER_REGISTRY_ADDRESS!;
+const REGISTRY_ABI = [
+  "function registerIssuer(address issuer) external",
+  "function revokeIssuer(address issuer) external",
+  "function isIssuerTrusted(address issuer) external view returns (bool)",
+  "event IssuerRegistered(address indexed issuer)",
+  "event IssuerRevoked(address indexed issuer)",
 ];
 
+interface IssuerEntry {
+  wallet: string;
+  trusted: boolean;
+  action?: "registering" | "revoking";
+}
+
 export default function AdminDashboard() {
-  const [issuers, setIssuers] = useState(mockIssuers);
+  const { walletAddress } = useAuth();
+
+  const [issuers, setIssuers] = useState<IssuerEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [newWallet, setNewWallet] = useState("");
+  const [registering, setRegistering] = useState(false);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState<{ wallet: string; action: "revoke" | "register" } | null>(null);
 
-  const filteredIssuers = issuers.filter((issuer) =>
-    issuer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    issuer.wallet.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Load issuer history from contract events
+  useEffect(() => {
+    const loadIssuers = async () => {
+      try {
+        setLoading(true);
+        const provider = new ethers.JsonRpcProvider(
+          `https://sepolia.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`
+        );
+        const contract = new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_ABI, provider);
 
-  const toggleAllowlist = (id: string) => {
-    // In a real app, this would call a Smart Contract function: setIssuerStatus(address, bool)
-    setIssuers((prev) =>
-      prev.map((issuer) =>
-        issuer.id === id
-          ? { ...issuer, allowed: !issuer.allowed }
-          : issuer
-      )
-    );
+        // Read all IssuerRegistered events to build the list
+        const registerFilter = contract.filters.IssuerRegistered();
+        const events = await contract.queryFilter(registerFilter);
+
+        // Deduplicate wallet addresses
+        const wallets = [...new Set(events.map((e: any) => e.args.issuer.toLowerCase()))];
+
+        // Check current trust status for each
+        const entries: IssuerEntry[] = await Promise.all(
+          wallets.map(async (wallet) => {
+            const trusted = await contract.isIssuerTrusted(wallet);
+            return { wallet, trusted };
+          })
+        );
+
+        setIssuers(entries);
+      } catch (err: any) {
+        setError("Failed to load issuer registry from blockchain.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadIssuers();
+  }, []);
+
+  const handleRegister = async (walletToRegister: string) => {
+    if (!ethers.isAddress(walletToRegister)) {
+      setRegisterError("Invalid Ethereum address.");
+      return;
+    }
+    setRegistering(true);
+    setRegisterError(null);
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum!);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_ABI, signer);
+      const tx = await contract.registerIssuer(walletToRegister);
+      await tx.wait();
+
+      setIssuers(prev => {
+        const exists = prev.find(i => i.wallet === walletToRegister.toLowerCase());
+        if (exists) return prev.map(i => i.wallet === walletToRegister.toLowerCase() ? { ...i, trusted: true } : i);
+        return [...prev, { wallet: walletToRegister.toLowerCase(), trusted: true }];
+      });
+      setNewWallet("");
+      setShowConfirm(null);
+    } catch (err: any) {
+      const msg = err?.code === "ACTION_REJECTED" ? "MetaMask transaction rejected." : err.message;
+      setRegisterError(msg);
+    } finally {
+      setRegistering(false);
+    }
   };
+
+  const handleRevoke = async (walletToRevoke: string) => {
+    setIssuers(prev => prev.map(i => i.wallet === walletToRevoke ? { ...i, action: "revoking" } : i));
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum!);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_ABI, signer);
+      const tx = await contract.revokeIssuer(walletToRevoke);
+      await tx.wait();
+      setIssuers(prev => prev.map(i => i.wallet === walletToRevoke ? { ...i, trusted: false, action: undefined } : i));
+      setShowConfirm(null);
+    } catch (err: any) {
+      setIssuers(prev => prev.map(i => i.wallet === walletToRevoke ? { ...i, action: undefined } : i));
+    }
+  };
+
+  const filtered = issuers.filter(i => i.wallet.toLowerCase().includes(searchTerm.toLowerCase()));
+  const trustedCount = issuers.filter(i => i.trusted).length;
 
   return (
     <RequireAuth allowedRole="admin">
       <div className="space-y-8">
-        
-        {/* Header & Stats */}
+
+        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
-                    <ShieldAlert size={24} />
-                </div>
-                <h2 className="text-3xl font-bold text-white tracking-tight">System Governance</h2>
+              <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
+                <ShieldAlert size={24} />
+              </div>
+              <h2 className="text-3xl font-bold text-white tracking-tight">System Governance</h2>
             </div>
-            <p className="text-slate-400">Manage the allowlist of authorized academic institutions.</p>
+            <p className="text-slate-400">Manage trusted issuer institutions on the blockchain.</p>
           </div>
 
-          {/* Mini Stats Card */}
+          {/* Stats */}
           <div className="flex items-center gap-6 bg-slate-900 border border-slate-800 p-4 rounded-xl">
-             <div className="text-center">
-                <p className="text-xs text-slate-500 uppercase font-bold">Total Issuers</p>
-                <p className="text-xl font-mono text-white">{issuers.length}</p>
-             </div>
-             <div className="w-px h-8 bg-slate-800" />
-             <div className="text-center">
-                <p className="text-xs text-slate-500 uppercase font-bold">Active</p>
-                <p className="text-xl font-mono text-emerald-400">
-                    {issuers.filter(i => i.allowed).length}
-                </p>
-             </div>
-             <div className="w-px h-8 bg-slate-800" />
-             <div className="text-center">
-                <p className="text-xs text-slate-500 uppercase font-bold">System Status</p>
-                <div className="flex items-center gap-1.5 justify-center mt-1">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-xs text-emerald-400 font-medium">Online</span>
-                </div>
-             </div>
+            <div className="text-center">
+              <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Total</p>
+              <p className="text-2xl font-bold text-white">{issuers.length}</p>
+            </div>
+            <div className="w-px h-10 bg-slate-800" />
+            <div className="text-center">
+              <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Trusted</p>
+              <p className="text-2xl font-bold text-emerald-400">{trustedCount}</p>
+            </div>
+            <div className="w-px h-10 bg-slate-800" />
+            <div className="text-center">
+              <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Revoked</p>
+              <p className="text-2xl font-bold text-red-400">{issuers.length - trustedCount}</p>
+            </div>
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search issuers by name or wallet address..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg py-3 pl-10 pr-4 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
-          />
+        {/* Register new issuer */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <h3 className="text-white font-bold mb-1 flex items-center gap-2">
+            <Plus size={18} className="text-emerald-400" /> Register New Issuer
+          </h3>
+          <p className="text-slate-500 text-sm mb-4">
+            Enter the wallet address of the institution to grant issuer trust on-chain.
+          </p>
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <Wallet className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+              <input
+                type="text"
+                value={newWallet}
+                onChange={(e) => { setNewWallet(e.target.value); setRegisterError(null); }}
+                placeholder="0x..."
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-mono text-sm"
+              />
+            </div>
+            <button
+              onClick={() => {
+                if (!ethers.isAddress(newWallet)) { setRegisterError("Invalid address."); return; }
+                setShowConfirm({ wallet: newWallet, action: "register" });
+              }}
+              disabled={registering || !newWallet.trim()}
+              className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
+            >
+              {registering ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+              Register
+            </button>
+          </div>
+          {registerError && (
+            <div className="mt-3 flex items-center gap-2 text-red-400 text-sm">
+              <AlertCircle size={14} /> {registerError}
+            </div>
+          )}
         </div>
 
-        {/* Issuers Grid */}
-        <div className="grid gap-4">
-          {filteredIssuers.map((issuer, index) => (
-            <motion.div
-              key={issuer.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className={`group flex flex-col md:flex-row items-center justify-between p-5 rounded-xl border transition-all ${
-                  issuer.allowed 
-                    ? "bg-slate-900/50 border-slate-800 hover:border-purple-500/30" 
-                    : "bg-red-950/10 border-red-900/20"
-              }`}
-            >
-              {/* Left: Info */}
-              <div className="flex items-start gap-4 w-full md:w-auto mb-4 md:mb-0">
-                <div className={`p-3 rounded-lg transition-colors ${
-                    issuer.allowed ? "bg-slate-800 text-purple-400" : "bg-red-900/20 text-red-500"
-                }`}>
-                  <Building2 size={24} />
-                </div>
-                
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className={`text-lg font-semibold ${issuer.allowed ? "text-white" : "text-slate-300"}`}>
-                        {issuer.name}
-                    </h3>
-                    {!issuer.allowed && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20 uppercase">
-                            Blocked
-                        </span>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-col gap-1 mt-1">
-                    <div className="flex items-center gap-2 text-xs text-slate-500 font-mono">
-                        <Wallet size={12} />
-                        {issuer.wallet}
-                    </div>
-                    <p className="text-xs text-slate-600">{issuer.region}</p>
-                  </div>
-                </div>
-              </div>
+        {/* Issuer list */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+          <div className="p-5 border-b border-slate-800 flex items-center justify-between gap-4">
+            <h3 className="text-white font-bold flex items-center gap-2">
+              <Activity size={18} className="text-purple-400" /> Issuer Registry
+            </h3>
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search wallet..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 pl-9 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
+              />
+            </div>
+          </div>
 
-              {/* Right: Actions */}
-              <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-                <div className="text-right hidden md:block mr-4">
-                    <p className="text-xs text-slate-500 uppercase font-bold mb-1">Authorization</p>
-                    <div className={`flex items-center gap-1.5 justify-end text-sm font-medium ${
-                        issuer.allowed ? "text-emerald-400" : "text-red-400"
-                    }`}>
-                        {issuer.allowed ? <CheckCircle size={14} /> : <Ban size={14} />}
-                        {issuer.allowed ? "Authorized Issuer" : "Access Revoked"}
-                    </div>
-                </div>
-
-                <button
-                    onClick={() => toggleAllowlist(issuer.id)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 border ${
-                        issuer.allowed
-                            ? "bg-slate-800 text-red-400 border-slate-700 hover:bg-red-950/30 hover:border-red-500/30 hover:text-red-300"
-                            : "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700 hover:border-emerald-600 shadow-lg shadow-emerald-900/20"
-                    }`}
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-slate-400 gap-3">
+              <Loader2 size={20} className="animate-spin" /> Reading from blockchain...
+            </div>
+          ) : error ? (
+            <div className="flex items-center gap-3 m-5 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400">
+              <AlertCircle size={18} /> {error}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-16 text-slate-500">
+              <ShieldAlert size={36} className="mx-auto mb-3 opacity-30" />
+              <p>No issuers registered yet</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-800">
+              {filtered.map((issuer, i) => (
+                <motion.div
+                  key={issuer.wallet}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.04 }}
+                  className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 hover:bg-slate-800/30 transition-colors"
                 >
-                    {issuer.allowed ? (
-                        <>
-                            <Ban size={16} /> Block Access
-                        </>
-                    ) : (
-                        <>
-                            <ShieldCheck size={16} /> Approve
-                        </>
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2.5 rounded-xl ${issuer.trusted ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+                      {issuer.trusted ? <ShieldCheck size={20} /> : <Ban size={20} />}
+                    </div>
+                    <div>
+                      <p className="text-white font-mono text-sm font-semibold break-all">
+                        {issuer.wallet}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {issuer.wallet.toLowerCase() === walletAddress?.toLowerCase()
+                          ? "⭐ Admin wallet"
+                          : "Registered issuer"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                      issuer.trusted
+                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                        : "bg-red-500/10 text-red-400 border-red-500/20"
+                    }`}>
+                      {issuer.trusted ? "TRUSTED" : "REVOKED"}
+                    </span>
+
+                    {/* Don't allow admin to toggle their own wallet */}
+                    {issuer.wallet.toLowerCase() !== walletAddress?.toLowerCase() && (
+                      issuer.trusted ? (
+                        <button
+                          onClick={() => setShowConfirm({ wallet: issuer.wallet, action: "revoke" })}
+                          disabled={issuer.action === "revoking"}
+                          className="px-4 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                        >
+                          {issuer.action === "revoking"
+                            ? <><Loader2 size={12} className="animate-spin" /> Revoking...</>
+                            : <><Ban size={12} /> Revoke</>}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setShowConfirm({ wallet: issuer.wallet, action: "register" })}
+                          className="px-4 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5"
+                        >
+                          <CheckCircle size={12} /> Re-trust
+                        </button>
+                      )
                     )}
-                </button>
-              </div>
-            </motion.div>
-          ))}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Confirm Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className={`p-3 rounded-full mb-4 ${showConfirm.action === "revoke" ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"}`}>
+                <AlertTriangle size={32} />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">
+                {showConfirm.action === "revoke" ? "Revoke Issuer Trust?" : "Register Issuer?"}
+              </h3>
+              <p className="text-sm text-slate-400 mb-2">
+                {showConfirm.action === "revoke"
+                  ? "This will prevent this wallet from issuing new credentials. All existing credentials will fail verification."
+                  : "This will grant issuer trust to this wallet on-chain."}
+              </p>
+              <p className="font-mono text-xs text-slate-500 bg-slate-950 px-3 py-2 rounded-lg mb-6 break-all">
+                {showConfirm.wallet}
+              </p>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setShowConfirm(null)}
+                  className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => showConfirm.action === "revoke"
+                    ? handleRevoke(showConfirm.wallet)
+                    : handleRegister(showConfirm.wallet)}
+                  disabled={registering}
+                  className={`flex-1 py-2.5 text-white rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${
+                    showConfirm.action === "revoke"
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-emerald-600 hover:bg-emerald-700"
+                  }`}
+                >
+                  {registering
+                    ? <><Loader2 size={14} className="animate-spin" /> Processing...</>
+                    : showConfirm.action === "revoke" ? "Yes, Revoke" : "Yes, Register"}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </RequireAuth>
   );
 }

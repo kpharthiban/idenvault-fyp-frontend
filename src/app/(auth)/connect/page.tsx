@@ -44,7 +44,13 @@ export default function ConnectPage() {
         await connectWallet(selectedRole);
         // Redirect handled by useEffect above
     } catch (err: any) {
-        setError(err.message || "Failed to connect wallet");
+        const msg = err.message || "Failed to connect wallet";
+        // If user rejected in MetaMask, show a friendlier message
+        if (err?.code === "ACTION_REJECTED" || msg.includes("user rejected")) {
+          setError("Connection request was rejected in MetaMask.");
+        } else {
+          setError(msg);
+        }
         setIsConnecting(false);
     }
   };

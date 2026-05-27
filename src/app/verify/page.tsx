@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   ShieldCheck, ArrowLeft, CheckCircle, XCircle, Loader2,
   Building2, User, Calendar, Clock, Bot, RefreshCw,
-  Copy, AlertCircle, ExternalLink, FileText
+  Copy, AlertCircle, ExternalLink, FileText, Database
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -23,6 +23,7 @@ interface CredentialRecord {
   title: string;
   description: string;
   grade: string | null;
+  metadata_cid: string | null;
   holder_wallet: string;
   issuer_wallet: string;
   status: string;
@@ -36,6 +37,18 @@ interface CredentialRecord {
   };
 }
 
+interface IpfsMetadata {
+  refId: string;
+  templateId: string;
+  issuerWallet: string;
+  studentWallet: string;
+  title: string;
+  type: string;
+  fields: Record<string, string>;
+  ipfsCid: string | null;
+  issuedAt: string;
+}
+
 export default function VerifyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -45,6 +58,10 @@ export default function VerifyPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "valid" | "invalid">("idle");
   const [record, setRecord] = useState<CredentialRecord | null>(null);
   const [trustChecks, setTrustChecks] = useState<TrustCheck[]>([]);
+
+  // IPFS metadata state
+  const [metadata, setMetadata] = useState<IpfsMetadata | null>(null);
+  const [metadataLoading, setMetadataLoading] = useState(false);
 
   // AI state
   const [showAI, setShowAI] = useState(false);
@@ -69,6 +86,7 @@ export default function VerifyPage() {
     setStatus("loading");
     setRecord(null);
     setTrustChecks([]);
+    setMetadata(null);
     setShowAI(false);
     setAiQuestions([]);
 
@@ -134,6 +152,24 @@ export default function VerifyPage() {
 
       const allPass = checks.every((c) => c.pass);
       setStatus(allPass ? "valid" : "invalid");
+
+      // Fetch IPFS metadata if available
+      if (data.metadata_cid) {
+        setMetadataLoading(true);
+        try {
+          const metaRes = await fetch(
+            `https://gateway.pinata.cloud/ipfs/${data.metadata_cid}`
+          );
+          if (metaRes.ok) {
+            const metaJson: IpfsMetadata = await metaRes.json();
+            setMetadata(metaJson);
+          }
+        } catch {
+          // Non-critical — metadata display is best-effort
+        } finally {
+          setMetadataLoading(false);
+        }
+      }
     } catch {
       setStatus("invalid");
     }
@@ -160,8 +196,7 @@ export default function VerifyPage() {
         body: JSON.stringify({
             title: record.title,
             issuer: record.issuer_wallet,
-            grade: record.grade ?? undefined,
-            description: record.description ?? undefined,
+            fields: metadata?.fields ?? undefined,
         }),
         });
         if (!res.ok) throw new Error("AI service failed");
@@ -186,6 +221,7 @@ export default function VerifyPage() {
     setCredentialId("");
     setRecord(null);
     setTrustChecks([]);
+    setMetadata(null);
     setShowAI(false);
     setAiQuestions([]);
     router.replace("/verify");
@@ -346,9 +382,37 @@ export default function VerifyPage() {
                 {record && (
                   <div className="bg-slate-950 rounded-xl border border-slate-800 p-4 space-y-3">
                     <h3 className="text-white font-bold text-base">{record.title}</h3>
-                    {record.description && (
-                      <p className="text-slate-400 text-sm leading-relaxed">{record.description}</p>
+
+                    {/* IPFS metadata fields */}
+                    {metadataLoading && (
+                      <div className="flex items-center gap-2 text-slate-400 text-sm py-2">
+                        <Loader2 size={14} className="animate-spin text-blue-400" />
+                        Loading credential details from IPFS...
+                      </div>
                     )}
+                    {metadata && Object.keys(metadata.fields).length > 0 && (
+                      <div className="bg-slate-900/50 rounded-lg border border-slate-800 p-3 space-y-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Credential Details
+                          </p>
+                          <span className="flex items-center gap-1 text-[10px] font-medium text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                            <Database size={10} /> IPFS Verified
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                          {Object.entries(metadata.fields).map(([key, value]) => (
+                            <div key={key}>
+                              <p className="text-[11px] text-slate-500 capitalize">
+                                {key.replace(/([A-Z])/g, " $1").replace(/_/g, " ").trim()}
+                              </p>
+                              <p className="text-sm text-white">{value}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
                       <div>
                         <p className="text-xs text-slate-500 flex items-center gap-1 mb-1">

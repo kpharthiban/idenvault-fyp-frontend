@@ -56,7 +56,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!window.ethereum) throw new Error("MetaMask not installed");
 
       const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+
+      let signer;
+      try {
+        signer = await provider.getSigner();
+      } catch (signerErr: any) {
+        // -32002 = MetaMask already has a pending eth_requestAccounts popup
+        const code = signerErr?.error?.code ?? signerErr?.code;
+        if (code === -32002) {
+          throw new Error(
+            "MetaMask already has a pending connection request. " +
+            "Please open the MetaMask extension and approve or reject it, then try again."
+          );
+        }
+        throw signerErr;
+      }
       const address = (await signer.getAddress()).toLowerCase();
 
       const nonceRes = await fetch(`${API_URL}/api/auth/nonce?wallet=${address}`);

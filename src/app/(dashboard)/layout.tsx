@@ -22,13 +22,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
 
-// --- Mock Data Defaults ---
-const defaultStudentProfile = {
-  name: "John Doe",
-  studentId: "STU2023001",
-  institution: "Multimedia University",
-};
-
 const defaultIssuerProfile = {
   institution: "Multimedia University",
   department: "Faculty of Computing & Informatics",
@@ -44,6 +37,11 @@ export default function DashboardLayout({
   const { walletAddress, role, logout } = useAuth();
 
   const [issuerData, setIssuerData] = useState(defaultIssuerProfile);
+  const [holderData, setHolderData] = useState<{ name: string; student_id: string; institution: string }>({
+    name: "",
+    student_id: "",
+    institution: "",
+  });
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const fetchIssuerProfile = useCallback(async () => {
@@ -57,15 +55,34 @@ export default function DashboardLayout({
     }
   }, [role, walletAddress]);
 
+  const fetchHolderProfile = useCallback(async () => {
+    if (role !== "student" || !walletAddress) return;
+    const res = await apiGet<{ name: string; student_id: string; institution: string }>("/api/holder-profile", walletAddress);
+    if (res.success && res.data) {
+      setHolderData({
+        name: res.data.name || "",
+        student_id: res.data.student_id || "",
+        institution: res.data.institution || "",
+      });
+    }
+  }, [role, walletAddress]);
+
   useEffect(() => {
     fetchIssuerProfile();
+    fetchHolderProfile();
+  }, [fetchIssuerProfile, fetchHolderProfile]);
+
+  useEffect(() => {
+    const handleIssuerUpdate = () => { fetchIssuerProfile(); };
+    window.addEventListener("issuerProfileUpdated", handleIssuerUpdate);
+    return () => window.removeEventListener("issuerProfileUpdated", handleIssuerUpdate);
   }, [fetchIssuerProfile]);
 
   useEffect(() => {
-    const handleProfileUpdate = () => { fetchIssuerProfile(); };
-    window.addEventListener("issuerProfileUpdated", handleProfileUpdate);
-    return () => window.removeEventListener("issuerProfileUpdated", handleProfileUpdate);
-  }, [fetchIssuerProfile]);
+    const handleHolderUpdate = () => { fetchHolderProfile(); };
+    window.addEventListener("holderProfileUpdated", handleHolderUpdate);
+    return () => window.removeEventListener("holderProfileUpdated", handleHolderUpdate);
+  }, [fetchHolderProfile]);
 
   // Close drawer on route change
   useEffect(() => {
@@ -119,15 +136,20 @@ export default function DashboardLayout({
           {role === "student" && (
             <div>
                <p className="text-xs text-blue-400 font-bold uppercase tracking-wide mb-1">Student Profile</p>
-               <h3 className="text-white font-semibold">{defaultStudentProfile.name}</h3>
-               <p className="text-sm text-slate-400 font-mono mb-2">{defaultStudentProfile.studentId}</p>
-               <div className="flex items-center gap-1 text-xs text-slate-500">
-                  <Building2 size={10} />
-                  {defaultStudentProfile.institution}
-               </div>
-               <p className="text-[10px] text-slate-500 mt-3 pt-2 border-t border-slate-700/50 leading-tight">
-                  Primary institution derived from active Student ID credential.
-               </p>
+               {holderData.name ? (
+                 <>
+                   <h3 className="text-white font-semibold">{holderData.name}</h3>
+                   <p className="text-sm text-slate-400 font-mono mb-2">{holderData.student_id || "No Student ID"}</p>
+                   <div className="flex items-center gap-1 text-xs text-slate-500">
+                     <Building2 size={10} />
+                     {holderData.institution || "No institution set"}
+                   </div>
+                 </>
+               ) : (
+                 <p className="text-xs text-slate-500 leading-relaxed">
+                   Update your <Link href="/student/profile" className="text-blue-400 hover:underline">Holder Profile</Link> to display your identity here.
+                 </p>
+               )}
             </div>
           )}
 
@@ -170,12 +192,20 @@ export default function DashboardLayout({
         )}
 
         {role === "student" && (
-          <NavItem
-            href="/student"
-            icon={<LayoutDashboard size={20} />}
-            label="My Credentials"
-            active={isActive("/student")}
-          />
+          <>
+            <NavItem
+              href="/student"
+              icon={<LayoutDashboard size={20} />}
+              label="My Credentials"
+              active={isActive("/student")}
+            />
+            <NavItem
+              href="/student/profile"
+              icon={<UserCog size={20} />}
+              label="Holder Profile"
+              active={isActive("/student/profile")}
+            />
+          </>
         )}
 
         {role === "issuer" && (

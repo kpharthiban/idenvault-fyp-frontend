@@ -20,11 +20,12 @@ const ANCHOR_ABI = [
   "function anchorCredential(string memory refId, bytes32 dataHash) external",
 ];
 
-type Status = "idle" | "uploading" | "anchoring" | "saving" | "success";
+type Status = "idle" | "uploading" | "uploading-metadata" | "anchoring" | "saving" | "success";
 
 const STATUS_MESSAGES: Record<Status, string> = {
   idle: "",
   uploading: "Uploading certificate to IPFS...",
+  "uploading-metadata": "Storing metadata on IPFS...",
   anchoring: "Waiting for MetaMask — sign the transaction...",
   saving: "Saving credential record to database...",
   success: "",
@@ -162,6 +163,19 @@ export default function IssueCredentialPage() {
         ethers.toUtf8Bytes(JSON.stringify(credentialData))
       );
 
+      // ── Step 2.5: Upload metadata JSON to IPFS ─────────────────
+      setStatus("uploading-metadata");
+      const metadataRes = await fetch(`${API_URL}/api/ipfs/upload-metadata`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-wallet-address": walletAddress!,
+        },
+        body: JSON.stringify(credentialData),
+      });
+      if (!metadataRes.ok) throw new Error("Failed to upload metadata to IPFS");
+      const { cid: metadataCid } = await metadataRes.json();
+
       // ── Step 3: Anchor on-chain via MetaMask ────────────────────
       const provider = new ethers.BrowserProvider(window.ethereum!);
       const signer = await provider.getSigner();
@@ -187,6 +201,7 @@ export default function IssueCredentialPage() {
           holder_wallet: credentialData.studentWallet,
           fields:        fieldValues,
           ipfs_cid:      ipfsCid || null,
+          metadata_cid:  metadataCid,
           tx_hash:       txHash,
           data_hash:     dataHash,
         }),

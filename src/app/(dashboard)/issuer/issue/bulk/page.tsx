@@ -1,21 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import RequireAuth from "@/lib/RequireAuth";
-import { 
-  ArrowLeft, 
-  Users, 
-  CheckCircle, 
-  ChevronRight, 
-  Award, 
-  ShieldCheck, 
+import { useAuth } from "@/context/AuthContext";
+import {
+  ArrowLeft,
+  Users,
+  CheckCircle,
+  ChevronRight,
+  Award,
+  ShieldCheck,
   Loader2,
   AlertTriangle,
-  Database
+  Database,
+  FileText,
+  Asterisk,
+  Upload,
+  WifiOff,
+  RefreshCw
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { CREDENTIAL_TEMPLATES } from "@/lib/credentialTemplates";
+import { CREDENTIAL_TEMPLATES, CredentialTemplate } from "@/lib/credentialTemplates";
+import { fetchTemplates } from "@/lib/api";
 
 // Mock External Data (reused for consistency)
 const MOCK_STUDENTS = [
@@ -27,17 +34,61 @@ const MOCK_STUDENTS = [
 
 type Step = "template" | "participants" | "review" | "success";
 
+const TYPE_BADGE: Record<CredentialTemplate["type"], string> = {
+  Degree: "bg-blue-500/10 border-blue-500/20 text-blue-400",
+  Award: "bg-purple-500/10 border-purple-500/20 text-purple-400",
+  Certificate: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+  Status: "bg-amber-500/10 border-amber-500/20 text-amber-400",
+};
+
+const FIELD_TYPE_LABEL: Record<string, string> = {
+  text: "text",
+  date: "date",
+  select: "select",
+  file: "file",
+  textarea: "textarea",
+};
+
 export default function BulkIssuePage() {
   const router = useRouter();
+  const { walletAddress } = useAuth();
   const [step, setStep] = useState<Step>("template");
-  
-  const [selectedTemplate, setSelectedTemplate] = useState(CREDENTIAL_TEMPLATES[0].id);
+
+  // ── Template list (fetched from API, fallback to local) ──────────
+  const [allTemplates, setAllTemplates] = useState<CredentialTemplate[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(true);
+  const [usingFallback, setUsingFallback] = useState(false);
+
+  const loadTemplates = useCallback(async () => {
+    if (!walletAddress) return;
+    setTemplatesLoading(true);
+    setUsingFallback(false);
+    const res = await fetchTemplates(walletAddress);
+    if (res.success && Array.isArray(res.data)) {
+      setAllTemplates(res.data);
+    } else {
+      setAllTemplates(
+        CREDENTIAL_TEMPLATES.map((t) => ({ ...t, isSystemDefault: true }))
+      );
+      setUsingFallback(true);
+    }
+    setTemplatesLoading(false);
+  }, [walletAddress]);
+
+  useEffect(() => { loadTemplates(); }, [loadTemplates]);
+
+  // Only templates that support bulk issuance
+  const bulkTemplates = allTemplates.filter(
+    (t) => t.issuanceMode === "bulk" || t.issuanceMode === "both"
+  );
+
+  const [selectedTemplate, setSelectedTemplate] = useState<CredentialTemplate | null>(null);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Toggle Selection Logic
   const toggleStudent = (id: string) => {
-    setSelectedStudents(prev => 
+    setSelectedStudents(prev =>
       prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
     );
   };
@@ -57,9 +108,6 @@ export default function BulkIssuePage() {
         setStep("success");
     }, 2000);
   };
-
-  // Helper to get template details
-  const currentTemplate = CREDENTIAL_TEMPLATES.find(t => t.id === selectedTemplate);
 
   return (
     <RequireAuth allowedRole="issuer">
@@ -107,49 +155,117 @@ export default function BulkIssuePage() {
             {step === "template" && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                     <h2 className="text-2xl font-bold text-white mb-6">Select Credential Template</h2>
-                    <div className="grid gap-4">
-                        {CREDENTIAL_TEMPLATES.map((t) => {
-                            
-                            // LOGIC: Disable if mode is 'single' only
-                            const isDisabled = t.issuanceMode === 'single';
 
+                    {/* Fallback warning */}
+                    {usingFallback && (
+                        <div className="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl mb-4">
+                            <WifiOff size={16} className="text-amber-400 shrink-0" />
+                            <p className="text-xs text-amber-200 flex-1">
+                                Could not connect to server. Showing local defaults.
+                            </p>
+                            <button
+                                onClick={loadTemplates}
+                                className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg border border-amber-500/20 transition-colors"
+                            >
+                                <RefreshCw size={10} /> Retry
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Loading state */}
+                    {templatesLoading && (
+                        <div className="flex items-center justify-center gap-3 py-12 text-slate-400">
+                            <Loader2 size={20} className="animate-spin" />
+                            <span className="text-sm">Loading templates...</span>
+                        </div>
+                    )}
+
+                    <div className="grid gap-4">
+                        {!templatesLoading && bulkTemplates.map((t) => {
+                            const isSelected = selectedTemplate?.id === t.id;
                             return (
-                                <div 
+                                <div
                                     key={t.id}
-                                    onClick={() => !isDisabled && setSelectedTemplate(t.id)}
-                                    className={`p-4 rounded-xl border-2 transition-all flex items-center justify-between ${
-                                        isDisabled 
-                                            ? "opacity-40 border-slate-800 bg-slate-900 cursor-not-allowed grayscale" // Grayed out look
-                                            : selectedTemplate === t.id 
-                                                ? "border-emerald-500 bg-emerald-500/10 cursor-pointer" 
-                                                : "border-slate-700 bg-slate-800/50 hover:border-slate-500 cursor-pointer"
+                                    onClick={() => setSelectedTemplate(t)}
+                                    className={`p-4 rounded-xl border-2 transition-all flex items-center justify-between cursor-pointer ${
+                                        isSelected
+                                            ? "border-emerald-500 bg-emerald-500/10"
+                                            : "border-slate-700 bg-slate-800/50 hover:border-slate-500"
                                     }`}
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className={`p-3 rounded-lg ${selectedTemplate === t.id ? "bg-emerald-500 text-white" : "bg-slate-700 text-slate-400"}`}>
+                                        <div className={`p-3 rounded-lg ${isSelected ? "bg-emerald-500 text-white" : "bg-slate-700 text-slate-400"}`}>
                                             <Award size={24} />
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
                                                 <h3 className="text-white font-bold text-lg">{t.title}</h3>
-                                                {isDisabled && (
-                                                    <span className="text-[10px] uppercase bg-slate-800 px-2 py-0.5 rounded text-slate-400 border border-slate-700">
-                                                        Single Issue Only
-                                                    </span>
-                                                )}
+                                                <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold uppercase ${TYPE_BADGE[t.type]}`}>
+                                                    {t.type}
+                                                </span>
                                             </div>
-                                            <p className="text-slate-400 text-sm">Type: {t.type}</p>
+                                            <p className="text-slate-400 text-sm mt-0.5">{t.description}</p>
                                         </div>
                                     </div>
-                                    {selectedTemplate === t.id && <CheckCircle className="text-emerald-500" size={24} />}
+                                    {isSelected && <CheckCircle className="text-emerald-500 shrink-0" size={24} />}
                                 </div>
                             );
                         })}
                     </div>
+
+                    {/* Template field preview card */}
+                    {selectedTemplate && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-6 bg-slate-950 border border-slate-800 rounded-xl p-5"
+                        >
+                            <div className="flex items-center gap-2 mb-4">
+                                <FileText size={16} className="text-slate-400" />
+                                <h4 className="text-sm font-semibold text-white">
+                                    Template Field Schema
+                                </h4>
+                                <span className="ml-auto text-xs text-slate-500">
+                                    {selectedTemplate.fields.length} field{selectedTemplate.fields.length !== 1 && "s"}
+                                </span>
+                            </div>
+                            <p className="text-xs text-slate-500 mb-3">
+                                Each recipient record from the external system must supply values for these fields:
+                            </p>
+                            <div className="space-y-2">
+                                {selectedTemplate.fields.map((f) => (
+                                    <div
+                                        key={f.name}
+                                        className="flex items-center gap-3 text-sm py-1.5 px-3 rounded-lg bg-slate-900/60"
+                                    >
+                                        <span className="text-white font-medium flex-1 min-w-0 truncate">
+                                            {f.label}
+                                        </span>
+                                        <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 uppercase font-bold shrink-0">
+                                            {FIELD_TYPE_LABEL[f.type]}
+                                        </span>
+                                        {f.required && (
+                                            <span className="flex items-center gap-0.5 text-[10px] text-red-400 shrink-0">
+                                                <Asterisk size={10} /> required
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            {selectedTemplate.requiresCertificate && (
+                                <div className="mt-4 flex items-center gap-2 text-xs text-amber-400 bg-amber-500/5 border border-amber-500/10 rounded-lg px-3 py-2">
+                                    <Upload size={14} className="shrink-0" />
+                                    This template requires a certificate file upload per recipient.
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+
                     <div className="mt-8 flex justify-end">
-                        <button 
+                        <button
                             onClick={() => setStep("participants")}
-                            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2"
+                            disabled={!selectedTemplate}
+                            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center gap-2"
                         >
                             Next Step <ChevronRight size={18} />
                         </button>
@@ -232,7 +348,27 @@ export default function BulkIssuePage() {
                     <div className="space-y-4 text-slate-300 mb-8">
                         <div className="flex justify-between border-b border-slate-800 pb-2">
                             <span>Credential Template:</span>
-                            <span className="text-white font-bold">{currentTemplate?.title}</span>
+                            <span className="text-white font-bold">{selectedTemplate?.title}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-slate-800 pb-2">
+                            <span>Credential Type:</span>
+                            {selectedTemplate && (
+                                <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${TYPE_BADGE[selectedTemplate.type]}`}>
+                                    {selectedTemplate.type}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex justify-between border-b border-slate-800 pb-2">
+                            <span>Template Fields:</span>
+                            <span className="text-white font-medium">
+                                {selectedTemplate?.fields.length} field{selectedTemplate?.fields.length !== 1 && "s"}
+                            </span>
+                        </div>
+                        <div className="flex justify-between border-b border-slate-800 pb-2">
+                            <span>Certificate Required:</span>
+                            <span className={selectedTemplate?.requiresCertificate ? "text-amber-400" : "text-slate-500"}>
+                                {selectedTemplate?.requiresCertificate ? "Yes — per recipient" : "No"}
+                            </span>
                         </div>
                         <div className="flex justify-between border-b border-slate-800 pb-2">
                             <span>Total Recipients:</span>
@@ -242,7 +378,6 @@ export default function BulkIssuePage() {
                             <span>Issuer Authority:</span>
                             <span className="text-emerald-400 flex items-center gap-1"><ShieldCheck size={14} /> Verified</span>
                         </div>
-                        {/* NEW: Certificate Source Row */}
                         <div className="flex justify-between border-b border-slate-800 pb-2">
                             <span>Certificate Source:</span>
                             <span className="text-slate-400 text-sm flex items-center gap-1">
@@ -278,7 +413,7 @@ export default function BulkIssuePage() {
                         <ul className="space-y-1 text-slate-300">
                             <li className="flex justify-between">
                                 <span>Template:</span>
-                                <span className="text-white font-medium">{currentTemplate?.title}</span>
+                                <span className="text-white font-medium">{selectedTemplate?.title}</span>
                             </li>
                             <li className="flex justify-between">
                                 <span>Recipients:</span>

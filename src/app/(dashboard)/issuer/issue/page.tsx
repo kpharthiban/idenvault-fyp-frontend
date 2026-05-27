@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ethers } from "ethers";
 import RequireAuth from "@/lib/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import {
   ArrowLeft, Send, User, Award, Loader2, CheckCircle, Shield,
-  Calendar, FileText, GraduationCap, Star, Upload, X, Paperclip, Users, AlertCircle
+  FileText, GraduationCap, Upload, X, Paperclip, Users, AlertCircle,
+  WifiOff, RefreshCw
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { CREDENTIAL_TEMPLATES } from "@/lib/credentialTemplates";
+import { CREDENTIAL_TEMPLATES, CredentialTemplate, TemplateField } from "@/lib/credentialTemplates";
+import { fetchTemplates } from "@/lib/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const ANCHOR_ADDRESS = process.env.NEXT_PUBLIC_CREDENTIAL_ANCHOR_ADDRESS!;
@@ -33,16 +35,37 @@ export default function IssueCredentialPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { walletAddress } = useAuth();
 
-  const [formData, setFormData] = useState({
-    studentWallet: "",
-    title: "",
-    type: "degree",
-    grade: "",
-    expiryDate: "",
-    description: "",
-    templateId: "",
-  });
+  // ── Template list (fetched from API, fallback to local) ──────────
+  const [allTemplates, setAllTemplates] = useState<CredentialTemplate[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(true);
+  const [usingFallback, setUsingFallback] = useState(false);
 
+  const loadTemplates = useCallback(async () => {
+    if (!walletAddress) return;
+    setTemplatesLoading(true);
+    setUsingFallback(false);
+    const res = await fetchTemplates(walletAddress);
+    if (res.success && Array.isArray(res.data)) {
+      setAllTemplates(res.data);
+    } else {
+      setAllTemplates(
+        CREDENTIAL_TEMPLATES.map((t) => ({ ...t, isSystemDefault: true }))
+      );
+      setUsingFallback(true);
+    }
+    setTemplatesLoading(false);
+  }, [walletAddress]);
+
+  useEffect(() => { loadTemplates(); }, [loadTemplates]);
+
+  // Only templates that support single issuance
+  const singleTemplates = allTemplates.filter(
+    (t) => t.issuanceMode === "single" || t.issuanceMode === "both"
+  );
+
+  const [selectedTemplate, setSelectedTemplate] = useState<CredentialTemplate | null>(null);
+  const [studentWallet, setStudentWallet] = useState("");
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -51,22 +74,16 @@ export default function IssueCredentialPage() {
 
   const isSubmitting = status !== "idle" && status !== "success";
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
   const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const tId = e.target.value;
-    const template = CREDENTIAL_TEMPLATES.find(t => t.id === tId);
-    if (template) {
-      setFormData(prev => ({
-        ...prev,
-        templateId: tId,
-        title: template.title,
-        type: template.type,
-      }));
-    }
+    const template = singleTemplates.find((t) => t.id === tId) ?? null;
+    setSelectedTemplate(template);
+    setFieldValues({});
+    setSelectedFile(null);
+  };
+
+  const handleFieldChange = (name: string, value: string) => {
+    setFieldValues(prev => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,12 +99,30 @@ export default function IssueCredentialPage() {
     e.preventDefault();
     setError(null);
 
-    if (!formData.studentWallet || !formData.title || !formData.description) {
-      setError("Please fill in all required fields.");
+    if (!selectedTemplate) {
+      setError("Please select a credential template.");
       return;
     }
-    if (!ethers.isAddress(formData.studentWallet)) {
+    if (!studentWallet) {
+      setError("Please enter the student wallet address.");
+      return;
+    }
+    if (!ethers.isAddress(studentWallet)) {
       setError("Student wallet must be a valid Ethereum address (0x...).");
+      return;
+    }
+
+    const missingRequired = selectedTemplate.fields
+      .filter(f => f.required && f.type !== "file" && !fieldValues[f.name]?.trim())
+      .map(f => f.label);
+    if (missingRequired.length > 0) {
+      setError(`Missing required fields: ${missingRequired.join(", ")}`);
+      return;
+    }
+
+    const fileField = selectedTemplate.fields.find(f => f.type === "file");
+    if (fileField?.required && !selectedFile) {
+      setError(`Please upload the required file: ${fileField.label}`);
       return;
     }
 
@@ -113,13 +148,12 @@ export default function IssueCredentialPage() {
       const refId = crypto.randomUUID();
       const credentialData = {
         refId,
+        templateId: selectedTemplate.id,
         issuerWallet: walletAddress!.toLowerCase(),
-        studentWallet: formData.studentWallet.toLowerCase(),
-        title: formData.title,
-        type: formData.type,
-        grade: formData.grade || null,
-        description: formData.description,
-        expiryDate: formData.expiryDate || null,
+        studentWallet: studentWallet.toLowerCase(),
+        title: selectedTemplate.title,
+        type: selectedTemplate.type,
+        fields: fieldValues,
         ipfsCid: ipfsCid || null,
         issuedAt: new Date().toISOString(),
       };
@@ -138,25 +172,25 @@ export default function IssueCredentialPage() {
       const txHash = receipt.hash;
 
       // ── Step 4: Save to Supabase via backend ────────────────────
-        setStatus("saving");
-        const saveRes = await fetch(`${API_URL}/api/credentials`, {
+      setStatus("saving");
+      const saveRes = await fetch(`${API_URL}/api/credentials`, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
-            "x-wallet-address": walletAddress!,
+          "Content-Type": "application/json",
+          "x-wallet-address": walletAddress!,
         },
         body: JSON.stringify({
-            ref_id:       refId,
-            title:        credentialData.title,
-            description:  credentialData.description,
-            grade:        credentialData.grade || null,
-            holder_wallet: credentialData.studentWallet,
-            expires_at:   credentialData.expiryDate || null,
-            ipfs_cid:     ipfsCid || null,
-            tx_hash:      txHash,
-            data_hash:    dataHash,
+          ref_id:        refId,
+          template_id:   selectedTemplate.id,
+          title:         credentialData.title,
+          type:          credentialData.type,
+          holder_wallet: credentialData.studentWallet,
+          fields:        fieldValues,
+          ipfs_cid:      ipfsCid || null,
+          tx_hash:       txHash,
+          data_hash:     dataHash,
         }),
-        });
+      });
       if (!saveRes.ok) throw new Error("Failed to save credential to database");
 
       setIssuedRefId(refId);
@@ -164,7 +198,6 @@ export default function IssueCredentialPage() {
       setStatus("success");
 
     } catch (err: any) {
-      // MetaMask rejection shows a friendly message
       const msg = err?.code === "ACTION_REJECTED"
         ? "MetaMask transaction was rejected."
         : err.message || "Something went wrong.";
@@ -172,6 +205,128 @@ export default function IssueCredentialPage() {
       setStatus("idle");
     }
   };
+
+  const resetForm = () => {
+    setStatus("idle");
+    setSelectedTemplate(null);
+    setStudentWallet("");
+    setFieldValues({});
+    setSelectedFile(null);
+    setError(null);
+  };
+
+  function renderField(field: TemplateField) {
+    if (field.type === "file") {
+      return (
+        <div key={field.name} className="pt-2 border-t border-slate-800">
+          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 ml-1">
+            {field.label} {field.required && <span className="text-red-400">*</span>}
+            {!field.required && <span className="text-slate-600 normal-case">(optional — uploaded to IPFS)</span>}
+          </label>
+          {!selectedFile ? (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDrop}
+              className="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all bg-slate-900/50 hover:bg-slate-900 group"
+            >
+              <div className="p-3 bg-slate-800 rounded-full mb-3 group-hover:bg-emerald-500/10 group-hover:text-emerald-400 transition-colors text-slate-400">
+                <Upload size={24} />
+              </div>
+              <p className="text-sm text-slate-300 font-medium">Click to upload or drag & drop</p>
+              <p className="text-xs text-slate-500 mt-1">PDF, PNG, JPG up to 10MB</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </div>
+          ) : (
+            <div className="flex items-center justify-between p-4 bg-slate-950 border border-slate-700 rounded-xl">
+              <div className="flex items-center gap-3">
+                <Paperclip size={18} className="text-emerald-400" />
+                <div>
+                  <p className="text-sm text-white font-medium">{selectedFile.name}</p>
+                  <p className="text-xs text-slate-500">{(selectedFile.size / 1024).toFixed(1)} KB</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedFile(null)}
+                disabled={isSubmitting}
+                className="p-1 text-slate-500 hover:text-red-400 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (field.type === "select") {
+      return (
+        <div key={field.name}>
+          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
+            {field.label} {field.required && <span className="text-red-400">*</span>}
+          </label>
+          <select
+            value={fieldValues[field.name] || ""}
+            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            disabled={isSubmitting}
+            className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none"
+          >
+            <option value="">{field.placeholder || `Select ${field.label}`}</option>
+            {field.options?.map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    if (field.type === "textarea") {
+      return (
+        <div key={field.name}>
+          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
+            {field.label} {field.required ? <span className="text-red-400">*</span> : <span className="text-slate-600 normal-case">(optional)</span>}
+          </label>
+          <div className="relative">
+            <FileText className="absolute left-4 top-3.5 text-slate-500 w-5 h-5" />
+            <textarea
+              value={fieldValues[field.name] || ""}
+              onChange={(e) => handleFieldChange(field.name, e.target.value)}
+              rows={3}
+              placeholder={field.placeholder}
+              disabled={isSubmitting}
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none"
+            />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div key={field.name}>
+        <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
+          {field.label} {field.required ? <span className="text-red-400">*</span> : <span className="text-slate-600 normal-case">(optional)</span>}
+        </label>
+        <input
+          type={field.type === "date" ? "date" : "text"}
+          value={fieldValues[field.name] || ""}
+          onChange={(e) => handleFieldChange(field.name, e.target.value)}
+          placeholder={field.placeholder}
+          disabled={isSubmitting}
+          className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+        />
+      </div>
+    );
+  }
+
+  const nonFileFields = selectedTemplate?.fields.filter(f => f.type !== "file") ?? [];
+  const fileFields = selectedTemplate?.fields.filter(f => f.type === "file") ?? [];
 
   return (
     <RequireAuth allowedRole="issuer">
@@ -198,7 +353,6 @@ export default function IssueCredentialPage() {
           <div className="absolute top-0 left-0 w-full h-1 bg-emerald-600" />
 
           {status === "success" ? (
-            <>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -209,10 +363,9 @@ export default function IssueCredentialPage() {
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">Credential Issued Successfully</h2>
               <p className="text-slate-400 mb-6 max-w-md mx-auto">
-                <strong>{formData.title}</strong> has been anchored on Sepolia and saved.
+                <strong>{selectedTemplate?.title}</strong> has been anchored on Sepolia and saved.
               </p>
 
-              {/* Reference details */}
               <div className="bg-slate-950 rounded-xl p-4 text-left space-y-2 mb-8 border border-slate-800">
                 <div>
                   <p className="text-xs text-slate-500 mb-1">Reference ID</p>
@@ -239,19 +392,13 @@ export default function IssueCredentialPage() {
                   Back to Dashboard
                 </button>
                 <button
-                  onClick={() => {
-                    setStatus("idle");
-                    setFormData({ studentWallet: "", title: "", type: "degree", grade: "", expiryDate: "", description: "", templateId: "" });
-                    setSelectedFile(null);
-                    setError(null);
-                  }}
+                  onClick={resetForm}
                   className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
                 >
                   Issue Another
                 </button>
               </div>
             </motion.div>
-            </>
           ) : (
             <>
               <div className="mb-8">
@@ -263,7 +410,6 @@ export default function IssueCredentialPage() {
                 </p>
               </div>
 
-              {/* Error banner */}
               {error && (
                 <div className="mb-6 flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
                   <AlertCircle size={18} className="shrink-0 mt-0.5" />
@@ -271,7 +417,6 @@ export default function IssueCredentialPage() {
                 </div>
               )}
 
-              {/* Progress banner */}
               {isSubmitting && (
                 <div className="mb-6 flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-sm">
                   <Loader2 size={18} className="animate-spin shrink-0" />
@@ -281,202 +426,126 @@ export default function IssueCredentialPage() {
 
               <form onSubmit={handleSubmit} className="space-y-6">
 
-                {/* Template */}
+                {/* Fallback warning */}
+                {usingFallback && (
+                  <div className="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                    <WifiOff size={16} className="text-amber-400 shrink-0" />
+                    <p className="text-xs text-amber-200 flex-1">
+                      Could not connect to server. Showing local defaults.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={loadTemplates}
+                      className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg border border-amber-500/20 transition-colors"
+                    >
+                      <RefreshCw size={10} /> Retry
+                    </button>
+                  </div>
+                )}
+
+                {/* Template Selector */}
                 <div>
                   <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                    Credential Template *
+                    Credential Template <span className="text-red-400">*</span>
                   </label>
                   <div className="relative">
                     <Award className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
                     <select
-                      name="templateId"
-                      value={formData.templateId}
+                      value={selectedTemplate?.id ?? ""}
                       onChange={handleTemplateChange}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || templatesLoading}
                       className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none"
                     >
-                      <option value="">-- Select a Template --</option>
-                      {CREDENTIAL_TEMPLATES.map(t => {
-                        const disabled = t.issuanceMode === "bulk";
-                        return (
-                          <option key={t.id} value={t.id} disabled={disabled}>
-                            {t.title}{disabled ? " (Bulk Only)" : ""}
-                          </option>
-                        );
-                      })}
+                      <option value="">
+                        {templatesLoading ? "Loading templates..." : "-- Select a Template --"}
+                      </option>
+                      {singleTemplates.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.title}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
-                {/* Student Wallet + Type */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                      Student Wallet Address *
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-                      <input
-                        type="text"
-                        name="studentWallet"
-                        value={formData.studentWallet}
-                        onChange={handleChange}
-                        placeholder="0x..."
-                        disabled={isSubmitting}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-mono text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                      Credential Type
-                    </label>
-                    <div className="relative">
-                      <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-                      <input
-                        type="text"
-                        name="type"
-                        value={formData.type}
-                        readOnly
-                        className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-400 cursor-not-allowed"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Title */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                    Credential Title *
-                  </label>
-                  <div className="relative">
-                    <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleChange}
-                      placeholder="e.g. Bachelor of Computer Science"
-                      disabled={isSubmitting}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                    />
-                  </div>
-                </div>
-
-                {/* Grade + Expiry */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                      Grade / GPA <span className="text-slate-600 normal-case">(optional)</span>
-                    </label>
-                    <div className="relative">
-                      <Star className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-                      <input
-                        type="text"
-                        name="grade"
-                        value={formData.grade}
-                        onChange={handleChange}
-                        placeholder="e.g. 3.85 / First Class"
-                        disabled={isSubmitting}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                      Expiry Date <span className="text-slate-600 normal-case">(optional)</span>
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-                      <input
-                        type="date"
-                        name="expiryDate"
-                        value={formData.expiryDate}
-                        onChange={handleChange}
-                        disabled={isSubmitting}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                    Description *
-                  </label>
-                  <div className="relative">
-                    <FileText className="absolute left-4 top-3.5 text-slate-500 w-5 h-5" />
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      rows={3}
-                      placeholder="Describe the credential, programme scope, or achievement..."
-                      disabled={isSubmitting}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none"
-                    />
-                  </div>
-                </div>
-
-                {/* File Upload */}
-                <div className="pt-2 border-t border-slate-800">
-                  <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 ml-1">
-                    Supporting Document <span className="text-slate-600 normal-case">(optional — uploaded to IPFS)</span>
-                  </label>
-                  {!selectedFile ? (
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={handleDrop}
-                      className="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all bg-slate-900/50 hover:bg-slate-900 group"
-                    >
-                      <div className="p-3 bg-slate-800 rounded-full mb-3 group-hover:bg-emerald-500/10 group-hover:text-emerald-400 transition-colors text-slate-400">
-                        <Upload size={24} />
-                      </div>
-                      <p className="text-sm text-slate-300 font-medium">Click to upload or drag & drop</p>
-                      <p className="text-xs text-slate-500 mt-1">PDF, PNG, JPG up to 10MB</p>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".pdf,.png,.jpg,.jpeg"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between p-4 bg-slate-950 border border-slate-700 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <Paperclip size={18} className="text-emerald-400" />
-                        <div>
-                          <p className="text-sm text-white font-medium">{selectedFile.name}</p>
-                          <p className="text-xs text-slate-500">{(selectedFile.size / 1024).toFixed(1)} KB</p>
+                {/* Student Wallet + Credential Type (always visible once template is selected) */}
+                {selectedTemplate && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
+                          Student Wallet Address <span className="text-red-400">*</span>
+                        </label>
+                        <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+                          <input
+                            type="text"
+                            value={studentWallet}
+                            onChange={(e) => setStudentWallet(e.target.value)}
+                            placeholder="0x..."
+                            disabled={isSubmitting}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-mono text-sm"
+                          />
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedFile(null)}
-                        disabled={isSubmitting}
-                        className="p-1 text-slate-500 hover:text-red-400 transition-colors"
-                      >
-                        <X size={18} />
-                      </button>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
+                          Credential Type
+                        </label>
+                        <div className="relative">
+                          <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+                          <input
+                            type="text"
+                            value={selectedTemplate.type}
+                            readOnly
+                            className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-400 cursor-not-allowed"
+                          />
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
 
-                {/* Submit */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-emerald-900/30"
-                >
-                  {isSubmitting ? (
-                    <><Loader2 size={20} className="animate-spin" /> Processing...</>
-                  ) : (
-                    <><Send size={20} /> Issue Credential</>
-                  )}
-                </button>
+                    {/* Credential Title (read-only from template) */}
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
+                        Credential Title
+                      </label>
+                      <div className="relative">
+                        <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+                        <input
+                          type="text"
+                          value={selectedTemplate.title}
+                          readOnly
+                          className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-400 cursor-not-allowed"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Dynamic template fields (non-file) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {nonFileFields.map(field => (
+                        <div key={field.name} className={field.type === "textarea" ? "md:col-span-2" : ""}>
+                          {renderField(field)}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* File upload fields */}
+                    {fileFields.map(field => renderField(field))}
+
+                    {/* Submit */}
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-emerald-900/30"
+                    >
+                      {isSubmitting ? (
+                        <><Loader2 size={20} className="animate-spin" /> Processing...</>
+                      ) : (
+                        <><Send size={20} /> Issue Credential</>
+                      )}
+                    </button>
+                  </>
+                )}
               </form>
             </>
           )}

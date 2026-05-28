@@ -52,6 +52,7 @@ const STATUS_MESSAGES: Record<Status, string> = {
 export default function IssueCredentialPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const { walletAddress } = useAuth();
 
   // ── External system connections ─────────────────────────────────
@@ -146,6 +147,17 @@ export default function IssueCredentialPage() {
   }, [walletAddress]);
 
   useEffect(() => { loadTemplates(); }, [loadTemplates]);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setSisSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const singleTemplates = allTemplates.filter(
     (t) => t.issuanceMode === "single" || t.issuanceMode === "both"
@@ -312,7 +324,6 @@ export default function IssueCredentialPage() {
         title: credentialData.title,
         type: credentialData.type,
         holder_wallet: credentialData.studentWallet,
-        fields: fieldValues,
         ipfs_cid: ipfsCid || null,
         metadata_cid: metadataCid,
         tx_hash: txHash,
@@ -513,8 +524,8 @@ export default function IssueCredentialPage() {
           </button>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-emerald-600" />
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl relative overflow-visible">
+          <div className="absolute top-0 left-0 w-full h-1 bg-emerald-600 rounded-t-2xl" />
 
           {status === "success" ? (
             <motion.div
@@ -592,7 +603,7 @@ export default function IssueCredentialPage() {
 
                 {/* ── Import from External System Panel ──────────────── */}
                 {!connectionsLoading && hasConnections && (
-                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 overflow-visible relative z-30">
                     <div className="flex items-center gap-2 mb-4">
                       <Database size={16} className="text-blue-400" />
                       <h3 className="text-sm font-semibold text-white">Import Student Data from External System</h3>
@@ -681,7 +692,7 @@ export default function IssueCredentialPage() {
                           </div>
                         ) : (
                           /* Search input */
-                          <div>
+                          <div ref={dropdownRef}>
                             <div className="relative">
                               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
                               <input
@@ -699,7 +710,6 @@ export default function IssueCredentialPage() {
                               {sisStudentsLoading && (
                                 <Loader2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 animate-spin" />
                               )}
-                            </div>
 
                             {/* Dropdown results */}
                             <AnimatePresence>
@@ -708,7 +718,7 @@ export default function IssueCredentialPage() {
                                   initial={{ opacity: 0, y: -4 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   exit={{ opacity: 0, y: -4 }}
-                                  className="absolute z-20 w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-2xl max-h-48 overflow-y-auto"
+                                  className="absolute left-0 right-0 z-50 mt-1 bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-2xl max-h-48 overflow-y-auto"
                                 >
                                   {filteredSisStudents.slice(0, 8).map((s) => (
                                     <button
@@ -732,6 +742,7 @@ export default function IssueCredentialPage() {
                                 </motion.div>
                               )}
                             </AnimatePresence>
+                            </div>
                           </div>
                         )}
 

@@ -8,9 +8,9 @@ import { useAuth } from "@/context/AuthContext";
 import {
   ArrowLeft, Send, User, Award, Loader2, CheckCircle, Shield,
   FileText, GraduationCap, Upload, X, Paperclip, Users, AlertCircle,
-  WifiOff, RefreshCw
+  WifiOff, RefreshCw, Database, Search, ChevronDown,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { CREDENTIAL_TEMPLATES, CredentialTemplate, TemplateField } from "@/lib/credentialTemplates";
 import { fetchTemplates } from "@/lib/api";
 
@@ -19,6 +19,24 @@ const ANCHOR_ADDRESS = process.env.NEXT_PUBLIC_CREDENTIAL_ANCHOR_ADDRESS!;
 const ANCHOR_ABI = [
   "function anchorCredential(string memory refId, bytes32 dataHash) external",
 ];
+
+interface Connection {
+  id: string;
+  system_name: string;
+  endpoint_url: string;
+  status: string;
+  connected_at: string;
+}
+
+interface ExternalStudent {
+  id: string;
+  student_id?: string;
+  name: string;
+  program: string;
+  gpa?: string;
+  status?: string;
+  has_certificate?: boolean;
+}
 
 type Status = "idle" | "uploading" | "uploading-metadata" | "anchoring" | "saving" | "success";
 
@@ -36,33 +54,23 @@ export default function IssueCredentialPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { walletAddress } = useAuth();
 
-  // ── Template list (fetched from API, fallback to local) ──────────
+  // ── External system connections ─────────────────────────────────
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
+  const [connectionsLoading, setConnectionsLoading] = useState(true);
+
+  // ── External students for import ────────────────────────────────
+  const [sisStudents, setSisStudents] = useState<ExternalStudent[]>([]);
+  const [sisStudentsLoading, setSisStudentsLoading] = useState(false);
+  const [sisSearchTerm, setSisSearchTerm] = useState("");
+  const [sisSearchOpen, setSisSearchOpen] = useState(false);
+  const [selectedSisStudent, setSelectedSisStudent] = useState<ExternalStudent | null>(null);
+  const [useSisCertificate, setUseSisCertificate] = useState(false);
+
+  // ── Template list (fetched from API, fallback to local) ─────────
   const [allTemplates, setAllTemplates] = useState<CredentialTemplate[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [usingFallback, setUsingFallback] = useState(false);
-
-  const loadTemplates = useCallback(async () => {
-    if (!walletAddress) return;
-    setTemplatesLoading(true);
-    setUsingFallback(false);
-    const res = await fetchTemplates(walletAddress);
-    if (res.success && Array.isArray(res.data)) {
-      setAllTemplates(res.data);
-    } else {
-      setAllTemplates(
-        CREDENTIAL_TEMPLATES.map((t) => ({ ...t, isSystemDefault: true }))
-      );
-      setUsingFallback(true);
-    }
-    setTemplatesLoading(false);
-  }, [walletAddress]);
-
-  useEffect(() => { loadTemplates(); }, [loadTemplates]);
-
-  // Only templates that support single issuance
-  const singleTemplates = allTemplates.filter(
-    (t) => t.issuanceMode === "single" || t.issuanceMode === "both"
-  );
 
   const [selectedTemplate, setSelectedTemplate] = useState<CredentialTemplate | null>(null);
   const [studentWallet, setStudentWallet] = useState("");
@@ -75,16 +83,96 @@ export default function IssueCredentialPage() {
 
   const isSubmitting = status !== "idle" && status !== "success";
 
+  const headers = useCallback(() => ({
+    "Content-Type": "application/json",
+    "x-wallet-address": walletAddress || "",
+  }), [walletAddress]);
+
+  // Load connections
+  useEffect(() => {
+    if (!walletAddress) return;
+    const load = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/external-system/connections`, { headers: headers() });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const conns: Connection[] = data.connections || [];
+        setConnections(conns);
+        if (conns.length === 1) setSelectedConnection(conns[0]);
+      } catch {
+        // Non-blocking — import panel just won't show
+      } finally {
+        setConnectionsLoading(false);
+      }
+    };
+    load();
+  }, [walletAddress, headers]);
+
+  // Fetch students when connection is selected
+  useEffect(() => {
+    if (!selectedConnection) return;
+    const fetchSisStudents = async () => {
+      setSisStudentsLoading(true);
+      try {
+        const res = await fetch(
+          `${API_URL}/api/external-system/connections/${selectedConnection.id}/students`,
+          { headers: headers() }
+        );
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setSisStudents(data.students || []);
+      } catch {
+        setSisStudents([]);
+      } finally {
+        setSisStudentsLoading(false);
+      }
+    };
+    fetchSisStudents();
+  }, [selectedConnection, headers]);
+
+  // Load templates
+  const loadTemplates = useCallback(async () => {
+    if (!walletAddress) return;
+    setTemplatesLoading(true);
+    setUsingFallback(false);
+    const res = await fetchTemplates(walletAddress);
+    if (res.success && Array.isArray(res.data)) {
+      setAllTemplates(res.data);
+    } else {
+      setAllTemplates(CREDENTIAL_TEMPLATES.map((t) => ({ ...t, isSystemDefault: true })));
+      setUsingFallback(true);
+    }
+    setTemplatesLoading(false);
+  }, [walletAddress]);
+
+  useEffect(() => { loadTemplates(); }, [loadTemplates]);
+
+  const singleTemplates = allTemplates.filter(
+    (t) => t.issuanceMode === "single" || t.issuanceMode === "both"
+  );
+
+  // Filtered student list for search
+  const filteredSisStudents = sisStudents.filter((s) => {
+    const term = sisSearchTerm.toLowerCase();
+    if (!term) return true;
+    return (
+      s.name.toLowerCase().includes(term) ||
+      s.id.toLowerCase().includes(term) ||
+      (s.student_id && s.student_id.toLowerCase().includes(term))
+    );
+  });
+
   const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const tId = e.target.value;
     const template = singleTemplates.find((t) => t.id === tId) ?? null;
     setSelectedTemplate(template);
     setFieldValues({});
     setSelectedFile(null);
+    setUseSisCertificate(false);
   };
 
   const handleFieldChange = (name: string, value: string) => {
-    setFieldValues(prev => ({ ...prev, [name]: value }));
+    setFieldValues((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,6 +182,30 @@ export default function IssueCredentialPage() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     if (e.dataTransfer.files?.[0]) setSelectedFile(e.dataTransfer.files[0]);
+  };
+
+  // Select student from SIS
+  const handleSelectSisStudent = (student: ExternalStudent) => {
+    setSelectedSisStudent(student);
+    setSisSearchTerm("");
+    setSisSearchOpen(false);
+    // Auto-fill student ID field if template has one
+    const studentIdVal = student.student_id || student.id;
+    setFieldValues((prev) => ({ ...prev, student_id: studentIdVal }));
+    setUseSisCertificate(false);
+  };
+
+  // Clear import
+  const handleClearImport = () => {
+    setSelectedSisStudent(null);
+    setSisSearchTerm("");
+    setUseSisCertificate(false);
+    setFieldValues((prev) => {
+      const next = { ...prev };
+      delete next.student_id;
+      return next;
+    });
+    setSelectedFile(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,23 +226,23 @@ export default function IssueCredentialPage() {
     }
 
     const missingRequired = selectedTemplate.fields
-      .filter(f => f.required && f.type !== "file" && !fieldValues[f.name]?.trim())
-      .map(f => f.label);
+      .filter((f) => f.required && f.type !== "file" && !fieldValues[f.name]?.trim())
+      .map((f) => f.label);
     if (missingRequired.length > 0) {
       setError(`Missing required fields: ${missingRequired.join(", ")}`);
       return;
     }
 
-    const fileField = selectedTemplate.fields.find(f => f.type === "file");
-    if (fileField?.required && !selectedFile) {
+    const fileField = selectedTemplate.fields.find((f) => f.type === "file");
+    if (fileField?.required && !selectedFile && !useSisCertificate) {
       setError(`Please upload the required file: ${fileField.label}`);
       return;
     }
 
     try {
-      // ── Step 1: IPFS upload (optional) ──────────────────────────
+      // ── Step 1: IPFS upload (optional, skip if using SIS cert) ──
       let ipfsCid = "";
-      if (selectedFile) {
+      if (selectedFile && !useSisCertificate) {
         setStatus("uploading");
         const fileForm = new FormData();
         fileForm.append("file", selectedFile);
@@ -144,10 +256,10 @@ export default function IssueCredentialPage() {
         ipfsCid = cid;
       }
 
-      // ── Step 2: Build data + compute hash ───────────────────────
+      // ── Step 2: Build data + compute hash ────────────────────────
       setStatus("anchoring");
       const refId = crypto.randomUUID();
-      const credentialData = {
+      const credentialData: Record<string, any> = {
         refId,
         templateId: selectedTemplate.id,
         issuerWallet: walletAddress!.toLowerCase(),
@@ -159,11 +271,18 @@ export default function IssueCredentialPage() {
         issuedAt: new Date().toISOString(),
       };
 
+      // Add SIS certificate info if using it
+      if (useSisCertificate && selectedSisStudent && selectedConnection) {
+        credentialData.sis_certificate = true;
+        credentialData.sis_connection_id = selectedConnection.id;
+        credentialData.sis_student_id = selectedSisStudent.id;
+      }
+
       const dataHash = ethers.keccak256(
         ethers.toUtf8Bytes(JSON.stringify(credentialData))
       );
 
-      // ── Step 2.5: Upload metadata JSON to IPFS ─────────────────
+      // ── Step 2.5: Upload metadata JSON to IPFS ──────────────────
       setStatus("uploading-metadata");
       const metadataRes = await fetch(`${API_URL}/api/ipfs/upload-metadata`, {
         method: "POST",
@@ -176,7 +295,7 @@ export default function IssueCredentialPage() {
       if (!metadataRes.ok) throw new Error("Failed to upload metadata to IPFS");
       const { cid: metadataCid } = await metadataRes.json();
 
-      // ── Step 3: Anchor on-chain via MetaMask ────────────────────
+      // ── Step 3: Anchor on-chain via MetaMask ─────────────────────
       const provider = new ethers.BrowserProvider(window.ethereum!);
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(ANCHOR_ADDRESS, ANCHOR_ABI, signer);
@@ -185,37 +304,45 @@ export default function IssueCredentialPage() {
       const receipt = await tx.wait();
       const txHash = receipt.hash;
 
-      // ── Step 4: Save to Supabase via backend ────────────────────
+      // ── Step 4: Save to Supabase via backend ─────────────────────
       setStatus("saving");
+      const savePayload: Record<string, any> = {
+        ref_id: refId,
+        template_id: selectedTemplate.id,
+        title: credentialData.title,
+        type: credentialData.type,
+        holder_wallet: credentialData.studentWallet,
+        fields: fieldValues,
+        ipfs_cid: ipfsCid || null,
+        metadata_cid: metadataCid,
+        tx_hash: txHash,
+        data_hash: dataHash,
+      };
+
+      if (useSisCertificate && selectedSisStudent && selectedConnection) {
+        savePayload.sis_certificate = true;
+        savePayload.sis_connection_id = selectedConnection.id;
+        savePayload.sis_student_id = selectedSisStudent.id;
+      }
+
       const saveRes = await fetch(`${API_URL}/api/credentials`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "x-wallet-address": walletAddress!,
         },
-        body: JSON.stringify({
-          ref_id:        refId,
-          template_id:   selectedTemplate.id,
-          title:         credentialData.title,
-          type:          credentialData.type,
-          holder_wallet: credentialData.studentWallet,
-          fields:        fieldValues,
-          ipfs_cid:      ipfsCid || null,
-          metadata_cid:  metadataCid,
-          tx_hash:       txHash,
-          data_hash:     dataHash,
-        }),
+        body: JSON.stringify(savePayload),
       });
       if (!saveRes.ok) throw new Error("Failed to save credential to database");
 
       setIssuedRefId(refId);
       setIssuedTxHash(txHash);
       setStatus("success");
-
     } catch (err: any) {
-      const msg = err?.code === "ACTION_REJECTED"
-        ? "MetaMask transaction was rejected."
-        : err.message || "Something went wrong.";
+      const msg =
+        err?.code === "ACTION_REJECTED"
+          ? "MetaMask transaction was rejected."
+          : err.message || "Something went wrong.";
       setError(msg);
       setStatus("idle");
     }
@@ -228,10 +355,31 @@ export default function IssueCredentialPage() {
     setFieldValues({});
     setSelectedFile(null);
     setError(null);
+    setSelectedSisStudent(null);
+    setSisSearchTerm("");
+    setUseSisCertificate(false);
   };
 
   function renderField(field: TemplateField) {
     if (field.type === "file") {
+      // If using SIS certificate, show badge instead of file upload
+      if (useSisCertificate) {
+        return (
+          <div key={field.name} className="pt-2 border-t border-slate-800">
+            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 ml-1">
+              {field.label} {field.required && <span className="text-red-400">*</span>}
+            </label>
+            <div className="flex items-center gap-3 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
+              <Database size={18} className="text-emerald-400 shrink-0" />
+              <div>
+                <p className="text-sm text-emerald-300 font-medium">Certificate will be fetched from external system</p>
+                <p className="text-xs text-slate-400 mt-0.5">Source: {selectedConnection?.system_name}</p>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div key={field.name} className="pt-2 border-t border-slate-800">
           <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 ml-1">
@@ -294,7 +442,7 @@ export default function IssueCredentialPage() {
             className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none"
           >
             <option value="">{field.placeholder || `Select ${field.label}`}</option>
-            {field.options?.map(opt => (
+            {field.options?.map((opt) => (
               <option key={opt} value={opt}>{opt}</option>
             ))}
           </select>
@@ -340,8 +488,9 @@ export default function IssueCredentialPage() {
     );
   }
 
-  const nonFileFields = selectedTemplate?.fields.filter(f => f.type !== "file") ?? [];
-  const fileFields = selectedTemplate?.fields.filter(f => f.type === "file") ?? [];
+  const nonFileFields = selectedTemplate?.fields.filter((f) => f.type !== "file") ?? [];
+  const fileFields = selectedTemplate?.fields.filter((f) => f.type === "file") ?? [];
+  const hasConnections = connections.length > 0;
 
   return (
     <RequireAuth allowedRole="issuer">
@@ -441,13 +590,172 @@ export default function IssueCredentialPage() {
 
               <form onSubmit={handleSubmit} className="space-y-6">
 
+                {/* ── Import from External System Panel ──────────────── */}
+                {!connectionsLoading && hasConnections && (
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Database size={16} className="text-blue-400" />
+                      <h3 className="text-sm font-semibold text-white">Import Student Data from External System</h3>
+                    </div>
+
+                    {/* System selector (only if multiple) */}
+                    {connections.length > 1 && (
+                      <div className="mb-4">
+                        <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1.5 ml-1">
+                          System
+                        </label>
+                        <select
+                          value={selectedConnection?.id || ""}
+                          onChange={(e) => {
+                            const conn = connections.find((c) => c.id === e.target.value) || null;
+                            setSelectedConnection(conn);
+                            setSelectedSisStudent(null);
+                            setSisSearchTerm("");
+                            setUseSisCertificate(false);
+                          }}
+                          disabled={isSubmitting}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none text-sm"
+                        >
+                          <option value="">Select a system...</option>
+                          {connections.map((c) => (
+                            <option key={c.id} value={c.id}>{c.system_name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Student search */}
+                    {selectedConnection && (
+                      <div className="relative">
+                        <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1.5 ml-1">
+                          Student
+                        </label>
+
+                        {selectedSisStudent ? (
+                          /* Selected student info card */
+                          <div className="bg-slate-900 border border-slate-700 rounded-xl p-4">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="text-white font-medium text-sm">
+                                  {selectedSisStudent.name}
+                                  <span className="text-slate-400 font-mono text-xs ml-2">
+                                    ({selectedSisStudent.student_id || selectedSisStudent.id})
+                                  </span>
+                                </p>
+                                <p className="text-xs text-slate-400 mt-1">
+                                  {selectedSisStudent.program}
+                                  {selectedSisStudent.gpa && <> · CGPA: {selectedSisStudent.gpa}</>}
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={handleClearImport}
+                                disabled={isSubmitting}
+                                className="text-slate-500 hover:text-red-400 transition-colors p-1"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+
+                            {/* SIS certificate toggle */}
+                            {selectedSisStudent.has_certificate && (
+                              <div className="mt-3 pt-3 border-t border-slate-800">
+                                <label className="flex items-center gap-3 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={useSisCertificate}
+                                    onChange={(e) => {
+                                      setUseSisCertificate(e.target.checked);
+                                      if (e.target.checked) setSelectedFile(null);
+                                    }}
+                                    disabled={isSubmitting}
+                                    className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                                  />
+                                  <span className="text-xs text-slate-300">
+                                    <Paperclip size={12} className="inline mr-1 text-emerald-400" />
+                                    Attach certificate from external system
+                                  </span>
+                                </label>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          /* Search input */
+                          <div>
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                              <input
+                                type="text"
+                                value={sisSearchTerm}
+                                onChange={(e) => {
+                                  setSisSearchTerm(e.target.value);
+                                  setSisSearchOpen(true);
+                                }}
+                                onFocus={() => setSisSearchOpen(true)}
+                                placeholder="Type name or student ID to search..."
+                                disabled={isSubmitting || sisStudentsLoading}
+                                className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 pl-9 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm"
+                              />
+                              {sisStudentsLoading && (
+                                <Loader2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 animate-spin" />
+                              )}
+                            </div>
+
+                            {/* Dropdown results */}
+                            <AnimatePresence>
+                              {sisSearchOpen && !sisStudentsLoading && filteredSisStudents.length > 0 && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: -4 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -4 }}
+                                  className="absolute z-20 w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-2xl max-h-48 overflow-y-auto"
+                                >
+                                  {filteredSisStudents.slice(0, 8).map((s) => (
+                                    <button
+                                      key={s.id}
+                                      type="button"
+                                      onClick={() => handleSelectSisStudent(s)}
+                                      className="w-full text-left px-4 py-2.5 hover:bg-slate-800/60 transition-colors border-b border-slate-800/40 last:border-b-0"
+                                    >
+                                      <p className="text-sm text-white">
+                                        <span className="font-mono text-xs text-blue-400 mr-2">{s.student_id || s.id}</span>
+                                        {s.name}
+                                      </p>
+                                      <p className="text-xs text-slate-500 mt-0.5">{s.program}</p>
+                                    </button>
+                                  ))}
+                                  {filteredSisStudents.length > 8 && (
+                                    <div className="px-4 py-2 text-xs text-slate-500 text-center bg-slate-950">
+                                      {filteredSisStudents.length - 8} more results — refine your search
+                                    </div>
+                                  )}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        )}
+
+                        {/* Clear import button (when student selected) */}
+                        {selectedSisStudent && (
+                          <button
+                            type="button"
+                            onClick={handleClearImport}
+                            disabled={isSubmitting}
+                            className="mt-2 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                          >
+                            Clear Import
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Fallback warning */}
                 {usingFallback && (
                   <div className="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
                     <WifiOff size={16} className="text-amber-400 shrink-0" />
-                    <p className="text-xs text-amber-200 flex-1">
-                      Could not connect to server. Showing local defaults.
-                    </p>
+                    <p className="text-xs text-amber-200 flex-1">Could not connect to server. Showing local defaults.</p>
                     <button
                       type="button"
                       onClick={loadTemplates}
@@ -475,15 +783,13 @@ export default function IssueCredentialPage() {
                         {templatesLoading ? "Loading templates..." : "-- Select a Template --"}
                       </option>
                       {singleTemplates.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.title}
-                        </option>
+                        <option key={t.id} value={t.id}>{t.title}</option>
                       ))}
                     </select>
                   </div>
                 </div>
 
-                {/* Student Wallet + Credential Type (always visible once template is selected) */}
+                {/* Student Wallet + Credential Type */}
                 {selectedTemplate && (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -537,7 +843,7 @@ export default function IssueCredentialPage() {
 
                     {/* Dynamic template fields (non-file) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {nonFileFields.map(field => (
+                      {nonFileFields.map((field) => (
                         <div key={field.name} className={field.type === "textarea" ? "md:col-span-2" : ""}>
                           {renderField(field)}
                         </div>
@@ -545,7 +851,7 @@ export default function IssueCredentialPage() {
                     </div>
 
                     {/* File upload fields */}
-                    {fileFields.map(field => renderField(field))}
+                    {fileFields.map((field) => renderField(field))}
 
                     {/* Submit */}
                     <button

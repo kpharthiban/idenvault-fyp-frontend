@@ -36,6 +36,7 @@ export default function AdminDashboard() {
   const [registering, setRegistering] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState<{ wallet: string; action: "revoke" | "register" } | null>(null);
+  const [profiles, setProfiles] = useState<Record<string, { institution: string; institution_type: string; department: string; website: string; address: string }>>({});
 
   // Load issuer history from contract events
   useEffect(() => {
@@ -71,6 +72,27 @@ export default function AdminDashboard() {
     };
     loadIssuers();
   }, []);
+
+  // Fetch issuer profiles from backend once issuers are loaded
+  useEffect(() => {
+    if (issuers.length === 0 || !walletAddress) return;
+    const fetchProfiles = async () => {
+      try {
+        const wallets = issuers.map(i => i.wallet);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/issuer-profiles`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-wallet-address": walletAddress || "" },
+          body: JSON.stringify({ wallets }),
+        });
+        if (!res.ok) throw new Error("Failed to fetch profiles");
+        const data = await res.json();
+        setProfiles(data.profiles || {});
+      } catch (err) {
+        console.error("Failed to fetch issuer profiles:", err);
+      }
+    };
+    fetchProfiles();
+  }, [issuers, walletAddress]);
 
   const handleRegister = async (walletToRegister: string) => {
     if (!ethers.isAddress(walletToRegister)) {
@@ -116,7 +138,13 @@ export default function AdminDashboard() {
     }
   };
 
-  const filtered = issuers.filter(i => i.wallet.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filtered = issuers.filter(i => {
+    const term = searchTerm.toLowerCase();
+    if (i.wallet.toLowerCase().includes(term)) return true;
+    const profile = profiles[i.wallet];
+    if (profile?.institution?.toLowerCase().includes(term)) return true;
+    return false;
+  });
   const trustedCount = issuers.filter(i => i.trusted).length;
 
   return (
@@ -202,7 +230,7 @@ export default function AdminDashboard() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search wallet..."
+                placeholder="Search wallet or institution..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 pl-9 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
@@ -224,32 +252,47 @@ export default function AdminDashboard() {
               <p>No issuers registered yet</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-800">
+            <div className="divide-y divide-slate-800/60">
               {filtered.map((issuer, i) => (
                 <motion.div
                   key={issuer.wallet}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.04 }}
-                  className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 hover:bg-slate-800/30 transition-colors"
+                  className="flex flex-col md:flex-row md:items-start justify-between gap-4 px-5 py-4 hover:bg-slate-800/30 transition-colors"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className={`p-2.5 rounded-xl ${issuer.trusted ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+                  <div className="flex items-start gap-4 min-w-0">
+                    <div className={`p-2.5 rounded-xl mt-0.5 shrink-0 ${issuer.trusted ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
                       {issuer.trusted ? <ShieldCheck size={20} /> : <Ban size={20} />}
                     </div>
-                    <div>
-                      <p className="text-white font-mono text-sm font-semibold break-all">
-                        {issuer.wallet}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {issuer.wallet.toLowerCase() === walletAddress?.toLowerCase()
-                          ? "⭐ Admin wallet"
-                          : "Registered issuer"}
-                      </p>
+                    <div className="min-w-0 space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 bg-slate-950 border border-slate-700/60 rounded-lg px-3 py-1 font-mono text-xs text-slate-300 break-all">
+                          <Wallet size={12} className="text-slate-500 shrink-0" />
+                          {issuer.wallet}
+                        </span>
+                        {issuer.wallet.toLowerCase() === walletAddress?.toLowerCase() && (
+                          <span className="inline-flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/20 rounded-full px-2.5 py-0.5 text-[10px] font-bold text-yellow-400 uppercase tracking-wider">
+                            Admin
+                          </span>
+                        )}
+                      </div>
+                      {profiles[issuer.wallet] ? (
+                        <div className="pl-0.5">
+                          <p className="text-white font-semibold text-sm leading-snug">
+                            {profiles[issuer.wallet].institution}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                            {[profiles[issuer.wallet].institution_type, profiles[issuer.wallet].department, profiles[issuer.wallet].address].filter(Boolean).join(" · ")}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-500 italic pl-0.5">No profile registered</p>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-3 shrink-0 md:mt-1">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
                       issuer.trusted
                         ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"

@@ -230,19 +230,19 @@ export default function VerifyPage() {
   const allPass = trustChecks.length > 0 && trustChecks.every((c) => c.pass);
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-slate-950">
+    <main className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-[#F8F8F8] bg-dotgrid">
 
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px]" />
+        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-100/50 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-50/50 rounded-full blur-[100px]" />
       </div>
 
       {/* Back nav */}
       <div className="absolute top-6 left-6 z-20">
         <Link
           href="/"
-          className="flex items-center gap-2 px-4 py-2 bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-all text-sm font-medium group"
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-slate-600 hover:text-slate-900 hover:bg-slate-50 hover:shadow-sm transition-all text-sm font-medium group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           Back to Home
@@ -253,19 +253,19 @@ export default function VerifyPage() {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center p-3 bg-slate-900 rounded-xl border border-slate-800 mb-4 shadow-xl">
-            <ShieldCheck className="w-8 h-8 text-blue-500" />
+          <div className="inline-flex items-center justify-center p-3 bg-white rounded-xl border border-slate-200 mb-6 shadow-sm">
+            <ShieldCheck className="w-8 h-8 text-purple-600" strokeWidth={2.5} />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
+          <h1 className="font-heading text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
             Credential Verification
           </h1>
-          <p className="text-slate-400">
+          <p className="text-slate-600 font-medium">
             Verify the authenticity of digital academic records on the blockchain.
           </p>
         </div>
 
         {/* Main Card */}
-        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl p-6 shadow-2xl">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm relative">
           <AnimatePresence mode="wait">
 
             {/* ── STATE: Input ── */}
@@ -284,11 +284,11 @@ export default function VerifyPage() {
                     onKeyDown={(e) => e.key === "Enter" && handleVerify(credentialId)}
                     placeholder="Enter Credential Reference ID (UUID)"
                     disabled={status === "loading"}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl py-4 pl-5 pr-12 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all disabled:opacity-50"
+                    className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-4 pr-12 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all disabled:opacity-50"
                   />
                   {status === "loading" && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                      <Loader2 className="animate-spin text-blue-500" size={20} />
+                      <Loader2 className="animate-spin text-purple-600" size={20} />
                     </div>
                   )}
                 </div>
@@ -297,7 +297,7 @@ export default function VerifyPage() {
                   <button
                     onClick={() => handleVerify(credentialId)}
                     disabled={status === "loading" || !credentialId.trim()}
-                    className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-medium transition-all shadow-lg shadow-blue-600/20"
+                    className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-semibold transition-all hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 active:shadow-none"
                   >
                     {status === "loading" ? (
                       <><Loader2 size={18} className="animate-spin" /> Verifying...</>
@@ -307,7 +307,7 @@ export default function VerifyPage() {
                   </button>
                   <Link
                     href="/verify/scan"
-                    className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-xl font-medium transition-all border border-slate-700"
+                    className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 py-3 rounded-xl font-semibold transition-all border border-slate-200"
                   >
                     <FileText size={18} /> Scan QR Code
                   </Link>
@@ -316,8 +316,8 @@ export default function VerifyPage() {
                 {status === "loading" && (
                   <div className="mt-5 space-y-2">
                     {["Fetching credential from database...", "Reading blockchain state...", "Running trust checks..."].map((msg, i) => (
-                      <div key={i} className="flex items-center gap-3 text-sm text-slate-400">
-                        <Loader2 size={14} className="animate-spin text-blue-400 shrink-0" />
+                      <div key={i} className="flex items-center gap-3 text-sm text-slate-500">
+                        <Loader2 size={14} className="animate-spin text-purple-600 shrink-0" />
                         {msg}
                       </div>
                     ))}
@@ -338,17 +338,17 @@ export default function VerifyPage() {
                 {/* Overall result banner */}
                 <div className={`flex items-center gap-4 p-4 rounded-xl border ${
                   allPass
-                    ? "bg-emerald-500/10 border-emerald-500/20"
-                    : "bg-red-500/10 border-red-500/20"
+                    ? "bg-green-50 border-green-200"
+                    : "bg-red-50 border-red-200"
                 }`}>
                   {allPass
-                    ? <CheckCircle size={32} className="text-emerald-500 shrink-0" />
-                    : <XCircle size={32} className="text-red-500 shrink-0" />}
+                    ? <CheckCircle size={32} className="text-green-600 shrink-0" />
+                    : <XCircle size={32} className="text-red-600 shrink-0" />}
                   <div>
-                    <p className={`font-bold text-lg ${allPass ? "text-emerald-400" : "text-red-400"}`}>
+                    <p className={`font-heading text-lg font-bold ${allPass ? "text-green-800" : "text-red-800"}`}>
                       {allPass ? "Credential Verified" : "Verification Failed"}
                     </p>
-                    <p className="text-slate-400 text-sm">
+                    <p className="text-slate-600 text-sm">
                       {allPass
                         ? "All trust checks passed. This credential is authentic."
                         : "One or more trust checks failed. See details below."}
@@ -357,20 +357,20 @@ export default function VerifyPage() {
                 </div>
 
                 {/* 5 Trust Checks */}
-                <div className="bg-slate-950 rounded-xl border border-slate-800 divide-y divide-slate-800 overflow-hidden">
+                <div className="bg-slate-50 rounded-xl border border-slate-200 divide-y divide-slate-200 overflow-hidden">
                   {trustChecks.map((check, i) => (
                     <div key={i} className="flex items-center gap-4 px-4 py-3">
                       {check.pass
-                        ? <CheckCircle size={18} className="text-emerald-500 shrink-0" />
-                        : <XCircle size={18} className="text-red-500 shrink-0" />}
+                        ? <CheckCircle size={18} className="text-green-600 shrink-0" />
+                        : <XCircle size={18} className="text-red-600 shrink-0" />}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white">{check.label}</p>
+                        <p className="text-sm font-semibold text-slate-900">{check.label}</p>
                         <p className="text-xs text-slate-500 truncate">{check.detail}</p>
                       </div>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
                         check.pass
-                          ? "bg-emerald-500/10 text-emerald-400"
-                          : "bg-red-500/10 text-red-400"
+                          ? "bg-green-50 text-green-700 border-green-200"
+                          : "bg-red-50 text-red-700 border-red-200"
                       }`}>
                         {check.pass ? "PASS" : "FAIL"}
                       </span>
@@ -380,61 +380,63 @@ export default function VerifyPage() {
 
                 {/* Credential metadata */}
                 {record && (
-                  <div className="bg-slate-950 rounded-xl border border-slate-800 p-4 space-y-3">
-                    <h3 className="text-white font-bold text-base">{record.title}</h3>
+                  <div className="bg-green-50/50 rounded-xl border border-green-200 p-5 space-y-4 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-[40px] -z-10 pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -z-10 pointer-events-none" />
+                    <h3 className="text-slate-900 font-heading text-lg font-bold">{record.title}</h3>
 
                     {/* IPFS metadata fields */}
                     {metadataLoading && (
                       <div className="flex items-center gap-2 text-slate-400 text-sm py-2">
-                        <Loader2 size={14} className="animate-spin text-blue-400" />
+                        <Loader2 size={14} className="animate-spin text-purple-600" />
                         Loading credential details from IPFS...
                       </div>
                     )}
                     {metadata && Object.keys(metadata.fields).length > 0 && (
-                      <div className="bg-slate-900/50 rounded-lg border border-slate-800 p-3 space-y-2">
+                      <div className="bg-white rounded-lg border border-green-100 shadow-sm p-4 space-y-3">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                             Credential Details
                           </p>
-                          <span className="flex items-center gap-1 text-[10px] font-medium text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                          <span className="flex items-center gap-1 text-[10px] font-medium text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
                             <Database size={10} /> IPFS Verified
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                           {Object.entries(metadata.fields).map(([key, value]) => (
                             <div key={key}>
-                              <p className="text-[11px] text-slate-500 capitalize">
+                              <p className="text-[11px] text-slate-500 capitalize mb-0.5 font-medium">
                                 {key.replace(/([A-Z])/g, " $1").replace(/_/g, " ").trim()}
                               </p>
-                              <p className="text-sm text-white">{value}</p>
+                              <p className="text-sm text-slate-900 font-medium">{value}</p>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 mt-2">
                       <div>
-                        <p className="text-xs text-slate-500 flex items-center gap-1 mb-1">
-                          <User size={11} /> Holder
+                        <p className="text-xs text-slate-500 flex items-center gap-1 mb-1 font-medium">
+                          <User size={12} /> Holder
                         </p>
-                        <p className="text-xs text-white font-mono">
+                        <p className="text-[13px] text-slate-900 font-mono bg-white px-1.5 py-0.5 rounded-md inline-block border border-green-100 shadow-sm">
                           {record.holder_wallet.slice(0, 8)}...{record.holder_wallet.slice(-6)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 flex items-center gap-1 mb-1">
-                          <Building2 size={11} /> Issuer
+                        <p className="text-xs text-slate-500 flex items-center gap-1 mb-1 font-medium">
+                          <Building2 size={12} /> Issuer
                         </p>
-                        <p className="text-xs text-white font-mono">
+                        <p className="text-[13px] text-slate-900 font-mono bg-white px-1.5 py-0.5 rounded-md inline-block border border-green-100 shadow-sm">
                           {record.issuer_wallet.slice(0, 8)}...{record.issuer_wallet.slice(-6)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 flex items-center gap-1 mb-1">
-                          <Calendar size={11} /> Issued
+                        <p className="text-xs text-slate-500 flex items-center gap-1 mb-1 font-medium">
+                          <Calendar size={12} /> Issued
                         </p>
-                        <p className="text-xs text-white">
+                        <p className="text-sm text-slate-900 font-medium">
                           {new Date(record.issued_at).toLocaleDateString("en-GB", {
                             day: "2-digit", month: "short", year: "numeric"
                           })}
@@ -442,10 +444,10 @@ export default function VerifyPage() {
                       </div>
                       {record.expires_at && (
                         <div>
-                          <p className="text-xs text-slate-500 flex items-center gap-1 mb-1">
-                            <Clock size={11} /> Expires
+                          <p className="text-xs text-slate-500 flex items-center gap-1 mb-1 font-medium">
+                            <Clock size={12} /> Expires
                           </p>
-                          <p className="text-xs text-white">
+                          <p className="text-sm text-slate-900 font-medium">
                             {new Date(record.expires_at).toLocaleDateString("en-GB", {
                               day: "2-digit", month: "short", year: "numeric"
                             })}
@@ -458,10 +460,10 @@ export default function VerifyPage() {
                         href={`https://sepolia.etherscan.io/tx/${record.tx_hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-between p-3 rounded-lg bg-slate-900 border border-slate-800 hover:border-blue-500/50 transition-all group mt-2"
+                        className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition-all group mt-4"
                       >
-                        <span className="text-sm text-slate-400 group-hover:text-blue-400">View on Etherscan</span>
-                        <ExternalLink size={14} className="text-slate-500 group-hover:text-blue-400" />
+                        <span className="text-sm text-slate-600 font-medium group-hover:text-slate-900">View on Etherscan</span>
+                        <ExternalLink size={16} className="text-slate-400 group-hover:text-slate-900" />
                       </a>
                     )}
                   </div>
@@ -469,15 +471,15 @@ export default function VerifyPage() {
 
                 {/* AI Interview Questions — only if all checks pass */}
                 {allPass && (
-                  <div className="border border-indigo-500/20 rounded-xl overflow-hidden">
+                  <div className="border border-purple-200 rounded-xl overflow-hidden bg-white shadow-sm">
                     <button
                       onClick={() => {
                         setShowAI(!showAI);
                         if (!showAI && aiQuestions.length === 0) handleGenerateQuestions();
                       }}
-                      className="w-full py-3 px-4 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-300 font-medium transition-all flex items-center justify-center gap-2"
+                      className="w-full py-3.5 px-4 bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold transition-all flex items-center justify-center gap-2"
                     >
-                      <Bot size={18} />
+                      <Bot size={18} strokeWidth={2.5} />
                       {showAI ? "Hide AI Questions" : "Generate Interview Questions with AI"}
                     </button>
 
@@ -489,43 +491,43 @@ export default function VerifyPage() {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <div className="p-4 bg-slate-950 space-y-3">
+                          <div className="p-5 border-t border-purple-100 space-y-4">
                             {aiLoading ? (
-                              <div className="flex items-center gap-3 text-slate-400 py-4 justify-center">
-                                <Loader2 size={18} className="animate-spin text-indigo-400" />
+                              <div className="flex items-center gap-3 text-slate-500 py-4 justify-center font-medium">
+                                <Loader2 size={18} className="animate-spin text-purple-600" />
                                 Gemini is generating questions...
                               </div>
                             ) : aiError ? (
-                              <div className="flex items-center gap-2 text-red-400 text-sm">
+                              <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-100">
                                 <AlertCircle size={16} /> {aiError}
                               </div>
                             ) : aiQuestions.length > 0 ? (
                               <>
-                                <ol className="space-y-3">
+                                <ol className="space-y-4">
                                   {aiQuestions.map((q, i) => (
-                                    <li key={i} className="flex gap-3 text-sm text-slate-300">
-                                      <span className="text-indigo-400 font-bold shrink-0">{i + 1}.</span>
-                                      <span>{q}</span>
+                                    <li key={i} className="flex gap-3 text-sm text-slate-700 font-medium">
+                                      <span className="text-purple-600 font-bold shrink-0">{i + 1}.</span>
+                                      <span className="leading-relaxed">{q}</span>
                                     </li>
                                   ))}
                                 </ol>
-                                <p className="text-xs text-slate-600 pt-2 border-t border-slate-800">
+                                <p className="text-xs text-slate-400 pt-4 border-t border-slate-100 mt-2">
                                   ⚠️ AI-generated questions are suggestions only. Use professional discretion.
                                 </p>
-                                <div className="flex gap-2 pt-1">
+                                <div className="flex gap-2 pt-2">
                                   <button
                                     onClick={handleGenerateQuestions}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition-colors"
+                                    className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold transition-colors shadow-sm"
                                   >
-                                    <RefreshCw size={13} /> Regenerate
+                                    <RefreshCw size={14} /> Regenerate
                                   </button>
                                   <button
                                     onClick={handleCopyQuestions}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition-colors"
+                                    className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold transition-colors shadow-sm"
                                   >
                                     {copied
-                                      ? <><CheckCircle size={13} className="text-emerald-400" /> Copied!</>
-                                      : <><Copy size={13} /> Copy All</>}
+                                      ? <><CheckCircle size={14} className="text-green-600" /> Copied!</>
+                                      : <><Copy size={14} /> Copy All</>}
                                   </button>
                                 </div>
                               </>
@@ -540,7 +542,7 @@ export default function VerifyPage() {
                 {/* Reset */}
                 <button
                   onClick={resetVerification}
-                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-medium transition-all border border-slate-700 text-sm"
+                  className="w-full py-3.5 bg-white hover:bg-purple-50 text-slate-700 hover:text-purple-700 hover:border-purple-400 rounded-xl font-bold transition-all border-2 border-slate-200 text-sm shadow-sm"
                 >
                   Verify Another Credential
                 </button>

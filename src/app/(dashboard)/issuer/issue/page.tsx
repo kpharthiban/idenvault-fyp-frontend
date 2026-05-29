@@ -376,15 +376,15 @@ export default function IssueCredentialPage() {
       // If using SIS certificate, show badge instead of file upload
       if (useSisCertificate) {
         return (
-          <div key={field.name} className="pt-2 border-t border-slate-800">
-            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 ml-1">
-              {field.label} {field.required && <span className="text-red-400">*</span>}
+          <div key={field.name} className="pt-2 border-t border-slate-200">
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">
+              {field.label} {field.required && <span className="text-red-600">*</span>}
             </label>
-            <div className="flex items-center gap-3 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
-              <Database size={18} className="text-emerald-400 shrink-0" />
+            <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <Database size={18} className="text-green-600 shrink-0" strokeWidth={2.5} />
               <div>
-                <p className="text-sm text-emerald-300 font-medium">Certificate will be fetched from external system</p>
-                <p className="text-xs text-slate-400 mt-0.5">Source: {selectedConnection?.system_name}</p>
+                <p className="text-sm text-green-800 font-bold">Certificate will be fetched from external system</p>
+                <p className="text-xs text-green-700 mt-0.5 font-medium">Source: {selectedConnection?.system_name}</p>
               </div>
             </div>
           </div>
@@ -392,23 +392,23 @@ export default function IssueCredentialPage() {
       }
 
       return (
-        <div key={field.name} className="pt-2 border-t border-slate-800">
-          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-3 ml-1">
-            {field.label} {field.required && <span className="text-red-400">*</span>}
-            {!field.required && <span className="text-slate-600 normal-case">(optional — uploaded to IPFS)</span>}
+        <div key={field.name} className="pt-2 border-t border-slate-200">
+          <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">
+            {field.label} {field.required && <span className="text-red-600">*</span>}
+            {!field.required && <span className="text-slate-500 normal-case font-medium ml-1">(optional — uploaded to IPFS)</span>}
           </label>
           {!selectedFile ? (
             <div
               onClick={() => fileInputRef.current?.click()}
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
-              className="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all bg-slate-900/50 hover:bg-slate-900 group"
+              className="border-2 border-dashed border-slate-200 hover:border-green-500 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all bg-slate-50 hover:bg-white group"
             >
-              <div className="p-3 bg-slate-800 rounded-full mb-3 group-hover:bg-emerald-500/10 group-hover:text-emerald-400 transition-colors text-slate-400">
+              <div className="p-3 bg-white border border-slate-200 shadow-sm rounded-full mb-3 group-hover:bg-green-50 group-hover:border-green-200 group-hover:text-green-600 transition-colors text-slate-400">
                 <Upload size={24} />
               </div>
-              <p className="text-sm text-slate-300 font-medium">Click to upload or drag & drop</p>
-              <p className="text-xs text-slate-500 mt-1">PDF, PNG, JPG up to 10MB</p>
+              <p className="text-sm text-slate-900 font-bold">Click to upload or drag & drop</p>
+              <p className="text-xs text-slate-500 mt-1 font-medium">PDF, PNG, JPG up to 10MB</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -418,19 +418,19 @@ export default function IssueCredentialPage() {
               />
             </div>
           ) : (
-            <div className="flex items-center justify-between p-4 bg-slate-950 border border-slate-700 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-white border border-slate-200 shadow-sm rounded-xl">
               <div className="flex items-center gap-3">
-                <Paperclip size={18} className="text-emerald-400" />
+                <Paperclip size={18} className="text-green-600" />
                 <div>
-                  <p className="text-sm text-white font-medium">{selectedFile.name}</p>
-                  <p className="text-xs text-slate-500">{(selectedFile.size / 1024).toFixed(1)} KB</p>
+                  <p className="text-sm text-slate-900 font-bold">{selectedFile.name}</p>
+                  <p className="text-xs text-slate-500 font-medium">{(selectedFile.size / 1024).toFixed(1)} KB</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedFile(null)}
                 disabled={isSubmitting}
-                className="p-1 text-slate-500 hover:text-red-400 transition-colors"
+                className="p-1 text-slate-400 hover:text-red-600 transition-colors"
               >
                 <X size={18} />
               </button>
@@ -443,20 +443,23 @@ export default function IssueCredentialPage() {
     if (field.type === "select") {
       return (
         <div key={field.name}>
-          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-            {field.label} {field.required && <span className="text-red-400">*</span>}
+          <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">
+            {field.label} {field.required && <span className="text-red-600">*</span>}
           </label>
-          <select
-            value={fieldValues[field.name] || ""}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
-            disabled={isSubmitting}
-            className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none"
-          >
-            <option value="">{field.placeholder || `Select ${field.label}`}</option>
-            {field.options?.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={fieldValues[field.name] || ""}
+              onChange={(e) => handleFieldChange(field.name, e.target.value)}
+              disabled={isSubmitting}
+              className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-4 pr-10 text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent appearance-none shadow-sm transition-all font-medium"
+            >
+              <option value="">{field.placeholder || `Select ${field.label}`}</option>
+              {field.options?.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+            <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" strokeWidth={2.5} />
+          </div>
         </div>
       );
     }
@@ -464,18 +467,18 @@ export default function IssueCredentialPage() {
     if (field.type === "textarea") {
       return (
         <div key={field.name}>
-          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-            {field.label} {field.required ? <span className="text-red-400">*</span> : <span className="text-slate-600 normal-case">(optional)</span>}
+          <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">
+            {field.label} {field.required ? <span className="text-red-600">*</span> : <span className="text-slate-500 normal-case font-medium ml-1">(optional)</span>}
           </label>
           <div className="relative">
-            <FileText className="absolute left-4 top-3.5 text-slate-500 w-5 h-5" />
+            <FileText className="absolute left-4 top-3.5 text-slate-400 w-5 h-5" />
             <textarea
               value={fieldValues[field.name] || ""}
               onChange={(e) => handleFieldChange(field.name, e.target.value)}
               rows={3}
               placeholder={field.placeholder}
               disabled={isSubmitting}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none"
+              className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 resize-none shadow-sm transition-all font-medium"
             />
           </div>
         </div>
@@ -484,8 +487,8 @@ export default function IssueCredentialPage() {
 
     return (
       <div key={field.name}>
-        <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-          {field.label} {field.required ? <span className="text-red-400">*</span> : <span className="text-slate-600 normal-case">(optional)</span>}
+        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">
+          {field.label} {field.required ? <span className="text-red-600">*</span> : <span className="text-slate-500 normal-case font-medium ml-1">(optional)</span>}
         </label>
         <input
           type={field.type === "date" ? "date" : "text"}
@@ -493,7 +496,7 @@ export default function IssueCredentialPage() {
           onChange={(e) => handleFieldChange(field.name, e.target.value)}
           placeholder={field.placeholder}
           disabled={isSubmitting}
-          className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 shadow-sm transition-all font-medium"
         />
       </div>
     );
@@ -511,21 +514,21 @@ export default function IssueCredentialPage() {
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => router.push("/issuer")}
-            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium group"
+            className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors text-sm font-bold group"
           >
-            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" strokeWidth={2.5} />
             Back to Dashboard
           </button>
           <button
             onClick={() => router.push("/issuer/issue/bulk")}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg border border-slate-700 transition-all text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-blue-600 rounded-lg border border-slate-200 shadow-sm transition-all text-sm font-bold"
           >
-            <Users size={16} /> Switch to Bulk Mode
+            <Users size={16} strokeWidth={2.5} /> Switch to Bulk Mode
           </button>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl relative overflow-visible">
-          <div className="absolute top-0 left-0 w-full h-1 bg-emerald-600 rounded-t-2xl" />
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-xl relative overflow-visible">
+          <div className="absolute top-0 left-0 w-full h-1 bg-green-500 rounded-t-2xl" />
 
           {status === "success" ? (
             <motion.div
@@ -533,26 +536,26 @@ export default function IssueCredentialPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="text-center py-10"
             >
-              <div className="inline-flex items-center justify-center p-4 bg-emerald-500/10 rounded-full mb-6">
-                <CheckCircle className="w-16 h-16 text-emerald-500" />
+              <div className="inline-flex items-center justify-center p-4 bg-green-50 rounded-full mb-6 border border-green-100">
+                <CheckCircle className="w-16 h-16 text-green-600" strokeWidth={2.5} />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Credential Issued Successfully</h2>
-              <p className="text-slate-400 mb-6 max-w-md mx-auto">
-                <strong>{selectedTemplate?.title}</strong> has been anchored on Sepolia and saved.
+              <h2 className="text-2xl font-heading font-extrabold text-slate-900 mb-2">Credential Issued Successfully</h2>
+              <p className="text-slate-600 mb-6 max-w-md mx-auto font-medium">
+                <strong className="text-slate-900">{selectedTemplate?.title}</strong> has been anchored on Sepolia and saved.
               </p>
 
-              <div className="bg-slate-950 rounded-xl p-4 text-left space-y-2 mb-8 border border-slate-800">
+              <div className="bg-slate-50 rounded-xl p-4 text-left space-y-2 mb-8 border border-slate-200">
                 <div>
-                  <p className="text-xs text-slate-500 mb-1">Reference ID</p>
-                  <p className="font-mono text-emerald-400 text-sm break-all">{issuedRefId}</p>
+                  <p className="text-xs text-slate-500 font-bold mb-1">Reference ID</p>
+                  <p className="font-mono text-green-700 text-sm break-all font-medium">{issuedRefId}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 mb-1">Transaction Hash</p>
+                  <p className="text-xs text-slate-500 font-bold mb-1 mt-3">Transaction Hash</p>
                   <a
                     href={`https://sepolia.etherscan.io/tx/${issuedTxHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-mono text-blue-400 text-sm break-all hover:underline"
+                    className="font-mono text-blue-600 text-sm break-all hover:underline font-medium"
                   >
                     {issuedTxHash}
                   </a>
@@ -562,13 +565,13 @@ export default function IssueCredentialPage() {
               <div className="flex gap-4 justify-center">
                 <button
                   onClick={() => router.push("/issuer")}
-                  className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors border border-slate-700"
+                  className="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition-all border border-slate-200 shadow-sm"
                 >
                   Back to Dashboard
                 </button>
                 <button
                   onClick={resetForm}
-                  className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+                  className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-sm"
                 >
                   Issue Another
                 </button>
@@ -577,218 +580,58 @@ export default function IssueCredentialPage() {
           ) : (
             <>
               <div className="mb-8">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Shield className="text-emerald-500" /> Issue New Credential
+                <h2 className="font-heading text-2xl font-extrabold text-slate-900 flex items-center gap-2">
+                  <Shield className="text-green-600" strokeWidth={2.5} /> Issue New Credential
                 </h2>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-slate-600 text-sm mt-1 font-medium">
                   Fill in the details below. This data will be immutable once anchored on-chain.
                 </p>
               </div>
 
               {error && (
-                <div className="mb-6 flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
-                  <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                <div className="mb-6 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium">
+                  <AlertCircle size={18} className="shrink-0 mt-0.5" strokeWidth={2.5} />
                   {error}
                 </div>
               )}
 
               {isSubmitting && (
-                <div className="mb-6 flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-sm">
-                  <Loader2 size={18} className="animate-spin shrink-0" />
+                <div className="mb-6 flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm font-medium">
+                  <Loader2 size={18} className="animate-spin shrink-0" strokeWidth={2.5} />
                   {STATUS_MESSAGES[status]}
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
 
-                {/* ── Import from External System Panel ──────────────── */}
-                {!connectionsLoading && hasConnections && (
-                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 overflow-visible relative z-30">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Database size={16} className="text-blue-400" />
-                      <h3 className="text-sm font-semibold text-white">Import Student Data from External System</h3>
-                    </div>
-
-                    {/* System selector (only if multiple) */}
-                    {connections.length > 1 && (
-                      <div className="mb-4">
-                        <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1.5 ml-1">
-                          System
-                        </label>
-                        <select
-                          value={selectedConnection?.id || ""}
-                          onChange={(e) => {
-                            const conn = connections.find((c) => c.id === e.target.value) || null;
-                            setSelectedConnection(conn);
-                            setSelectedSisStudent(null);
-                            setSisSearchTerm("");
-                            setUseSisCertificate(false);
-                          }}
-                          disabled={isSubmitting}
-                          className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none text-sm"
-                        >
-                          <option value="">Select a system...</option>
-                          {connections.map((c) => (
-                            <option key={c.id} value={c.id}>{c.system_name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
-                    {/* Student search */}
-                    {selectedConnection && (
-                      <div className="relative">
-                        <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1.5 ml-1">
-                          Student
-                        </label>
-
-                        {selectedSisStudent ? (
-                          /* Selected student info card */
-                          <div className="bg-slate-900 border border-slate-700 rounded-xl p-4">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <p className="text-white font-medium text-sm">
-                                  {selectedSisStudent.name}
-                                  <span className="text-slate-400 font-mono text-xs ml-2">
-                                    ({selectedSisStudent.student_id || selectedSisStudent.id})
-                                  </span>
-                                </p>
-                                <p className="text-xs text-slate-400 mt-1">
-                                  {selectedSisStudent.program}
-                                  {selectedSisStudent.gpa && <> · CGPA: {selectedSisStudent.gpa}</>}
-                                </p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={handleClearImport}
-                                disabled={isSubmitting}
-                                className="text-slate-500 hover:text-red-400 transition-colors p-1"
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-
-                            {/* SIS certificate toggle */}
-                            {selectedSisStudent.has_certificate && (
-                              <div className="mt-3 pt-3 border-t border-slate-800">
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={useSisCertificate}
-                                    onChange={(e) => {
-                                      setUseSisCertificate(e.target.checked);
-                                      if (e.target.checked) setSelectedFile(null);
-                                    }}
-                                    disabled={isSubmitting}
-                                    className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
-                                  />
-                                  <span className="text-xs text-slate-300">
-                                    <Paperclip size={12} className="inline mr-1 text-emerald-400" />
-                                    Attach certificate from external system
-                                  </span>
-                                </label>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          /* Search input */
-                          <div ref={dropdownRef}>
-                            <div className="relative">
-                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-                              <input
-                                type="text"
-                                value={sisSearchTerm}
-                                onChange={(e) => {
-                                  setSisSearchTerm(e.target.value);
-                                  setSisSearchOpen(true);
-                                }}
-                                onFocus={() => setSisSearchOpen(true)}
-                                placeholder="Type name or student ID to search..."
-                                disabled={isSubmitting || sisStudentsLoading}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 pl-9 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm"
-                              />
-                              {sisStudentsLoading && (
-                                <Loader2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 animate-spin" />
-                              )}
-
-                            {/* Dropdown results */}
-                            <AnimatePresence>
-                              {sisSearchOpen && !sisStudentsLoading && filteredSisStudents.length > 0 && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: -4 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -4 }}
-                                  className="absolute left-0 right-0 z-50 mt-1 bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-2xl max-h-48 overflow-y-auto"
-                                >
-                                  {filteredSisStudents.slice(0, 8).map((s) => (
-                                    <button
-                                      key={s.id}
-                                      type="button"
-                                      onClick={() => handleSelectSisStudent(s)}
-                                      className="w-full text-left px-4 py-2.5 hover:bg-slate-800/60 transition-colors border-b border-slate-800/40 last:border-b-0"
-                                    >
-                                      <p className="text-sm text-white">
-                                        <span className="font-mono text-xs text-blue-400 mr-2">{s.student_id || s.id}</span>
-                                        {s.name}
-                                      </p>
-                                      <p className="text-xs text-slate-500 mt-0.5">{s.program}</p>
-                                    </button>
-                                  ))}
-                                  {filteredSisStudents.length > 8 && (
-                                    <div className="px-4 py-2 text-xs text-slate-500 text-center bg-slate-950">
-                                      {filteredSisStudents.length - 8} more results — refine your search
-                                    </div>
-                                  )}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Clear import button (when student selected) */}
-                        {selectedSisStudent && (
-                          <button
-                            type="button"
-                            onClick={handleClearImport}
-                            disabled={isSubmitting}
-                            className="mt-2 text-xs text-slate-500 hover:text-slate-300 transition-colors"
-                          >
-                            Clear Import
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {/* Fallback warning */}
                 {usingFallback && (
-                  <div className="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                    <WifiOff size={16} className="text-amber-400 shrink-0" />
-                    <p className="text-xs text-amber-200 flex-1">Could not connect to server. Showing local defaults.</p>
+                  <div className="flex items-center gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+                    <WifiOff size={16} className="text-yellow-600 shrink-0" strokeWidth={2.5} />
+                    <p className="text-xs text-yellow-700 flex-1 font-bold">Could not connect to server. Showing local defaults.</p>
                     <button
                       type="button"
                       onClick={loadTemplates}
-                      className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg border border-amber-500/20 transition-colors"
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-yellow-700 bg-white hover:bg-yellow-50 rounded-lg border border-yellow-200 transition-colors shadow-sm"
                     >
-                      <RefreshCw size={10} /> Retry
+                      <RefreshCw size={12} strokeWidth={2.5} /> Retry
                     </button>
                   </div>
                 )}
 
                 {/* Template Selector */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                    Credential Template <span className="text-red-400">*</span>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">
+                    Credential Template <span className="text-red-600">*</span>
                   </label>
                   <div className="relative">
-                    <Award className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+                    <Award className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <select
                       value={selectedTemplate?.id ?? ""}
                       onChange={handleTemplateChange}
                       disabled={isSubmitting || templatesLoading}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none"
+                      className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-12 pr-10 text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent appearance-none shadow-sm transition-all font-medium"
                     >
                       <option value="">
                         {templatesLoading ? "Loading templates..." : "-- Select a Template --"}
@@ -797,6 +640,7 @@ export default function IssueCredentialPage() {
                         <option key={t.id} value={t.id}>{t.title}</option>
                       ))}
                     </select>
+                    <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" strokeWidth={2.5} />
                   </div>
                 </div>
 
@@ -805,32 +649,32 @@ export default function IssueCredentialPage() {
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                          Student Wallet Address <span className="text-red-400">*</span>
+                        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">
+                          Student Wallet Address <span className="text-red-600">*</span>
                         </label>
                         <div className="relative">
-                          <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                           <input
                             type="text"
                             value={studentWallet}
                             onChange={(e) => setStudentWallet(e.target.value)}
                             placeholder="0x..."
                             disabled={isSubmitting}
-                            className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-mono text-sm"
+                            className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 font-mono text-sm shadow-sm transition-all"
                           />
                         </div>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
+                        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">
                           Credential Type
                         </label>
                         <div className="relative">
-                          <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+                          <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                           <input
                             type="text"
                             value={selectedTemplate.type}
                             readOnly
-                            className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-400 cursor-not-allowed"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-slate-500 cursor-not-allowed font-medium"
                           />
                         </div>
                       </div>
@@ -838,16 +682,16 @@ export default function IssueCredentialPage() {
 
                     {/* Credential Title (read-only from template) */}
                     <div>
-                      <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2 ml-1">
+                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">
                         Credential Title
                       </label>
                       <div className="relative">
-                        <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
+                        <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                         <input
                           type="text"
                           value={selectedTemplate.title}
                           readOnly
-                          className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-12 pr-4 text-slate-400 cursor-not-allowed"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-slate-500 cursor-not-allowed font-medium"
                         />
                       </div>
                     </div>
@@ -868,12 +712,12 @@ export default function IssueCredentialPage() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-emerald-900/30"
+                      className="w-full py-4 bg-green-600 hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-all shadow-sm hover:-translate-y-[1px] active:translate-y-0 active:shadow-none mt-2"
                     >
                       {isSubmitting ? (
                         <><Loader2 size={20} className="animate-spin" /> Processing...</>
                       ) : (
-                        <><Send size={20} /> Issue Credential</>
+                        <><Send size={20} strokeWidth={2.5} /> Issue Credential</>
                       )}
                     </button>
                   </>

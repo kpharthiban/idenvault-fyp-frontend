@@ -1,21 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
+import { Inter, Sora, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const sora = Sora({
+  subsets: ["latin"],
+  variable: "--font-sora",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -29,11 +32,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${jetbrainsMono.variable} antialiased bg-slate-950 text-slate-100 selection:bg-blue-500/30`}>
+    <html lang="en">
+      <body className={`${inter.variable} ${sora.variable} ${geistMono.variable} font-sans antialiased bg-[#F8F8F8] text-slate-900 selection:bg-teal-500/30`}>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
 }
-

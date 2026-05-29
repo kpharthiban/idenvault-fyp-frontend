@@ -244,11 +244,11 @@ export default function ExternalSystemsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-              <Server className="text-blue-500" />
+            <h2 className="text-3xl font-heading font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+              <Server className="text-blue-600" strokeWidth={2.5} />
               External System Integration
             </h2>
-            <p className="text-slate-400 mt-2">
+            <p className="text-slate-600 font-medium mt-2">
               Connect to institutional data sources for automated credential issuance.
             </p>
           </div>
@@ -291,13 +291,13 @@ export default function ExternalSystemsPage() {
               transition={{ duration: 0.25 }}
               className="overflow-hidden"
             >
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-white font-bold flex items-center gap-2">
-                    <Plus size={18} className="text-blue-400" />
+                  <h3 className="text-slate-900 font-bold flex items-center gap-2">
+                    <Plus size={18} className="text-blue-600" />
                     Connect New System
                   </h3>
-                  <button onClick={() => { setShowAddForm(false); setConnectError(null); }} className="text-slate-500 hover:text-slate-300 transition-colors">
+                  <button onClick={() => { setShowAddForm(false); setConnectError(null); }} className="text-slate-400 hover:text-slate-600 transition-colors">
                     <X size={18} />
                   </button>
                 </div>
@@ -305,44 +305,44 @@ export default function ExternalSystemsPage() {
                 <div className="space-y-4">
                   {/* System Name */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1.5">System Name</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-1.5">System Name</label>
                     <input
                       type="text"
                       value={formData.system_name}
                       onChange={(e) => setFormData((f) => ({ ...f, system_name: e.target.value }))}
                       placeholder="e.g. MMU Student Records"
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 px-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm"
+                      className="w-full bg-white border border-slate-300 rounded-xl py-2.5 px-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm font-medium"
                     />
                   </div>
 
                   {/* Endpoint URL */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1.5">Endpoint URL</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Endpoint URL</label>
                     <input
                       type="text"
                       value={formData.endpoint_url}
                       onChange={(e) => setFormData((f) => ({ ...f, endpoint_url: e.target.value }))}
                       placeholder="https://your-sis-api.example.com"
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 px-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-mono"
+                      className="w-full bg-white border border-slate-300 rounded-xl py-2.5 px-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm font-mono font-medium"
                     />
                   </div>
 
                   {/* API Key */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1.5">API Key</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-1.5">API Key</label>
                     <input
                       type="password"
                       value={formData.api_key}
                       onChange={(e) => setFormData((f) => ({ ...f, api_key: e.target.value }))}
                       placeholder="Enter the API key provided by the system"
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 px-4 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm"
+                      className="w-full bg-white border border-slate-300 rounded-xl py-2.5 px-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-600 text-sm font-medium"
                     />
                   </div>
 
                   {/* Error */}
                   {connectError && (
-                    <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2.5">
-                      <AlertCircle size={14} className="shrink-0" />
+                    <div className="flex items-center gap-2 text-red-700 text-sm font-bold bg-red-50 border border-red-200 rounded-lg px-4 py-2.5 shadow-sm">
+                      <AlertCircle size={14} className="shrink-0" strokeWidth={2.5} />
                       {connectError}
                     </div>
                   )}
@@ -351,14 +351,14 @@ export default function ExternalSystemsPage() {
                   <div className="flex items-center gap-3 pt-2">
                     <button
                       onClick={() => { setShowAddForm(false); setConnectError(null); }}
-                      className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-medium border border-slate-700 transition-colors text-sm"
+                      className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-bold border border-slate-200 transition-colors shadow-sm text-sm"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleAddConnection}
                       disabled={connecting || !formData.endpoint_url.trim() || !formData.api_key.trim()}
-                      className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-600/20 transition-all text-sm"
+                      className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:hover:bg-green-600 text-white rounded-xl font-bold shadow-sm transition-all text-sm"
                     >
                       {connecting ? (
                         <>
@@ -386,31 +386,31 @@ export default function ExternalSystemsPage() {
             Loading connections...
           </div>
         ) : connectionsError ? (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center">
-            <AlertCircle size={36} className="mx-auto mb-3 text-red-400 opacity-60" />
-            <p className="text-red-400 mb-4">{connectionsError}</p>
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-sm">
+            <AlertCircle size={36} className="mx-auto mb-3 text-red-600 opacity-60" strokeWidth={2.5} />
+            <p className="text-red-600 font-bold mb-4">{connectionsError}</p>
             <button
               onClick={loadConnections}
-              className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium border border-slate-700 transition-colors text-sm inline-flex items-center gap-2"
+              className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-bold border border-slate-200 transition-colors shadow-sm text-sm inline-flex items-center gap-2"
             >
-              <RefreshCw size={14} /> Retry
+              <RefreshCw size={14} strokeWidth={2.5} /> Retry
             </button>
           </div>
         ) : connections.length === 0 && !showAddForm ? (
           /* Empty State */
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
-            <div className="inline-flex p-4 rounded-2xl bg-slate-800/50 mb-5">
-              <Server size={40} className="text-slate-500" />
+          <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
+            <div className="inline-flex p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-5">
+              <Server size={40} className="text-slate-400" strokeWidth={2.5} />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">No External Systems Connected</h3>
-            <p className="text-slate-400 max-w-md mx-auto mb-6 text-sm leading-relaxed">
+            <h3 className="text-xl font-heading font-extrabold text-slate-900 mb-2">No External Systems Connected</h3>
+            <p className="text-slate-500 font-medium max-w-md mx-auto mb-6 text-sm leading-relaxed">
               Connect to institutional systems like Student Information Systems to enable bulk credential issuance and automated data retrieval.
             </p>
             <button
               onClick={() => { setShowAddForm(true); setConnectError(null); }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-lg shadow-blue-600/20 transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold shadow-sm transition-all"
             >
-              <Plus size={18} />
+              <Plus size={18} strokeWidth={2.5} />
               Connect Your First System
             </button>
           </div>
@@ -424,7 +424,7 @@ export default function ExternalSystemsPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
-                className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl"
+                className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm"
               >
                 {/* Card Header */}
                 <div className="p-5">
@@ -432,14 +432,14 @@ export default function ExternalSystemsPage() {
                     <div className="flex items-start gap-3.5 min-w-0">
                       <div className="mt-0.5 shrink-0">
                         <span className="flex h-3 w-3 relative">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40" />
-                          <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-40" />
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" />
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <h3 className="text-white font-bold text-base leading-snug">{conn.system_name}</h3>
-                        <p className="text-slate-400 text-xs font-mono mt-1 break-all">{conn.endpoint_url}</p>
-                        <p className="text-slate-500 text-xs mt-1">Connected {formatDate(conn.connected_at)}</p>
+                        <h3 className="text-slate-900 font-bold text-base leading-snug">{conn.system_name}</h3>
+                        <p className="text-blue-600 font-medium text-xs font-mono mt-1 break-all">{conn.endpoint_url}</p>
+                        <p className="text-slate-500 font-medium text-xs mt-1">Connected {formatDate(conn.connected_at)}</p>
                       </div>
                     </div>
 
@@ -447,7 +447,7 @@ export default function ExternalSystemsPage() {
                       {/* View Students Toggle */}
                       <button
                         onClick={() => toggleExpand(conn.id)}
-                        className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium border border-slate-700 transition-colors"
+                        className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-bold border border-slate-200 transition-colors shadow-sm"
                       >
                         <Database size={13} />
                         {expandedSystem === conn.id ? (
@@ -462,14 +462,14 @@ export default function ExternalSystemsPage() {
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => setDisconnectConfirm(null)}
-                            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium border border-slate-700 transition-colors"
+                            className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold border border-slate-200 transition-colors shadow-sm"
                           >
                             Cancel
                           </button>
                           <button
                             onClick={() => handleDisconnect(conn.id)}
                             disabled={disconnecting === conn.id}
-                            className="flex items-center gap-1.5 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold border border-red-500/20 transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-bold border border-red-200 transition-colors disabled:opacity-50 shadow-sm"
                           >
                             {disconnecting === conn.id ? (
                               <Loader2 size={12} className="animate-spin" />
@@ -482,7 +482,7 @@ export default function ExternalSystemsPage() {
                       ) : (
                         <button
                           onClick={() => setDisconnectConfirm(conn.id)}
-                          className="flex items-center gap-1.5 px-3.5 py-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg text-xs font-medium transition-colors border border-transparent hover:border-red-500/20"
+                          className="flex items-center gap-1.5 px-3.5 py-2 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-lg text-xs font-bold transition-colors border border-transparent hover:border-red-200"
                         >
                           <Trash2 size={13} />
                           Disconnect
@@ -502,52 +502,52 @@ export default function ExternalSystemsPage() {
                       transition={{ duration: 0.25 }}
                       className="overflow-hidden"
                     >
-                      <div className="border-t border-slate-800">
+                      <div className="border-t border-slate-200 bg-slate-50 pb-2">
                         {/* Data Governance Banner */}
-                        <div className="mx-5 mt-4 mb-3 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg flex items-center gap-3">
-                          <ShieldCheck className="text-purple-400 shrink-0" size={16} />
-                          <p className="text-xs text-purple-200">
+                        <div className="mx-5 mt-4 mb-3 p-3 bg-purple-50 border border-purple-200 rounded-lg flex items-center gap-3 shadow-sm">
+                          <ShieldCheck className="text-purple-600 shrink-0" size={16} strokeWidth={2.5} />
+                          <p className="text-xs text-purple-800 font-medium">
                             <strong>Data Governance:</strong> Data retrieved from this external system is treated as authoritative. It cannot be modified within IdenVault.
                           </p>
                         </div>
 
                         {studentsLoading[conn.id] ? (
-                          <div className="flex items-center justify-center py-12 text-slate-400 gap-3 text-sm">
-                            <Loader2 size={16} className="animate-spin" />
+                          <div className="flex items-center justify-center py-12 text-slate-500 gap-3 text-sm font-bold">
+                            <Loader2 size={16} className="animate-spin" strokeWidth={2.5} />
                             Fetching student records...
                           </div>
                         ) : studentsError[conn.id] ? (
-                          <div className="m-5 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-red-400 text-sm">
-                              <AlertCircle size={14} /> {studentsError[conn.id]}
+                          <div className="m-5 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between shadow-sm">
+                            <div className="flex items-center gap-2 text-red-700 text-sm font-bold">
+                              <AlertCircle size={14} strokeWidth={2.5} /> {studentsError[conn.id]}
                             </div>
                             <button
                               onClick={() => fetchStudents(conn.id)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium border border-slate-700 transition-colors"
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold border border-slate-200 transition-colors shadow-sm"
                             >
-                              <RefreshCw size={12} /> Retry
+                              <RefreshCw size={12} strokeWidth={2.5} /> Retry
                             </button>
                           </div>
                         ) : (
                           <>
                             {/* Header Bar */}
-                            <div className="flex items-center justify-between px-5 mb-2">
-                              <div className="flex items-center gap-2 text-xs text-slate-500">
-                                <Lock size={11} />
+                            <div className="flex items-center justify-between px-5 mb-2 mt-2">
+                              <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                                <Lock size={11} strokeWidth={2.5} />
                                 Read-Only Access Granted
                               </div>
                               <button
                                 onClick={() => fetchStudents(conn.id)}
-                                className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+                                className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors"
                               >
-                                <RefreshCw size={12} /> Refresh
+                                <RefreshCw size={12} strokeWidth={2.5} /> Refresh
                               </button>
                             </div>
 
                             {/* Table */}
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto mx-5 bg-white rounded-xl border border-slate-200 shadow-sm mb-4">
                               <table className="w-full text-left text-sm">
-                                <thead className="bg-slate-950 text-slate-400 uppercase text-xs font-medium border-y border-slate-800">
+                                <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-bold border-b border-slate-200">
                                   <tr>
                                     <th className="px-5 py-3">Student ID</th>
                                     <th className="px-5 py-3">Full Name</th>
@@ -557,45 +557,45 @@ export default function ExternalSystemsPage() {
                                     <th className="px-5 py-3">Certificate</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                                <tbody className="divide-y divide-slate-200 text-slate-600">
                                   {(students[conn.id] || []).map((student) => (
-                                    <tr key={student.id} className="hover:bg-slate-800/30 transition-colors">
-                                      <td className="px-5 py-3 font-mono text-blue-400 text-xs">{student.id}</td>
-                                      <td className="px-5 py-3 font-medium text-white text-sm">{student.name}</td>
-                                      <td className="px-5 py-3 text-xs">{student.program}</td>
-                                      <td className="px-5 py-3 text-xs">{student.gpa}</td>
+                                    <tr key={student.id} className="hover:bg-slate-50 transition-colors">
+                                      <td className="px-5 py-3 font-mono text-blue-600 font-bold text-xs">{student.id}</td>
+                                      <td className="px-5 py-3 font-bold text-slate-900 text-sm">{student.name}</td>
+                                      <td className="px-5 py-3 text-xs font-medium">{student.program}</td>
+                                      <td className="px-5 py-3 text-xs font-bold">{student.gpa}</td>
                                       <td className="px-5 py-3">
                                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                                           student.status === "Graduated"
-                                            ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                                            : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                                            : "bg-green-50 text-green-700 border-green-200"
                                         }`}>
-                                          <CheckCircle size={9} /> {student.status}
+                                          <CheckCircle size={9} strokeWidth={2.5} /> {student.status}
                                         </span>
                                       </td>
                                       <td className="px-5 py-3">
                                         {student.has_certificate ? (
                                           <div className="flex items-center gap-2">
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-200">
                                               Available
                                             </span>
                                             <button
                                               onClick={() => handleViewCertificate(conn.id, student.id)}
-                                              className="p-1 text-slate-400 hover:text-blue-400 transition-colors"
+                                              className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
                                               title="View certificate"
                                             >
-                                              <Eye size={13} />
+                                              <Eye size={13} strokeWidth={2.5} />
                                             </button>
                                             <button
                                               onClick={() => handleDownloadCertificate(conn.id, student.id)}
-                                              className="p-1 text-slate-400 hover:text-emerald-400 transition-colors"
+                                              className="p-1 text-slate-400 hover:text-green-600 transition-colors"
                                               title="Download certificate"
                                             >
-                                              <Download size={13} />
+                                              <Download size={13} strokeWidth={2.5} />
                                             </button>
                                           </div>
                                         ) : (
-                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-800 text-slate-500 text-[10px] font-bold border border-slate-700">
+                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold border border-slate-200">
                                             None
                                           </span>
                                         )}
@@ -607,7 +607,7 @@ export default function ExternalSystemsPage() {
                             </div>
 
                             {/* Footer */}
-                            <div className="px-5 py-3 bg-slate-950 border-t border-slate-800 text-xs text-slate-500">
+                            <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 text-xs font-bold text-slate-500 rounded-b-2xl">
                               Showing {(students[conn.id] || []).length} records from {conn.system_name}
                             </div>
                           </>

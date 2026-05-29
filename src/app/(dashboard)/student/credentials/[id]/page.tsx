@@ -36,7 +36,6 @@ export default function StudentCredentialDetail() {
   const [credential, setCredential] = useState<CredentialDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [shareTab, setShareTab] = useState<"link" | "qr">("link");
   const [copied, setCopied] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(30);
 
@@ -58,7 +57,6 @@ export default function StudentCredentialDetail() {
 
   // QR refresh timer
   useEffect(() => {
-    if (shareTab !== "qr") return;
     setSecondsLeft(30);
     const interval = setInterval(() => {
       setSecondsLeft((s) => {
@@ -67,7 +65,7 @@ export default function StudentCredentialDetail() {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [shareTab]);
+  }, []);
 
   const verifyUrl = typeof window !== "undefined"
     ? `${window.location.origin}/verify?ref=${refId}`
@@ -82,8 +80,8 @@ export default function StudentCredentialDetail() {
   if (loading) {
     return (
       <RequireAuth allowedRole="student">
-        <div className="flex items-center justify-center py-32 text-slate-400 gap-3">
-          <Loader2 size={20} className="animate-spin" /> Loading credential...
+        <div className="flex items-center justify-center py-32 text-slate-600 font-bold gap-3">
+          <Loader2 size={20} className="animate-spin" strokeWidth={2.5} /> Loading credential...
         </div>
       </RequireAuth>
     );
@@ -92,8 +90,8 @@ export default function StudentCredentialDetail() {
   if (error || !credential) {
     return (
       <RequireAuth allowedRole="student">
-        <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400">
-          <AlertCircle size={18} /> {error || "Credential not found"}
+        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 font-bold shadow-sm">
+          <AlertCircle size={18} strokeWidth={2.5} /> {error || "Credential not found"}
         </div>
       </RequireAuth>
     );
@@ -106,40 +104,40 @@ export default function StudentCredentialDetail() {
 
   return (
     <RequireAuth allowedRole="student">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-3xl mx-auto pb-12">
 
         <button
-          onClick={() => router.push("/student")}
-          className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors text-sm font-medium group"
+          onClick={() => router.push("/student/credentials")}
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-900 mb-6 transition-colors text-sm font-bold group"
         >
-          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          Back to Wallet
+          <ArrowLeft size={16} strokeWidth={2.5} className="group-hover:-translate-x-1 transition-transform" />
+          Back to Credentials
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="flex flex-col gap-6">
 
-          {/* Left — Credential Info (3 cols) */}
-          <div className="lg:col-span-3 space-y-4">
+          {/* Credential Info */}
+          <div className="space-y-4">
 
             {/* Main card */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-              <div className={`w-full h-1.5 ${isRevoked ? "bg-red-500" : "bg-emerald-500"}`} />
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xl">
+              <div className={`w-full h-1.5 ${isRevoked ? "bg-red-500" : "bg-green-500"}`} />
               <div className="p-6">
 
                 {/* Title + status */}
                 <div className="flex items-start justify-between gap-3 mb-6">
                   <div>
-                    <h1 className="text-2xl font-bold text-white">{credential.title}</h1>
+                    <h1 className="text-2xl font-heading font-extrabold text-slate-900">{credential.title}</h1>
                     {credential.grade && (
-                      <p className="text-emerald-400 font-semibold mt-1">Grade: {credential.grade}</p>
+                      <p className="text-green-700 font-bold mt-1">Grade: {credential.grade}</p>
                     )}
                   </div>
-                  <div className={`shrink-0 px-3 py-1 rounded-full border text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                  <div className={`shrink-0 px-3 py-1 rounded-full border text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm ${
                     isRevoked
-                      ? "bg-red-500/10 text-red-400 border-red-500/30"
-                      : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                      ? "bg-red-50 text-red-700 border-red-200"
+                      : "bg-green-50 text-green-700 border-green-200"
                   }`}>
-                    {isRevoked ? <Ban size={12} /> : <ShieldCheck size={12} />}
+                    {isRevoked ? <Ban size={12} strokeWidth={2.5} /> : <ShieldCheck size={12} strokeWidth={2.5} />}
                     {isRevoked ? "Revoked" : "Active"}
                   </div>
                 </div>
@@ -147,16 +145,16 @@ export default function StudentCredentialDetail() {
                 {/* Details grid */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 text-sm">
-                    <Building2 size={15} className="text-slate-500 shrink-0" />
-                    <span className="text-slate-400">Issuer:</span>
-                    <span className="text-white font-mono text-xs">
+                    <Building2 size={15} className="text-slate-500 shrink-0" strokeWidth={2.5} />
+                    <span className="text-slate-500 font-bold">Issuer:</span>
+                    <span className="text-slate-900 font-mono font-medium text-xs">
                       {credential.issuer_wallet.slice(0, 10)}...{credential.issuer_wallet.slice(-6)}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
-                    <Calendar size={15} className="text-slate-500 shrink-0" />
-                    <span className="text-slate-400">Issued:</span>
-                    <span className="text-white">
+                    <Calendar size={15} className="text-slate-500 shrink-0" strokeWidth={2.5} />
+                    <span className="text-slate-500 font-bold">Issued:</span>
+                    <span className="text-slate-900 font-medium">
                       {new Date(credential.issued_at).toLocaleDateString("en-GB", {
                         day: "2-digit", month: "long", year: "numeric"
                       })}
@@ -164,9 +162,9 @@ export default function StudentCredentialDetail() {
                   </div>
                   {credential.expires_at && (
                     <div className="flex items-center gap-3 text-sm">
-                      <Clock size={15} className="text-slate-500 shrink-0" />
-                      <span className="text-slate-400">Expires:</span>
-                      <span className="text-white">
+                      <Clock size={15} className="text-slate-500 shrink-0" strokeWidth={2.5} />
+                      <span className="text-slate-500 font-bold">Expires:</span>
+                      <span className="text-slate-900 font-medium">
                         {new Date(credential.expires_at).toLocaleDateString("en-GB", {
                           day: "2-digit", month: "long", year: "numeric"
                         })}
@@ -174,19 +172,19 @@ export default function StudentCredentialDetail() {
                     </div>
                   )}
                   <div className="flex items-start gap-3 text-sm">
-                    <Fingerprint size={15} className="text-slate-500 shrink-0 mt-0.5" />
-                    <span className="text-slate-400 shrink-0">Ref ID:</span>
-                    <span className="text-emerald-400 font-mono text-xs break-all">{credential.ref_id}</span>
+                    <Fingerprint size={15} className="text-slate-500 shrink-0 mt-0.5" strokeWidth={2.5} />
+                    <span className="text-slate-500 font-bold shrink-0">Ref ID:</span>
+                    <span className="text-green-600 font-mono font-bold text-xs break-all">{credential.ref_id}</span>
                   </div>
                   {credential.tx_hash && (
                     <div className="flex items-start gap-3 text-sm">
-                      <ExternalLink size={15} className="text-slate-500 shrink-0 mt-0.5" />
-                      <span className="text-slate-400 shrink-0">Tx:</span>
+                      <ExternalLink size={15} className="text-slate-500 shrink-0 mt-0.5" strokeWidth={2.5} />
+                      <span className="text-slate-500 font-bold shrink-0">Tx:</span>
                       <a
                         href={`https://sepolia.etherscan.io/tx/${credential.tx_hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-purple-400 font-mono text-xs break-all hover:underline"
+                        className="text-purple-600 font-mono font-bold text-xs break-all hover:underline"
                       >
                         {credential.tx_hash.slice(0, 18)}...
                       </a>
@@ -196,8 +194,8 @@ export default function StudentCredentialDetail() {
 
                 {/* Description */}
                 {credential.description && (
-                  <div className="mt-5 pt-5 border-t border-slate-800">
-                    <p className="text-slate-400 text-sm leading-relaxed">{credential.description}</p>
+                  <div className="mt-5 pt-5 border-t border-slate-200">
+                    <p className="text-slate-600 font-medium text-sm leading-relaxed">{credential.description}</p>
                   </div>
                 )}
               </div>
@@ -205,15 +203,15 @@ export default function StudentCredentialDetail() {
 
             {/* IPFS Certificate */}
             {ipfsUrl && (
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
-                      <FileCheck size={18} />
+                    <div className="p-2 bg-green-50 rounded-lg text-green-600">
+                      <FileCheck size={18} strokeWidth={2.5} />
                     </div>
                     <div>
-                      <p className="text-white text-sm font-semibold">Certificate Document</p>
-                      <p className="text-xs text-slate-500">Stored on IPFS via Pinata</p>
+                      <p className="text-slate-900 text-sm font-bold">Certificate Document</p>
+                      <p className="text-xs text-slate-500 font-medium">Stored on IPFS via Pinata</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -221,16 +219,16 @@ export default function StudentCredentialDetail() {
                       href={ipfsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
+                      className="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5"
                     >
-                      <ExternalLink size={13} /> View
+                      <ExternalLink size={13} strokeWidth={2.5} /> View
                     </a>
                     <a
                       href={ipfsUrl}
                       download
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
+                      className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-sm text-xs font-bold transition-colors flex items-center gap-1.5"
                     >
-                      <Download size={13} /> Download
+                      <Download size={13} strokeWidth={2.5} /> Download
                     </a>
                   </div>
                 </div>
@@ -238,87 +236,59 @@ export default function StudentCredentialDetail() {
             )}
           </div>
 
-          {/* Right — Share Panel (2 cols) */}
-          <div className="lg:col-span-2">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden sticky top-6">
-              <div className="p-5 border-b border-slate-800">
-                <h3 className="text-white font-bold">Share Credential</h3>
-                <p className="text-slate-500 text-xs mt-1">Present or share this credential with verifiers</p>
+          {/* Share Panel */}
+          <div>
+            <div className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+              <div className="p-6 border-b border-slate-200 bg-white">
+                <h3 className="text-slate-900 font-heading font-extrabold text-xl">Share Credential</h3>
+                <p className="text-slate-500 font-medium text-sm mt-1">Present or share this credential with verifiers to prove its authenticity</p>
               </div>
 
-              {/* Tabs */}
-              <div className="flex border-b border-slate-800">
-                {(["link", "qr"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setShareTab(tab)}
-                    className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                      shareTab === tab
-                        ? "text-blue-400 border-b-2 border-blue-400 bg-blue-500/5"
-                        : "text-slate-500 hover:text-slate-300"
-                    }`}
-                  >
-                    {tab === "link" ? "🔗 Verify Link" : "📱 QR Code"}
-                  </button>
-                ))}
-              </div>
-
-              <div className="p-5">
-                <AnimatePresence mode="wait">
-                  {shareTab === "link" ? (
-                    <motion.div
-                      key="link"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                    >
-                      <p className="text-slate-400 text-xs mb-3">
-                        Share this link for online or async verification (LinkedIn, resume, email).
-                      </p>
-                      <div className="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-lg p-3 mb-3">
-                        <code className="text-xs text-emerald-400 flex-1 break-all">{verifyUrl}</code>
-                        <button
-                          onClick={handleCopyLink}
-                          className="shrink-0 p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
-                        >
-                          {copied
-                            ? <CheckCircle size={16} className="text-emerald-500" />
-                            : <Copy size={16} />}
-                        </button>
-                      </div>
-                      <p className="text-xs text-slate-600">
-                        {copied ? "✓ Copied to clipboard!" : "Click the copy icon to copy the link"}
-                      </p>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="qr"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      className="flex flex-col items-center"
-                    >
-                      <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium mb-4 ${
+              {/* Share Content */}
+              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-8 bg-[#F8F8F8]">
+                 {/* QR Code Column */}
+                 <div className="flex flex-col items-center justify-center bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                      <div className={`absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold shadow-sm ${
                         secondsLeft < 10
-                          ? "bg-red-500/10 text-red-400"
-                          : "bg-blue-500/10 text-blue-400"
+                          ? "bg-red-50 border border-red-200 text-red-600"
+                          : "bg-blue-50 border border-blue-200 text-blue-700"
                       }`}>
-                        <Clock size={11} /> Refreshes in {secondsLeft}s
+                        <Clock size={11} strokeWidth={2.5} /> {secondsLeft}s
                       </div>
-                      <div className="bg-white p-4 rounded-xl mb-3 relative overflow-hidden">
+                      <div className="relative mt-8">
                         <motion.div
                           animate={{ top: ["0%", "100%", "0%"] }}
                           transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                          className="absolute left-0 w-full h-0.5 bg-blue-500/50 pointer-events-none"
+                          className="absolute left-0 w-full h-0.5 bg-green-500/50 pointer-events-none z-10"
                         />
-                        <QRCodeSVG value={verifyUrl} size={160} />
+                        <QRCodeSVG value={verifyUrl} size={140} />
                       </div>
-                      <p className="text-xs text-slate-500 text-center">
-                        Scan to verify instantly. Shows active presentation.
+                      <p className="text-xs text-slate-500 font-medium text-center mt-6">
+                        Scan to verify instantly
                       </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                 </div>
+
+                 {/* Link Column */}
+                 <div className="flex flex-col justify-center">
+                    <p className="text-slate-900 font-bold text-sm mb-2">Verify Link</p>
+                    <p className="text-slate-500 font-medium text-xs mb-4">
+                      Share this link for online or async verification (LinkedIn, resume, email).
+                    </p>
+                    <div className="flex items-center gap-2 bg-white border border-slate-200 shadow-sm rounded-xl p-2 mb-3">
+                      <code className="text-[11px] text-green-700 font-bold flex-1 break-all line-clamp-2 px-2">{verifyUrl}</code>
+                      <button
+                        onClick={handleCopyLink}
+                        className="shrink-0 p-2.5 bg-slate-50 hover:bg-green-50 rounded-lg text-slate-500 hover:text-green-600 border border-slate-200 hover:border-green-200 transition-all shadow-sm"
+                      >
+                        {copied
+                          ? <CheckCircle size={16} strokeWidth={2.5} className="text-green-600" />
+                          : <Copy size={16} strokeWidth={2.5} />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-green-600 font-bold h-4">
+                      {copied ? "✓ Copied to clipboard!" : ""}
+                    </p>
+                 </div>
               </div>
             </div>
           </div>

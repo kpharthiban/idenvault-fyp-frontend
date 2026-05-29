@@ -37,18 +37,18 @@ import {
 /* ------------------------------------------------------------------ */
 
 const TYPE_COLORS: Record<CredentialTemplate["type"], string> = {
-  Degree: "bg-blue-500/10 border-blue-500/20 text-blue-400",
-  Award: "bg-purple-500/10 border-purple-500/20 text-purple-400",
-  Certificate: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-  Status: "bg-amber-500/10 border-amber-500/20 text-amber-400",
+  Degree: "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm",
+  Award: "bg-purple-50 border-purple-200 text-purple-700 font-bold shadow-sm",
+  Certificate: "bg-green-50 border-green-200 text-green-700 font-bold shadow-sm",
+  Status: "bg-yellow-50 border-yellow-200 text-yellow-700 font-bold shadow-sm",
 };
 
 const FIELD_TYPE_COLORS: Record<TemplateField["type"], string> = {
-  text: "bg-slate-700 text-slate-300",
-  date: "bg-blue-500/15 text-blue-400",
-  select: "bg-purple-500/15 text-purple-400",
-  file: "bg-amber-500/15 text-amber-400",
-  textarea: "bg-emerald-500/15 text-emerald-400",
+  text: "bg-slate-100 text-slate-700 font-bold",
+  date: "bg-blue-50 text-blue-700 font-bold",
+  select: "bg-purple-50 text-purple-700 font-bold",
+  file: "bg-yellow-50 text-yellow-700 font-bold",
+  textarea: "bg-green-50 text-green-700 font-bold",
 };
 
 function toCamelCase(str: string): string {
@@ -100,10 +100,10 @@ function nextFieldKey(): number {
 
 function TableSkeleton() {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-950 text-slate-400 uppercase font-medium border-b border-slate-800 text-xs">
+          <thead className="bg-slate-50 text-slate-500 uppercase font-bold border-b border-slate-200 text-xs">
             <tr>
               <th className="px-6 py-4">Title</th>
               <th className="px-6 py-4">Type</th>
@@ -113,15 +113,15 @@ function TableSkeleton() {
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800">
+          <tbody className="divide-y divide-slate-200">
             {[...Array(4)].map((_, i) => (
               <tr key={i} className="animate-pulse">
-                <td className="px-6 py-4"><div className="h-4 w-48 bg-slate-800 rounded" /></td>
-                <td className="px-6 py-4"><div className="h-5 w-16 bg-slate-800 rounded-full" /></td>
-                <td className="px-6 py-4"><div className="flex gap-1.5"><div className="h-4 w-12 bg-slate-800 rounded" /><div className="h-4 w-10 bg-slate-800 rounded" /></div></td>
-                <td className="px-6 py-4"><div className="h-4 w-4 bg-slate-800 rounded" /></td>
-                <td className="px-6 py-4"><div className="h-4 w-14 bg-slate-800 rounded" /></td>
-                <td className="px-6 py-4"><div className="h-4 w-24 bg-slate-800 rounded ml-auto" /></td>
+                <td className="px-6 py-4"><div className="h-4 w-48 bg-slate-200 rounded" /></td>
+                <td className="px-6 py-4"><div className="h-5 w-16 bg-slate-200 rounded-full" /></td>
+                <td className="px-6 py-4"><div className="flex gap-1.5"><div className="h-4 w-12 bg-slate-200 rounded" /><div className="h-4 w-10 bg-slate-200 rounded" /></div></td>
+                <td className="px-6 py-4"><div className="h-4 w-4 bg-slate-200 rounded" /></td>
+                <td className="px-6 py-4"><div className="h-4 w-14 bg-slate-200 rounded" /></td>
+                <td className="px-6 py-4"><div className="h-4 w-24 bg-slate-200 rounded ml-auto" /></td>
               </tr>
             ))}
           </tbody>
@@ -141,12 +141,12 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 30 }}
-      className="fixed bottom-6 right-6 z-[60] flex items-center gap-3 bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-lg shadow-emerald-900/40"
+      className="fixed bottom-6 right-6 z-[60] flex items-center gap-3 bg-green-600 text-white px-5 py-3 rounded-xl shadow-lg shadow-green-500/20"
     >
-      <Check size={18} />
-      <span className="text-sm font-medium">{message}</span>
-      <button onClick={onClose} className="ml-2 hover:text-emerald-200 transition-colors">
-        <X size={16} />
+      <Check size={18} strokeWidth={2.5} />
+      <span className="text-sm font-bold">{message}</span>
+      <button onClick={onClose} className="ml-2 hover:text-green-200 transition-colors">
+        <X size={16} strokeWidth={2.5} />
       </button>
     </motion.div>
   );
@@ -172,7 +172,7 @@ function DeleteDialog({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
       onClick={onCancel}
     >
       <motion.div
@@ -180,17 +180,17 @@ function DeleteDialog({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         transition={{ type: "spring", duration: 0.3 }}
-        className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+        className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4">
-          <div className="p-2 rounded-full bg-red-500/10">
-            <AlertTriangle className="text-red-400" size={22} />
+          <div className="p-2 rounded-full bg-red-50">
+            <AlertTriangle className="text-red-600" size={22} strokeWidth={2.5} />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-white">Delete Template</h3>
-            <p className="text-sm text-slate-400 mt-2">
-              Are you sure you want to delete <strong className="text-white">{templateName}</strong>?
+            <h3 className="text-lg font-bold text-slate-900">Delete Template</h3>
+            <p className="text-sm text-slate-600 mt-2 font-medium">
+              Are you sure you want to delete <strong className="text-slate-900">{templateName}</strong>?
               This won&apos;t affect already-issued credentials.
             </p>
           </div>
@@ -199,16 +199,16 @@ function DeleteDialog({
           <button
             onClick={onCancel}
             disabled={isDeleting}
-            className="px-4 py-2 text-sm text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm text-slate-700 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 shadow-sm transition-colors disabled:opacity-50 font-bold"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={isDeleting}
-            className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-500 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+            className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 font-bold"
           >
-            {isDeleting && <Loader2 size={14} className="animate-spin" />}
+            {isDeleting && <Loader2 size={14} className="animate-spin" strokeWidth={2.5} />}
             Delete
           </button>
         </div>
@@ -302,7 +302,7 @@ function TemplateModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm overflow-y-auto py-8 px-4"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/40 backdrop-blur-sm overflow-y-auto py-8 px-4"
       onClick={onClose}
     >
       <motion.div
@@ -310,19 +310,19 @@ function TemplateModal({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 30, opacity: 0 }}
         transition={{ type: "spring", duration: 0.35 }}
-        className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl my-auto"
+        className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl shadow-xl my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
-          <h2 className="text-lg font-semibold text-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+          <h2 className="text-lg font-bold text-slate-900">
             {isEdit ? "Edit Template" : "Create Template"}
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800"
+            className="text-slate-500 hover:text-slate-900 transition-colors p-1 rounded-lg hover:bg-slate-100"
           >
-            <X size={20} />
+            <X size={20} strokeWidth={2.5} />
           </button>
         </div>
 
@@ -330,60 +330,66 @@ function TemplateModal({
         <div className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              Title <span className="text-red-400">*</span>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5">
+              Title <span className="text-red-600">*</span>
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Bachelor of Information Technology"
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition-all"
+              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all shadow-sm"
             />
           </div>
 
           {/* Type + Issuance Mode */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Type</label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value as CredentialTemplate["type"])}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition-all"
-              >
-                <option value="Degree">Degree</option>
-                <option value="Award">Award</option>
-                <option value="Certificate">Certificate</option>
-                <option value="Status">Status</option>
-              </select>
+              <label className="block text-sm font-bold text-slate-700 mb-1.5">Type</label>
+              <div className="relative">
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value as CredentialTemplate["type"])}
+                  className="w-full appearance-none bg-white border border-slate-300 rounded-lg px-3 py-2.5 pr-10 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all shadow-sm font-medium"
+                >
+                  <option value="Degree">Degree</option>
+                  <option value="Award">Award</option>
+                  <option value="Certificate">Certificate</option>
+                  <option value="Status">Status</option>
+                </select>
+                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" strokeWidth={2.5} />
+              </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">
+              <label className="block text-sm font-bold text-slate-700 mb-1.5">
                 Issuance Mode
               </label>
-              <select
-                value={issuanceMode}
-                onChange={(e) =>
-                  setIssuanceMode(e.target.value as CredentialTemplate["issuanceMode"])
-                }
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition-all"
-              >
-                <option value="single">Single</option>
-                <option value="bulk">Bulk</option>
-                <option value="both">Both</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={issuanceMode}
+                  onChange={(e) =>
+                    setIssuanceMode(e.target.value as CredentialTemplate["issuanceMode"])
+                  }
+                  className="w-full appearance-none bg-white border border-slate-300 rounded-lg px-3 py-2.5 pr-10 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all shadow-sm font-medium"
+                >
+                  <option value="single">Single</option>
+                  <option value="bulk">Bulk</option>
+                  <option value="both">Both</option>
+                </select>
+                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" strokeWidth={2.5} />
+              </div>
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">Description</label>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder="What this credential represents..."
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition-all resize-none"
+              className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all resize-none shadow-sm font-medium"
             />
           </div>
 
@@ -394,8 +400,8 @@ function TemplateModal({
             className="flex items-center gap-3 cursor-pointer group w-full text-left"
           >
             <div
-              className={`w-9 h-5 rounded-full flex items-center transition-colors duration-200 shrink-0 ${
-                requiresCert ? "bg-emerald-500" : "bg-slate-700"
+              className={`w-9 h-5 rounded-full flex items-center transition-colors duration-200 shrink-0 shadow-inner ${
+                requiresCert ? "bg-green-600" : "bg-slate-300"
               }`}
             >
               <motion.div
@@ -405,7 +411,7 @@ function TemplateModal({
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               />
             </div>
-            <span className="text-sm text-slate-300 group-hover:text-white transition-colors">
+            <span className="text-sm text-slate-700 font-bold group-hover:text-slate-900 transition-colors">
               Requires certificate file upload
             </span>
           </button>
@@ -413,8 +419,8 @@ function TemplateModal({
           {/* ---- Fields builder ---- */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium text-slate-300">Template Fields</label>
-              <span className="text-xs text-slate-500">{fields.length} field{fields.length !== 1 && "s"}</span>
+              <label className="text-sm font-bold text-slate-900">Template Fields</label>
+              <span className="text-xs text-slate-500 font-medium">{fields.length} field{fields.length !== 1 && "s"}</span>
             </div>
 
             <div className="space-y-3">
@@ -426,7 +432,7 @@ function TemplateModal({
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 space-y-3"
+                    className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 shadow-sm"
                   >
                     {/* Row 1: label, type, required, actions */}
                     <div className="flex items-start gap-3">
@@ -436,38 +442,41 @@ function TemplateModal({
                           value={field.label}
                           onChange={(e) => handleLabelChange(idx, e.target.value)}
                           placeholder="Field label"
-                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all font-medium"
                         />
-                        <span className="text-[11px] text-slate-500 mt-1 block">
-                          name: <code className="text-slate-400">{field.name || "—"}</code>
+                        <span className="text-[11px] text-slate-500 font-medium mt-1 block">
+                          name: <code className="text-slate-600 font-bold">{field.name || "—"}</code>
                         </span>
                       </div>
 
-                      <select
-                        value={field.type}
-                        onChange={(e) =>
-                          updateField(idx, {
-                            type: e.target.value as TemplateField["type"],
-                            ...(e.target.value !== "select" ? { options: undefined } : {}),
-                          })
-                        }
-                        className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all w-28 shrink-0"
-                      >
-                        <option value="text">Text</option>
-                        <option value="date">Date</option>
-                        <option value="select">Select</option>
-                        <option value="file">File</option>
-                        <option value="textarea">Textarea</option>
-                      </select>
+                      <div className="relative w-28 shrink-0">
+                        <select
+                          value={field.type}
+                          onChange={(e) =>
+                            updateField(idx, {
+                              type: e.target.value as TemplateField["type"],
+                              ...(e.target.value !== "select" ? { options: undefined } : {}),
+                            })
+                          }
+                          className="w-full appearance-none bg-white border border-slate-300 rounded-lg pl-3 pr-8 py-2 text-sm text-slate-900 font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all"
+                        >
+                          <option value="text">Text</option>
+                          <option value="date">Date</option>
+                          <option value="select">Select</option>
+                          <option value="file">File</option>
+                          <option value="textarea">Textarea</option>
+                        </select>
+                        <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" strokeWidth={2.5} />
+                      </div>
 
-                      <label className="flex items-center gap-1.5 shrink-0 cursor-pointer pt-2">
+                      <label className="flex items-center gap-2 shrink-0 cursor-pointer pt-2">
                         <input
                           type="checkbox"
                           checked={field.required}
                           onChange={(e) => updateField(idx, { required: e.target.checked })}
-                          className="w-4 h-4 rounded border-slate-600 bg-slate-900 text-emerald-500 focus:ring-emerald-500/40 focus:ring-offset-0"
+                          className="w-4 h-4 rounded cursor-pointer accent-green-600"
                         />
-                        <span className="text-xs text-slate-400">Required</span>
+                        <span className="text-xs text-slate-600 font-bold">Required</span>
                       </label>
                     </div>
 
@@ -477,7 +486,7 @@ function TemplateModal({
                       value={field.placeholder ?? ""}
                       onChange={(e) => updateField(idx, { placeholder: e.target.value })}
                       placeholder="Placeholder text (optional)"
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                     />
 
                     {/* Row 3: options (only for select type) */}
@@ -491,7 +500,7 @@ function TemplateModal({
                           })
                         }
                         placeholder="Comma-separated options, e.g. Option A, Option B"
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40 transition-all"
+                        className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                       />
                     )}
 
@@ -500,25 +509,25 @@ function TemplateModal({
                       <button
                         onClick={() => moveField(idx, -1)}
                         disabled={idx === 0}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-bold"
                         title="Move up"
                       >
-                        <ChevronUp size={14} />
+                        <ChevronUp size={14} strokeWidth={2.5} />
                       </button>
                       <button
                         onClick={() => moveField(idx, 1)}
                         disabled={idx === fields.length - 1}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-bold"
                         title="Move down"
                       >
-                        <ChevronDown size={14} />
+                        <ChevronDown size={14} strokeWidth={2.5} />
                       </button>
                       <button
                         onClick={() => removeField(idx)}
-                        className="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                        className="p-1.5 rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors font-bold"
                         title="Remove field"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={14} strokeWidth={2.5} />
                       </button>
                     </div>
                   </motion.div>
@@ -528,29 +537,29 @@ function TemplateModal({
 
             <button
               onClick={addField}
-              className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-slate-700 text-sm text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-colors"
+              className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-slate-300 bg-white text-sm text-slate-500 font-bold hover:text-green-600 hover:border-green-300 hover:bg-green-50 transition-colors"
             >
-              <Plus size={16} />
+              <Plus size={16} strokeWidth={2.5} />
               Add Field
             </button>
           </div>
         </div>
 
         {/* Modal footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-800">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200">
           <button
             onClick={onClose}
             disabled={isSaving}
-            className="px-4 py-2.5 text-sm text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2.5 text-sm text-slate-700 bg-white hover:bg-slate-50 shadow-sm font-bold rounded-xl border border-slate-200 transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!isValid || isSaving}
-            className="px-5 py-2.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
+            className="px-5 py-2.5 text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl shadow-sm transition-colors flex items-center gap-2"
           >
-            {isSaving && <Loader2 size={14} className="animate-spin" />}
+            {isSaving && <Loader2 size={14} className="animate-spin" strokeWidth={2.5} />}
             {isEdit ? "Save Changes" : "Create Template"}
           </button>
         </div>
@@ -686,50 +695,50 @@ export default function TemplatesPage() {
         {/* ---- Header ---- */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-              <FileBox className="text-emerald-500" />
+            <h2 className="text-3xl font-heading font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+              <FileBox className="text-green-600" strokeWidth={2.5} />
               Credential Templates
             </h2>
-            <p className="text-slate-400 mt-2 max-w-2xl">
+            <p className="text-slate-600 font-medium mt-2 max-w-2xl">
               Templates define the structure and field schema for each credential type your
               institution issues. System defaults are locked — create your own to customise.
             </p>
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-xl transition-colors shrink-0"
+            className="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold shadow-sm rounded-xl transition-colors shrink-0"
           >
-            <Plus size={18} />
+            <Plus size={18} strokeWidth={2.5} />
             Create Template
           </button>
         </div>
 
         {/* ---- Fallback warning banner ---- */}
         {usingFallback && (
-          <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-            <WifiOff size={18} className="text-amber-400 shrink-0" />
-            <p className="text-sm text-amber-200 flex-1">
+          <div className="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+            <WifiOff size={18} className="text-yellow-600 shrink-0" strokeWidth={2.5} />
+            <p className="text-sm text-yellow-800 font-bold flex-1">
               Could not connect to server. Showing local defaults.
             </p>
             <button
               onClick={loadTemplates}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg border border-amber-500/20 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-yellow-700 bg-yellow-100 hover:bg-yellow-200 rounded-lg border border-yellow-200 transition-colors"
             >
-              <RefreshCw size={12} /> Retry
+              <RefreshCw size={12} strokeWidth={2.5} /> Retry
             </button>
           </div>
         )}
 
         {/* ---- Fetch error (non-fallback, e.g. no wallet) ---- */}
         {fetchError && !usingFallback && (
-          <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <AlertTriangle size={18} className="text-red-400 shrink-0" />
-            <p className="text-sm text-red-300 flex-1">{fetchError}</p>
+          <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+            <AlertTriangle size={18} className="text-red-600 shrink-0" strokeWidth={2.5} />
+            <p className="text-sm text-red-800 font-bold flex-1">{fetchError}</p>
             <button
               onClick={loadTemplates}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg border border-red-500/20 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-red-700 bg-red-100 hover:bg-red-200 rounded-lg border border-red-200 transition-colors"
             >
-              <RefreshCw size={12} /> Retry
+              <RefreshCw size={12} strokeWidth={2.5} /> Retry
             </button>
           </div>
         )}
@@ -739,10 +748,10 @@ export default function TemplatesPage() {
 
         {/* ---- Table ---- */}
         {!isLoading && (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-slate-950 text-slate-400 uppercase font-medium border-b border-slate-800 text-xs">
+                <thead className="bg-slate-50 text-slate-500 uppercase font-bold border-b border-slate-200 text-xs">
                   <tr>
                     <th className="px-6 py-4">Title</th>
                     <th className="px-6 py-4">Type</th>
@@ -752,20 +761,20 @@ export default function TemplatesPage() {
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800 text-slate-300">
+                <tbody className="divide-y divide-slate-200 text-slate-600 font-medium">
                   {templates.map((template) => {
                     const isDefault = !!template.isSystemDefault;
                     return (
                       <tr
                         key={template.id}
-                        className="hover:bg-slate-800/30 transition-colors"
+                        className="hover:bg-slate-50 transition-colors"
                       >
                         {/* Title */}
                         <td className="px-6 py-4 max-w-xs">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-white">{template.title}</span>
+                            <span className="font-bold text-slate-900">{template.title}</span>
                             {isDefault && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-500 uppercase font-semibold shrink-0">
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-500 uppercase font-bold shrink-0">
                                 Default
                               </span>
                             )}
@@ -775,7 +784,7 @@ export default function TemplatesPage() {
                         {/* Type badge */}
                         <td className="px-6 py-4">
                           <span
-                            className={`text-xs px-2.5 py-1 rounded-full border font-medium ${TYPE_COLORS[template.type]}`}
+                            className={`text-xs px-2.5 py-1 rounded-full border font-bold ${TYPE_COLORS[template.type]}`}
                           >
                             {template.type}
                           </span>
@@ -788,8 +797,8 @@ export default function TemplatesPage() {
                               className={`text-[10px] px-2 py-0.5 rounded border uppercase font-bold ${
                                 template.issuanceMode === "single" ||
                                 template.issuanceMode === "both"
-                                  ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
-                                  : "bg-slate-800 border-slate-700 text-slate-600 opacity-50"
+                                  ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
+                                  : "bg-slate-100 border-slate-200 text-slate-400 opacity-70"
                               }`}
                             >
                               Single
@@ -798,8 +807,8 @@ export default function TemplatesPage() {
                               className={`text-[10px] px-2 py-0.5 rounded border uppercase font-bold ${
                                 template.issuanceMode === "bulk" ||
                                 template.issuanceMode === "both"
-                                  ? "bg-purple-500/10 border-purple-500/20 text-purple-400"
-                                  : "bg-slate-800 border-slate-700 text-slate-600 opacity-50"
+                                  ? "bg-purple-50 border-purple-200 text-purple-700 shadow-sm"
+                                  : "bg-slate-100 border-slate-200 text-slate-400 opacity-70"
                               }`}
                             >
                               Bulk
@@ -810,14 +819,14 @@ export default function TemplatesPage() {
                         {/* Certificate Required */}
                         <td className="px-6 py-4">
                           {template.requiresCertificate ? (
-                            <Check size={16} className="text-emerald-400" />
+                            <Check size={16} className="text-green-600" strokeWidth={2.5} />
                           ) : (
-                            <Minus size={16} className="text-slate-600" />
+                            <Minus size={16} className="text-slate-400" strokeWidth={2.5} />
                           )}
                         </td>
 
                         {/* Fields count */}
-                        <td className="px-6 py-4 text-slate-400 text-xs">
+                        <td className="px-6 py-4 text-slate-500 text-xs">
                           {template.fields.length} field{template.fields.length !== 1 && "s"}
                         </td>
 
@@ -826,27 +835,27 @@ export default function TemplatesPage() {
                           <div className="flex items-center justify-end gap-2">
                             {isDefault ? (
                               <span
-                                className="flex items-center gap-1.5 text-xs text-slate-500"
+                                className="flex items-center gap-1.5 text-xs text-slate-500 font-bold"
                                 title="System default — cannot be modified"
                               >
-                                <Lock size={14} />
+                                <Lock size={14} strokeWidth={2.5} />
                                 System default
                               </span>
                             ) : (
                               <>
                                 <button
                                   onClick={() => openEdit(template)}
-                                  className="p-2 rounded-lg text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+                                  className="p-2 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                                   title="Edit template"
                                 >
-                                  <Pencil size={15} />
+                                  <Pencil size={15} strokeWidth={2.5} />
                                 </button>
                                 <button
                                   onClick={() => setDeleteTarget(template)}
-                                  className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                  className="p-2 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
                                   title="Delete template"
                                 >
-                                  <Trash2 size={15} />
+                                  <Trash2 size={15} strokeWidth={2.5} />
                                 </button>
                               </>
                             )}
@@ -858,7 +867,7 @@ export default function TemplatesPage() {
 
                   {templates.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-16 text-center text-slate-500">
+                      <td colSpan={6} className="px-6 py-16 text-center text-slate-500 font-medium">
                         No templates yet. Click &quot;Create Template&quot; to get started.
                       </td>
                     </tr>

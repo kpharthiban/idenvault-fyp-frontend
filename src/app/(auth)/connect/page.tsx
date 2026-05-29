@@ -58,48 +58,48 @@ export default function ConnectPage() {
   const isStudent = selectedRole === "student";
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-slate-950">
+    <main className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-[#F8F8F8] bg-dotgrid">
       
       {/* Background Decor */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className={`absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full blur-[100px] opacity-20 ${isStudent ? 'bg-blue-600' : 'bg-emerald-600'}`} />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px]" />
+        <div className={`absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full blur-[100px] opacity-60 ${isStudent ? 'bg-blue-100' : 'bg-emerald-100'}`} />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-50 rounded-full blur-[100px] opacity-60" />
       </div>
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.3 }}
         className="w-full max-w-md z-10"
       >
         <button
             onClick={() => router.push("/")}
-            className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors text-sm font-medium group"
+            className="flex items-center gap-2 text-slate-500 hover:text-slate-900 mb-6 transition-colors text-sm font-medium group"
         >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
             Back to Role Selection
         </button>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow duration-200 relative overflow-hidden">
             
             {/* Top Border Accent */}
             <div className={`absolute top-0 left-0 w-full h-1 ${isStudent ? 'bg-blue-500' : 'bg-emerald-500'}`} />
 
             <div className="flex flex-col items-center text-center">
-                <div className={`p-4 rounded-full mb-6 ${isStudent ? 'bg-blue-500/10 text-blue-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
-                    <Wallet size={40} />
+                <div className={`p-4 rounded-xl mb-6 border ${isStudent ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                    <Wallet size={32} strokeWidth={2.5} />
                 </div>
 
-                <h1 className="text-2xl font-bold text-white mb-2">Connect Wallet</h1>
-                <p className="text-slate-400 mb-8">
+                <h1 className="font-heading text-2xl font-extrabold text-slate-900 mb-2 tracking-tight">Connect Wallet</h1>
+                <p className="text-slate-600 mb-8 text-[15px]">
                     You are initializing a secure session as a <br />
-                    <span className={`font-mono font-medium uppercase tracking-wider ${isStudent ? 'text-blue-400' : 'text-emerald-400'}`}>
+                    <span className={`font-mono font-bold uppercase tracking-wider ${isStudent ? 'text-blue-600' : 'text-emerald-600'}`}>
                         {selectedRole}
                     </span>
                 </p>
 
                 {error && (
-                    <div className="w-full mb-6 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-3 text-sm text-red-400 text-left">
+                    <div className="w-full mb-6 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-sm text-red-700 text-left">
                         <AlertCircle size={18} className="shrink-0" />
                         <p>{error}</p>
                     </div>
@@ -108,26 +108,26 @@ export default function ConnectPage() {
                 <button
                     onClick={handleConnect}
                     disabled={isConnecting}
-                    className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed
+                    className={`w-full py-3.5 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 active:shadow-none
                     ${isStudent 
-                        ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20' 
-                        : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                        ? 'bg-blue-600 hover:bg-blue-700' 
+                        : 'bg-emerald-600 hover:bg-emerald-700'
                     }`}
                 >
                     {isConnecting ? (
                         <>
-                            <Loader2 size={20} className="animate-spin" />
+                            <Loader2 size={18} className="animate-spin" />
                             Establishing Connection...
                         </>
                     ) : (
                         <>
-                            <ShieldCheck size={20} />
+                            <ShieldCheck size={18} strokeWidth={2.5} />
                             Connect MetaMask
                         </>
                     )}
                 </button>
 
-                <p className="mt-6 text-xs text-slate-500 max-w-xs">
+                <p className="mt-6 text-xs text-slate-400 max-w-xs">
                     By connecting, you agree to sign a cryptographic challenge to verify your identity.
                 </p>
             </div>

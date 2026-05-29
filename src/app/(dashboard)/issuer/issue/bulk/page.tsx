@@ -754,45 +754,45 @@ export default function BulkIssuePage() {
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <button onClick={() => router.push("/issuer/issue")} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium group">
-            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+          <button onClick={() => router.push("/issuer/issue")} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors text-sm font-bold group">
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" strokeWidth={2.5} />
             Back to Single Issue
           </button>
-          <div className="flex items-center gap-2 text-emerald-400 font-bold">
-            <Users size={20} /> Bulk Issuance Wizard
+          <div className="flex items-center gap-2 text-green-600 font-heading font-extrabold text-lg">
+            <Users size={20} strokeWidth={2.5} /> Bulk Issuance Wizard
           </div>
         </div>
 
         {connectionsLoading ? (
-          <div className="flex items-center justify-center py-20 text-slate-400 gap-3">
-            <Loader2 size={20} className="animate-spin" /> Loading connections...
+          <div className="flex items-center justify-center py-20 text-slate-500 gap-3 font-medium">
+            <Loader2 size={20} className="animate-spin" strokeWidth={2.5} /> Loading connections...
           </div>
         ) : connectionsError ? (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center">
-            <AlertCircle size={36} className="mx-auto mb-3 text-red-400 opacity-60" />
-            <p className="text-red-400 mb-4">{connectionsError}</p>
-            <button onClick={loadConnections} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium border border-slate-700 transition-colors text-sm inline-flex items-center gap-2">
-              <RefreshCw size={14} /> Retry
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-sm">
+            <AlertCircle size={36} className="mx-auto mb-3 text-red-600 opacity-60" strokeWidth={2.5} />
+            <p className="text-red-600 mb-4 font-medium">{connectionsError}</p>
+            <button onClick={loadConnections} className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-bold border border-slate-200 shadow-sm transition-colors text-sm inline-flex items-center gap-2">
+              <RefreshCw size={14} strokeWidth={2.5} /> Retry
             </button>
           </div>
         ) : (
           <>
             {/* Progress Bar (wizard steps — not during processing/success/error) */}
             {!["processing", "success", "error"].includes(step) && (
-              <div className="flex items-center justify-between mb-8 px-4 relative">
-                <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-800 -z-10" />
+              <div className="flex items-start justify-between mb-8 px-4 relative">
+                <div className="absolute top-4 left-8 right-8 h-1 bg-slate-200 -z-10 -translate-y-1/2" />
                 {stepList.map((s, idx) => {
                   const currentIdx = stepList.indexOf(step as any);
                   const isActive = step === s;
                   const isPast = currentIdx > idx;
                   return (
-                    <div key={s} className={`flex flex-col items-center gap-2 bg-slate-950 px-2 ${isActive || isPast ? "text-emerald-400" : "text-slate-600"}`}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${
-                        isActive || isPast ? "bg-emerald-500/10 border-emerald-500" : "bg-slate-900 border-slate-700"
+                    <div key={s} className={`flex flex-col items-center gap-2 ${isActive || isPast ? "text-green-700" : "text-slate-400"}`}>
+                      <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${
+                        isActive || isPast ? "bg-green-50 border-green-500 text-green-700" : "bg-white border-slate-300 text-slate-500"
                       }`}>
-                        {isPast ? <CheckCircle size={14} /> : idx + 1}
+                        {isPast ? <CheckCircle size={14} strokeWidth={2.5} /> : idx + 1}
                       </div>
-                      <span className="text-xs uppercase font-medium">{stepLabels[s]}</span>
+                      <span className="text-xs uppercase font-bold bg-[#F8F8F8] px-1">{stepLabels[s]}</span>
                     </div>
                   );
                 })}
@@ -800,13 +800,13 @@ export default function BulkIssuePage() {
             )}
 
             {/* MAIN CARD */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl relative min-h-[400px]">
+            <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-xl relative min-h-[400px]">
 
               {/* ────── SOURCE STEP ────── */}
               {step === "source" && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                  <h2 className="text-2xl font-bold text-white mb-2">Choose Source</h2>
-                  <p className="text-slate-400 text-sm mb-6">How would you like to provide recipient data?</p>
+                  <h2 className="text-2xl font-heading font-extrabold text-slate-900 mb-2">Choose Source</h2>
+                  <p className="text-slate-600 text-sm mb-6 font-medium">How would you like to provide recipient data?</p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* External System card */}
@@ -821,29 +821,29 @@ export default function BulkIssuePage() {
                         setDataSource("external");
                         if (connections.length === 1) setSelectedConnection(connections[0]);
                       }}
-                      className={`bg-slate-900 border rounded-2xl p-6 transition-all ${
+                      className={`bg-white border rounded-2xl p-6 transition-all shadow-sm ${
                         connections.length === 0
-                          ? "border-slate-800 opacity-50 cursor-not-allowed"
+                          ? "border-slate-200 opacity-50 cursor-not-allowed"
                           : dataSource === "external"
-                            ? "border-emerald-500 bg-emerald-500/10 cursor-pointer"
-                            : "border-slate-800 cursor-pointer hover:border-slate-600"
+                            ? "border-green-500 bg-green-50 cursor-pointer"
+                            : "border-slate-200 cursor-pointer hover:border-slate-300"
                       }`}
                     >
                       <div className="flex items-start gap-4">
-                        <div className={`p-3 rounded-xl ${dataSource === "external" ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-800 text-slate-400"}`}>
-                          <Server size={24} />
+                        <div className={`p-3 rounded-xl ${dataSource === "external" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
+                          <Server size={24} strokeWidth={2.5} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-white font-bold text-lg">External System</h3>
-                          <p className="text-slate-400 text-sm mt-1">Pull recipients from a connected institutional system (SIS)</p>
+                          <h3 className="text-slate-900 font-bold text-lg">External System</h3>
+                          <p className="text-slate-500 text-sm mt-1 font-medium">Pull recipients from a connected institutional system (SIS)</p>
                           {connections.length > 0 ? (
-                            <span className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20">
-                              <CheckCircle size={12} /> Connected ({connections.length})
+                            <span className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold border border-green-200">
+                              <CheckCircle size={12} strokeWidth={2.5} /> Connected ({connections.length})
                             </span>
                           ) : (
                             <div className="mt-3">
-                              <span className="text-slate-500 text-xs">No systems connected</span>
-                              <a href="/issuer/external-systems" className="ml-2 text-xs text-blue-400 hover:underline">Connect one →</a>
+                              <span className="text-slate-400 text-xs font-bold">No systems connected</span>
+                              <a href="/issuer/external-systems" className="ml-2 text-xs text-blue-600 hover:underline font-bold">Connect one →</a>
                             </div>
                           )}
                         </div>
@@ -859,19 +859,19 @@ export default function BulkIssuePage() {
                         }
                         setDataSource("csv");
                       }}
-                      className={`bg-slate-900 border rounded-2xl p-6 cursor-pointer transition-all ${
+                      className={`bg-white border rounded-2xl p-6 cursor-pointer transition-all shadow-sm ${
                         dataSource === "csv"
-                          ? "border-emerald-500 bg-emerald-500/10"
-                          : "border-slate-800 hover:border-slate-600"
+                          ? "border-green-500 bg-green-50"
+                          : "border-slate-200 hover:border-slate-300"
                       }`}
                     >
                       <div className="flex items-start gap-4">
-                        <div className={`p-3 rounded-xl ${dataSource === "csv" ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-800 text-slate-400"}`}>
-                          <Upload size={24} />
+                        <div className={`p-3 rounded-xl ${dataSource === "csv" ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
+                          <Upload size={24} strokeWidth={2.5} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-white font-bold text-lg">CSV / Spreadsheet Upload</h3>
-                          <p className="text-slate-400 text-sm mt-1">Upload a CSV file with recipient details and wallet addresses</p>
+                          <h3 className="text-slate-900 font-bold text-lg">CSV / Spreadsheet Upload</h3>
+                          <p className="text-slate-500 text-sm mt-1 font-medium">Upload a CSV file with recipient details and wallet addresses</p>
                         </div>
                       </div>
                     </div>
@@ -880,20 +880,20 @@ export default function BulkIssuePage() {
                   {/* Connection picker (shown when external selected and multiple connections) */}
                   {dataSource === "external" && connections.length > 1 && (
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
-                      <h3 className="text-sm font-semibold text-slate-300 mb-3">Select Connection</h3>
+                      <h3 className="text-sm font-bold text-slate-700 mb-3">Select Connection</h3>
                       <div className="grid gap-3">
                         {connections.map((conn) => {
                           const isSelected = selectedConnection?.id === conn.id;
                           return (
-                            <div key={conn.id} onClick={() => setSelectedConnection(conn)} className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${isSelected ? "border-emerald-500 bg-emerald-500/10" : "border-slate-700 bg-slate-800/50 hover:border-slate-500"}`}>
+                            <div key={conn.id} onClick={() => setSelectedConnection(conn)} className={`p-4 rounded-xl border-2 transition-all cursor-pointer shadow-sm ${isSelected ? "border-green-500 bg-green-50" : "border-slate-200 bg-white hover:border-slate-300"}`}>
                               <div className="flex items-center gap-4">
-                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? "border-emerald-500" : "border-slate-600"}`}>
-                                  {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? "border-green-500" : "border-slate-300"}`}>
+                                  {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-green-500" />}
                                 </div>
                                 <div className="min-w-0">
-                                  <h3 className="text-white font-bold">{conn.system_name}</h3>
-                                  <p className="text-slate-400 text-xs font-mono mt-0.5 break-all">{conn.endpoint_url}</p>
-                                  <p className="text-slate-500 text-xs mt-0.5">Connected {formatDate(conn.connected_at)}</p>
+                                  <h3 className="text-slate-900 font-bold">{conn.system_name}</h3>
+                                  <p className="text-slate-500 text-xs font-mono mt-0.5 break-all font-medium">{conn.endpoint_url}</p>
+                                  <p className="text-slate-400 text-xs mt-0.5 font-bold">Connected {formatDate(conn.connected_at)}</p>
                                 </div>
                               </div>
                             </div>
@@ -910,9 +910,9 @@ export default function BulkIssuePage() {
                         setStep("template");
                       }}
                       disabled={!dataSource || (dataSource === "external" && connections.length > 1 && !selectedConnection)}
-                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center gap-2"
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center gap-2 shadow-sm"
                     >
-                      Next <ChevronRight size={18} />
+                      Next <ChevronRight size={18} strokeWidth={2.5} />
                     </button>
                   </div>
                 </motion.div>
@@ -921,28 +921,28 @@ export default function BulkIssuePage() {
               {/* ────── TEMPLATE STEP ────── */}
               {step === "template" && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                  <h2 className="text-2xl font-bold text-white mb-2">Select Credential Template</h2>
+                  <h2 className="text-2xl font-heading font-extrabold text-slate-900 mb-2">Select Credential Template</h2>
 
                   {selectedConnection && (
-                    <div className="flex items-center gap-2 mb-6 text-xs text-slate-400 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 w-fit">
-                      <Database size={13} className="text-blue-400" />
-                      Source: <span className="text-white font-medium">{selectedConnection.system_name}</span>
+                    <div className="flex items-center gap-2 mb-6 text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 w-fit font-medium">
+                      <Database size={13} className="text-blue-600" />
+                      Source: <span className="text-slate-900 font-bold">{selectedConnection.system_name}</span>
                     </div>
                   )}
 
                   {usingFallback && (
-                    <div className="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl mb-4">
-                      <WifiOff size={16} className="text-amber-400 shrink-0" />
-                      <p className="text-xs text-amber-200 flex-1">Could not connect to server. Showing local defaults.</p>
-                      <button onClick={loadTemplates} className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg border border-amber-500/20 transition-colors">
-                        <RefreshCw size={10} /> Retry
+                    <div className="flex items-center gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl mb-4 shadow-sm">
+                      <WifiOff size={16} className="text-yellow-600 shrink-0" strokeWidth={2.5} />
+                      <p className="text-xs text-yellow-700 flex-1 font-bold">Could not connect to server. Showing local defaults.</p>
+                      <button onClick={loadTemplates} className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-yellow-700 bg-white hover:bg-yellow-50 rounded-lg border border-yellow-200 transition-colors shadow-sm">
+                        <RefreshCw size={12} strokeWidth={2.5} /> Retry
                       </button>
                     </div>
                   )}
 
                   {templatesLoading ? (
-                    <div className="flex items-center justify-center gap-3 py-12 text-slate-400">
-                      <Loader2 size={20} className="animate-spin" />
+                    <div className="flex items-center justify-center gap-3 py-12 text-slate-500 font-medium">
+                      <Loader2 size={20} className="animate-spin" strokeWidth={2.5} />
                       <span className="text-sm">Loading templates...</span>
                     </div>
                   ) : (
@@ -950,20 +950,20 @@ export default function BulkIssuePage() {
                       {bulkTemplates.map((t) => {
                         const isSelected = selectedTemplate?.id === t.id;
                         return (
-                          <div key={t.id} onClick={() => setSelectedTemplate(t)} className={`p-4 rounded-xl border-2 transition-all flex items-center justify-between cursor-pointer ${isSelected ? "border-emerald-500 bg-emerald-500/10" : "border-slate-700 bg-slate-800/50 hover:border-slate-500"}`}>
+                          <div key={t.id} onClick={() => setSelectedTemplate(t)} className={`p-4 rounded-xl border-2 transition-all flex items-center justify-between cursor-pointer shadow-sm ${isSelected ? "border-green-500 bg-green-50" : "border-slate-200 bg-white hover:border-slate-300"}`}>
                             <div className="flex items-center gap-4">
-                              <div className={`p-3 rounded-lg ${isSelected ? "bg-emerald-500 text-white" : "bg-slate-700 text-slate-400"}`}>
-                                <Award size={24} />
+                              <div className={`p-3 rounded-lg ${isSelected ? "bg-green-600 text-white" : "bg-slate-100 text-slate-500"}`}>
+                                <Award size={24} strokeWidth={2.5} />
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <h3 className="text-white font-bold text-lg">{t.title}</h3>
-                                  <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold uppercase ${TYPE_BADGE[t.type]}`}>{t.type}</span>
+                                  <h3 className="text-slate-900 font-bold text-lg">{t.title}</h3>
+                                  <span className={`text-[10px] px-2 py-0.5 rounded border font-bold uppercase ${TYPE_BADGE[t.type]}`}>{t.type}</span>
                                 </div>
-                                <p className="text-slate-400 text-sm mt-0.5">{t.description}</p>
+                                <p className="text-slate-500 text-sm mt-0.5 font-medium">{t.description}</p>
                               </div>
                             </div>
-                            {isSelected && <CheckCircle className="text-emerald-500 shrink-0" size={24} />}
+                            {isSelected && <CheckCircle className="text-green-600 shrink-0" size={24} strokeWidth={2.5} />}
                           </div>
                         );
                       })}
@@ -971,25 +971,25 @@ export default function BulkIssuePage() {
                   )}
 
                   {selectedTemplate && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 bg-slate-950 border border-slate-800 rounded-xl p-5">
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">
                       <div className="flex items-center gap-2 mb-4">
-                        <FileText size={16} className="text-slate-400" />
-                        <h4 className="text-sm font-semibold text-white">Template Field Schema</h4>
-                        <span className="ml-auto text-xs text-slate-500">{selectedTemplate.fields.length} field{selectedTemplate.fields.length !== 1 && "s"}</span>
+                        <FileText size={16} className="text-slate-500" strokeWidth={2.5} />
+                        <h4 className="text-sm font-bold text-slate-900">Template Field Schema</h4>
+                        <span className="ml-auto text-xs text-slate-500 font-medium">{selectedTemplate.fields.length} field{selectedTemplate.fields.length !== 1 && "s"}</span>
                       </div>
-                      <p className="text-xs text-slate-500 mb-3">Each recipient record from the external system must supply values for these fields:</p>
+                      <p className="text-xs text-slate-600 mb-3 font-medium">Each recipient record from the external system must supply values for these fields:</p>
                       <div className="space-y-2">
                         {selectedTemplate.fields.map((f) => (
-                          <div key={f.name} className="flex items-center gap-3 text-sm py-1.5 px-3 rounded-lg bg-slate-900/60">
-                            <span className="text-white font-medium flex-1 min-w-0 truncate">{f.label}</span>
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 uppercase font-bold shrink-0">{FIELD_TYPE_LABEL[f.type]}</span>
-                            {f.required && <span className="flex items-center gap-0.5 text-[10px] text-red-400 shrink-0"><Asterisk size={10} /> required</span>}
+                          <div key={f.name} className="flex items-center gap-3 text-sm py-1.5 px-3 rounded-lg bg-white border border-slate-200 shadow-sm">
+                            <span className="text-slate-900 font-bold flex-1 min-w-0 truncate">{f.label}</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-500 uppercase font-bold shrink-0">{FIELD_TYPE_LABEL[f.type]}</span>
+                            {f.required && <span className="flex items-center gap-0.5 text-[10px] text-red-600 font-bold shrink-0"><Asterisk size={10} /> required</span>}
                           </div>
                         ))}
                       </div>
                       {selectedTemplate.requiresCertificate && (
-                        <div className="mt-4 flex items-center gap-2 text-xs text-amber-400 bg-amber-500/5 border border-amber-500/10 rounded-lg px-3 py-2">
-                          <Upload size={14} className="shrink-0" />
+                        <div className="mt-4 flex items-center gap-2 text-xs text-yellow-700 font-bold bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                          <Upload size={14} className="shrink-0" strokeWidth={2.5} />
                           This template requires a certificate file upload per recipient.
                         </div>
                       )}
@@ -997,16 +997,16 @@ export default function BulkIssuePage() {
                   )}
 
                   <div className="mt-8 flex justify-between">
-                    <button onClick={() => setStep("source")} className="text-slate-400 hover:text-white transition-colors">Back</button>
+                    <button onClick={() => setStep("source")} className="text-slate-500 hover:text-slate-900 transition-colors font-bold">Back</button>
                     <button
                       onClick={() => {
                         if (dataSource === "external") goToParticipants();
                         else if (dataSource === "csv") setStep("upload");
                       }}
                       disabled={!selectedTemplate}
-                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center gap-2"
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center gap-2 shadow-sm"
                     >
-                      Next Step <ChevronRight size={18} />
+                      Next Step <ChevronRight size={18} strokeWidth={2.5} />
                     </button>
                   </div>
                 </motion.div>
@@ -1016,49 +1016,49 @@ export default function BulkIssuePage() {
               {step === "participants" && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-white">Select Recipients</h2>
+                    <h2 className="text-2xl font-heading font-extrabold text-slate-900">Select Recipients</h2>
                     {!studentsLoading && !studentsError && externalStudents.length > 0 && (
-                      <button onClick={handleSelectAll} className="text-sm text-blue-400 hover:underline">
+                      <button onClick={handleSelectAll} className="text-sm text-blue-600 hover:underline font-bold">
                         {selectedStudentIds.length === externalStudents.length ? "Deselect All" : "Select All"}
                       </button>
                     )}
                   </div>
 
-                  <div className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-lg flex items-center gap-2 mb-4">
-                    <ShieldCheck size={16} className="text-purple-400 shrink-0" />
-                    <p className="text-xs text-purple-200">
+                  <div className="bg-purple-50 border border-purple-200 p-3 rounded-lg flex items-center gap-2 mb-4 shadow-sm">
+                    <ShieldCheck size={16} className="text-purple-600 shrink-0" strokeWidth={2.5} />
+                    <p className="text-xs text-purple-700 font-medium">
                       <strong>Data Governance:</strong> Recipients are retrieved from connected institutional systems. This data is authoritative.
                     </p>
                   </div>
 
                   {participantError && (
-                    <div className="flex items-center gap-2 mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-                      <AlertCircle size={14} className="shrink-0" /> {participantError}
+                    <div className="flex items-center gap-2 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm font-bold shadow-sm">
+                      <AlertCircle size={14} className="shrink-0" strokeWidth={2.5} /> {participantError}
                     </div>
                   )}
 
                   {studentsLoading ? (
-                    <div className="flex items-center justify-center py-16 text-slate-400 gap-3">
-                      <Loader2 size={18} className="animate-spin" /> <span className="text-sm">Fetching student records...</span>
+                    <div className="flex items-center justify-center py-16 text-slate-500 gap-3 font-medium">
+                      <Loader2 size={18} className="animate-spin" strokeWidth={2.5} /> <span className="text-sm">Fetching student records...</span>
                     </div>
                   ) : studentsError ? (
                     <div className="p-6 text-center">
-                      <AlertCircle size={32} className="mx-auto mb-3 text-red-400 opacity-60" />
-                      <p className="text-red-400 text-sm mb-4">{studentsError}</p>
-                      <button onClick={fetchStudents} className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium border border-slate-700 transition-colors text-sm inline-flex items-center gap-2">
-                        <RefreshCw size={14} /> Retry
+                      <AlertCircle size={32} className="mx-auto mb-3 text-red-600 opacity-60" strokeWidth={2.5} />
+                      <p className="text-red-600 text-sm mb-4 font-bold">{studentsError}</p>
+                      <button onClick={fetchStudents} className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-bold border border-slate-200 shadow-sm transition-colors text-sm inline-flex items-center gap-2">
+                        <RefreshCw size={14} strokeWidth={2.5} /> Retry
                       </button>
                     </div>
                   ) : externalStudents.length === 0 ? (
-                    <div className="text-center py-16 text-slate-500">
-                      <Users size={36} className="mx-auto mb-3 opacity-30" />
+                    <div className="text-center py-16 text-slate-500 font-medium">
+                      <Users size={36} className="mx-auto mb-3 opacity-30" strokeWidth={2.5} />
                       <p>No student records found in this system.</p>
                     </div>
                   ) : (
-                    <div className="bg-slate-950 rounded-xl overflow-hidden border border-slate-800">
+                    <div className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                          <thead className="bg-slate-900 text-slate-400 uppercase text-xs">
+                          <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-bold">
                             <tr>
                               <th className="px-3 py-3 w-10"></th>
                               <th className="px-3 py-3">Student ID</th>
@@ -1069,28 +1069,28 @@ export default function BulkIssuePage() {
                               <th className="px-3 py-3">Certificate</th>
                             </tr>
                           </thead>
-                          <tbody className="text-slate-300 divide-y divide-slate-800/60">
+                          <tbody className="text-slate-600 divide-y divide-slate-200">
                             {externalStudents.map((s) => (
-                              <tr key={s.id} onClick={() => toggleStudent(s.id)} className={`cursor-pointer transition-colors ${selectedStudentIds.includes(s.id) ? "bg-emerald-500/5" : "hover:bg-slate-800/30"}`}>
+                              <tr key={s.id} onClick={() => toggleStudent(s.id)} className={`cursor-pointer transition-colors ${selectedStudentIds.includes(s.id) ? "bg-green-50" : "hover:bg-slate-50"}`}>
                                 <td className="px-3 py-3">
-                                  <input type="checkbox" checked={selectedStudentIds.includes(s.id)} onChange={() => toggleStudent(s.id)} className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500" />
+                                  <input type="checkbox" checked={selectedStudentIds.includes(s.id)} onChange={() => toggleStudent(s.id)} className="w-4 h-4 rounded border-slate-300 bg-white text-green-600 focus:ring-green-600" />
                                 </td>
-                                <td className="px-3 py-3 font-mono text-xs text-blue-400">{s.student_id}</td>
-                                <td className="px-3 py-3 font-medium text-white text-sm">{s.name}</td>
-                                <td className="px-3 py-3 text-xs">{s.programme}</td>
-                                <td className="px-3 py-3 text-xs">{s.gpa || "—"}</td>
+                                <td className="px-3 py-3 font-mono text-xs text-blue-600 font-bold">{s.student_id}</td>
+                                <td className="px-3 py-3 font-bold text-slate-900 text-sm">{s.name}</td>
+                                <td className="px-3 py-3 text-xs font-medium">{s.programme}</td>
+                                <td className="px-3 py-3 text-xs font-medium">{s.gpa || "—"}</td>
                                 <td className="px-3 py-3 font-mono text-xs">
                                   {s.wallet_address ? (
-                                    <span className="text-slate-300">{truncateAddress(s.wallet_address)}</span>
+                                    <span className="text-slate-600">{truncateAddress(s.wallet_address)}</span>
                                   ) : (
-                                    <span className="text-red-400">Missing</span>
+                                    <span className="text-red-600 font-bold">Missing</span>
                                   )}
                                 </td>
                                 <td className="px-3 py-3">
                                   {s.has_certificate ? (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">Available</span>
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-200">Available</span>
                                   ) : (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-800 text-slate-500 text-[10px] font-bold border border-slate-700">None</span>
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold border border-slate-200">None</span>
                                   )}
                                 </td>
                               </tr>
@@ -1098,16 +1098,16 @@ export default function BulkIssuePage() {
                           </tbody>
                         </table>
                       </div>
-                      <div className="px-4 py-2.5 bg-slate-900 border-t border-slate-800 text-xs text-slate-500">
+                      <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 font-bold">
                         {externalStudents.length} records from {selectedConnection?.system_name} · {selectedStudentIds.length} selected
                       </div>
                     </div>
                   )}
 
                   <div className="mt-8 flex justify-between">
-                    <button onClick={() => setStep("template")} className="text-slate-400 hover:text-white transition-colors">Back</button>
-                    <button onClick={goToReview} disabled={selectedStudentIds.length === 0} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                      Review Batch ({selectedStudentIds.length}) <ChevronRight size={18} />
+                    <button onClick={() => setStep("template")} className="text-slate-500 hover:text-slate-900 transition-colors font-bold">Back</button>
+                    <button onClick={goToReview} disabled={selectedStudentIds.length === 0} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+                      Review Batch ({selectedStudentIds.length}) <ChevronRight size={18} strokeWidth={2.5} />
                     </button>
                   </div>
                 </motion.div>
@@ -1118,20 +1118,20 @@ export default function BulkIssuePage() {
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h2 className="text-2xl font-bold text-white">Upload CSV</h2>
-                      <p className="text-slate-400 text-sm mt-1">Upload a spreadsheet containing recipient details for bulk issuance</p>
+                      <h2 className="text-2xl font-heading font-extrabold text-slate-900">Upload CSV</h2>
+                      <p className="text-slate-600 text-sm mt-1 font-medium">Upload a spreadsheet containing recipient details for bulk issuance</p>
                     </div>
                     <button
                       onClick={downloadCsvTemplate}
-                      className="bg-slate-800 border border-slate-700 hover:bg-slate-700 text-white rounded-xl px-4 py-2.5 text-sm font-medium flex items-center gap-2 transition-colors shrink-0"
+                      className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold flex items-center gap-2 transition-colors shrink-0 shadow-sm"
                     >
-                      <Download size={16} /> Download CSV Template
+                      <Download size={16} strokeWidth={2.5} /> Download CSV Template
                     </button>
                   </div>
 
                   {csvParsing ? (
-                    <div className="flex items-center justify-center py-16 text-slate-400 gap-3">
-                      <Loader2 size={18} className="animate-spin" /> <span className="text-sm">Parsing CSV file...</span>
+                    <div className="flex items-center justify-center py-16 text-slate-500 gap-3 font-medium">
+                      <Loader2 size={18} className="animate-spin" strokeWidth={2.5} /> <span className="text-sm">Parsing CSV file...</span>
                     </div>
                   ) : csvData.length === 0 ? (
                     /* Drop zone */
@@ -1148,7 +1148,7 @@ export default function BulkIssuePage() {
                         parseCsvFile(file);
                       }}
                       onClick={() => document.getElementById("csv-file-input")?.click()}
-                      className="border-2 border-dashed border-slate-700 rounded-2xl p-12 text-center hover:border-slate-500 transition-colors cursor-pointer"
+                      className="border-2 border-dashed border-slate-300 bg-slate-50 rounded-2xl p-12 text-center hover:border-slate-400 transition-colors cursor-pointer"
                     >
                       <input
                         id="csv-file-input"
@@ -1166,25 +1166,25 @@ export default function BulkIssuePage() {
                           e.target.value = "";
                         }}
                       />
-                      <Upload size={40} className="mx-auto mb-4 text-slate-500" />
-                      <p className="text-white font-bold text-lg mb-1">Drop your CSV file here</p>
-                      <p className="text-slate-500 text-sm">or click to browse</p>
+                      <Upload size={40} className="mx-auto mb-4 text-slate-400" />
+                      <p className="text-slate-900 font-bold text-lg mb-1">Drop your CSV file here</p>
+                      <p className="text-slate-500 text-sm font-medium">or click to browse</p>
                     </div>
                   ) : (
                     /* Parsed file view */
                     <div className="space-y-6">
                       {/* File info bar */}
-                      <div className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl px-4 py-3">
+                      <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
                         <div className="flex items-center gap-3">
-                          <FileText size={18} className="text-blue-400" />
+                          <FileText size={18} className="text-blue-600" strokeWidth={2.5} />
                           <div>
-                            <p className="text-white font-medium text-sm">{csvFile?.name}</p>
-                            <p className="text-slate-500 text-xs">{csvData.length} row{csvData.length !== 1 && "s"} · {csvHeaders.length} column{csvHeaders.length !== 1 && "s"}</p>
+                            <p className="text-slate-900 font-bold text-sm">{csvFile?.name}</p>
+                            <p className="text-slate-500 text-xs font-medium">{csvData.length} row{csvData.length !== 1 && "s"} · {csvHeaders.length} column{csvHeaders.length !== 1 && "s"}</p>
                           </div>
                         </div>
                         <button
                           onClick={() => { setCsvFile(null); setCsvData([]); setCsvHeaders([]); setCsvColumnMap({}); setCsvErrors([]); setCsvErrorsExpanded(false); }}
-                          className="text-xs text-red-400 hover:text-red-300 font-medium transition-colors"
+                          className="text-xs text-red-600 hover:text-red-700 font-bold transition-colors"
                         >
                           Remove
                         </button>
@@ -1192,17 +1192,17 @@ export default function BulkIssuePage() {
 
                       {/* Column mapping */}
                       <div>
-                        <h3 className="text-sm font-semibold text-white mb-3">Column Mapping</h3>
-                        <p className="text-xs text-slate-500 mb-4">Map CSV columns to credential template fields. Auto-mapped where possible.</p>
+                        <h3 className="text-sm font-bold text-slate-900 mb-3">Column Mapping</h3>
+                        <p className="text-xs text-slate-600 font-medium mb-4">Map CSV columns to credential template fields. Auto-mapped where possible.</p>
                         <div className="space-y-3">
                           {/* Wallet address mapping */}
-                          <div className={`flex items-center gap-4 p-3 rounded-xl border ${csvColumnMap["wallet_address"] ? "border-slate-800 bg-slate-950" : "border-amber-500/30 bg-amber-500/5"}`}>
+                          <div className={`flex items-center gap-4 p-3 rounded-xl border shadow-sm ${csvColumnMap["wallet_address"] ? "border-slate-200 bg-white" : "border-yellow-300 bg-yellow-50"}`}>
                             <div className="flex-1 min-w-0">
-                              <span className="text-white font-medium text-sm">Wallet Address</span>
-                              <span className="text-red-400 ml-1">*</span>
+                              <span className="text-slate-900 font-bold text-sm">Wallet Address</span>
+                              <span className="text-red-600 ml-1 font-bold">*</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              {!csvColumnMap["wallet_address"] && <AlertTriangle size={14} className="text-amber-400 shrink-0" />}
+                              {!csvColumnMap["wallet_address"] && <AlertTriangle size={14} className="text-yellow-600 shrink-0" strokeWidth={2.5} />}
                               <select
                                 value={csvColumnMap["wallet_address"] || ""}
                                 onChange={(e) => {
@@ -1211,7 +1211,7 @@ export default function BulkIssuePage() {
                                   setCsvColumnMap(newMap);
                                   setCsvErrors(validateCsvData(csvData, newMap));
                                 }}
-                                className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-1.5 min-w-[180px]"
+                                className="bg-white border border-slate-300 text-slate-900 text-sm font-medium rounded-lg px-3 py-1.5 min-w-[180px] shadow-sm outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                               >
                                 <option value="">— Select column —</option>
                                 {csvHeaders.map((h) => <option key={h} value={h}>{h}</option>)}
@@ -1221,13 +1221,13 @@ export default function BulkIssuePage() {
 
                           {/* Certificate column mapping (when template requires cert) */}
                           {selectedTemplate?.requiresCertificate && (
-                            <div className={`flex items-center gap-4 p-3 rounded-xl border ${csvColumnMap["certificate"] ? "border-slate-800 bg-slate-950" : "border-amber-500/30 bg-amber-500/5"}`}>
+                            <div className={`flex items-center gap-4 p-3 rounded-xl border shadow-sm ${csvColumnMap["certificate"] ? "border-slate-200 bg-white" : "border-yellow-300 bg-yellow-50"}`}>
                               <div className="flex-1 min-w-0">
-                                <span className="text-white font-medium text-sm">Certificate Filename</span>
-                                <span className="text-red-400 ml-1">*</span>
+                                <span className="text-slate-900 font-bold text-sm">Certificate Filename</span>
+                                <span className="text-red-600 ml-1 font-bold">*</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                {!csvColumnMap["certificate"] && <AlertTriangle size={14} className="text-amber-400 shrink-0" />}
+                                {!csvColumnMap["certificate"] && <AlertTriangle size={14} className="text-yellow-600 shrink-0" strokeWidth={2.5} />}
                                 <select
                                   value={csvColumnMap["certificate"] || ""}
                                   onChange={(e) => {
@@ -1235,7 +1235,7 @@ export default function BulkIssuePage() {
                                     if (!e.target.value) delete newMap["certificate"];
                                     setCsvColumnMap(newMap);
                                   }}
-                                  className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-1.5 min-w-[180px]"
+                                  className="bg-white border border-slate-300 text-slate-900 text-sm font-medium rounded-lg px-3 py-1.5 min-w-[180px] shadow-sm outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 >
                                   <option value="">— Select column —</option>
                                   {csvHeaders.map((h) => <option key={h} value={h}>{h}</option>)}
@@ -1246,17 +1246,17 @@ export default function BulkIssuePage() {
 
                           {/* Template field mappings */}
                           {selectedTemplate?.fields.filter((f) => f.type !== "file").map((field) => (
-                            <div key={field.name} className={`flex items-center gap-4 p-3 rounded-xl border ${
+                            <div key={field.name} className={`flex items-center gap-4 p-3 rounded-xl border shadow-sm ${
                               !csvColumnMap[field.name] && field.required
-                                ? "border-amber-500/30 bg-amber-500/5"
-                                : "border-slate-800 bg-slate-950"
+                                ? "border-yellow-300 bg-yellow-50"
+                                : "border-slate-200 bg-white"
                             }`}>
                               <div className="flex-1 min-w-0">
-                                <span className="text-white font-medium text-sm">{field.label}</span>
-                                {field.required && <span className="text-red-400 ml-1">*</span>}
+                                <span className="text-slate-900 font-bold text-sm">{field.label}</span>
+                                {field.required && <span className="text-red-600 ml-1 font-bold">*</span>}
                               </div>
                               <div className="flex items-center gap-2">
-                                {!csvColumnMap[field.name] && field.required && <AlertTriangle size={14} className="text-amber-400 shrink-0" />}
+                                {!csvColumnMap[field.name] && field.required && <AlertTriangle size={14} className="text-yellow-600 shrink-0" strokeWidth={2.5} />}
                                 <select
                                   value={csvColumnMap[field.name] || ""}
                                   onChange={(e) => {
@@ -1265,7 +1265,7 @@ export default function BulkIssuePage() {
                                     setCsvColumnMap(newMap);
                                     setCsvErrors(validateCsvData(csvData, newMap));
                                   }}
-                                  className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-1.5 min-w-[180px]"
+                                  className="bg-white border border-slate-300 text-slate-900 text-sm font-medium rounded-lg px-3 py-1.5 min-w-[180px] shadow-sm outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                 >
                                   <option value="">— Select column —</option>
                                   {csvHeaders.map((h) => <option key={h} value={h}>{h}</option>)}
@@ -1326,10 +1326,10 @@ export default function BulkIssuePage() {
                     <div className="mt-2">
                       <div className="flex items-center gap-2 mt-8 mb-4">
                         <Paperclip size={16} className="text-slate-400" />
-                        <h3 className="text-lg font-semibold text-white">Certificate Files</h3>
-                        <span className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">Required by template</span>
+                        <h3 className="text-lg font-extrabold text-slate-900">Certificate Files</h3>
+                        <span className="text-xs text-yellow-700 font-bold bg-yellow-50 border border-yellow-200 px-2 py-0.5 rounded-full shadow-sm">Required by template</span>
                       </div>
-                      <p className="text-xs text-slate-500 mb-4">
+                      <p className="text-xs text-slate-500 font-medium mb-4">
                         Upload the PDF certificate files for each recipient. The system will match files to CSV rows using the filename in the &apos;certificate&apos; column.
                       </p>
 
@@ -1342,7 +1342,7 @@ export default function BulkIssuePage() {
                           if (files.length > 0) setCertFiles(prev => [...prev, ...files]);
                         }}
                         onClick={() => document.getElementById("cert-file-input")?.click()}
-                        className="border-2 border-dashed border-slate-700 rounded-xl p-6 text-center hover:border-slate-500 transition-colors cursor-pointer"
+                        className="border-2 border-dashed border-slate-300 bg-slate-50 rounded-xl p-6 text-center hover:border-slate-400 transition-colors cursor-pointer"
                       >
                         <input
                           id="cert-file-input"
@@ -1356,9 +1356,9 @@ export default function BulkIssuePage() {
                             e.target.value = "";
                           }}
                         />
-                        <Upload size={24} className="mx-auto mb-2 text-slate-500" />
-                        <p className="text-white font-medium text-sm">Drop PDF files here or click to browse</p>
-                        <p className="text-slate-500 text-xs mt-1">Multiple files allowed — drop additional files anytime</p>
+                        <Upload size={24} className="mx-auto mb-2 text-slate-400" />
+                        <p className="text-slate-900 font-bold text-sm">Drop PDF files here or click to browse</p>
+                        <p className="text-slate-500 text-xs font-medium mt-1">Multiple files allowed — drop additional files anytime</p>
                       </div>
 
                       {/* Uploaded files list */}
@@ -1367,19 +1367,19 @@ export default function BulkIssuePage() {
                           {certFiles.map((file, i) => {
                             const isMatched = Object.values(certFileMap).some(f => f === file);
                             return (
-                              <div key={`${file.name}-${i}`} className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-lg px-3 py-2">
+                              <div key={`${file.name}-${i}`} className="flex items-center justify-between bg-white border border-slate-200 shadow-sm rounded-lg px-3 py-2">
                                 <div className="flex items-center gap-3 min-w-0">
                                   <FileText size={14} className="text-slate-400 shrink-0" />
-                                  <span className="text-sm text-white truncate">{file.name}</span>
-                                  <span className="text-xs text-slate-500 shrink-0">{formatFileSize(file.size)}</span>
+                                  <span className="text-sm text-slate-900 font-bold truncate">{file.name}</span>
+                                  <span className="text-xs text-slate-500 font-medium shrink-0">{formatFileSize(file.size)}</span>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
                                   {isMatched ? (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-200">
                                       <CheckCircle size={10} /> Matched
                                     </span>
                                   ) : (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-800 text-slate-500 text-[10px] font-bold border border-slate-700">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold border border-slate-200">
                                       Unmatched
                                     </span>
                                   )}
@@ -1434,7 +1434,7 @@ export default function BulkIssuePage() {
                   )}
 
                   <div className="mt-8 flex justify-between">
-                    <button onClick={() => setStep("template")} className="text-slate-400 hover:text-white transition-colors">Back</button>
+                    <button onClick={() => setStep("source")} className="text-slate-500 hover:text-slate-900 font-bold transition-colors">Back</button>
                     <button
                       onClick={() => {
                         const freshErrors = validateCsvData(csvData, csvColumnMap);
@@ -1459,7 +1459,7 @@ export default function BulkIssuePage() {
               {step === "csvParticipants" && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-white">Select Recipients</h2>
+                    <h2 className="text-2xl font-heading font-extrabold text-slate-900">Select Recipients</h2>
                     {csvParticipants.length > 0 && (() => {
                       const validIds = csvParticipants.filter(p => !csvErrorRowIndices.has(p._csvRowIndex) && !(selectedTemplate?.requiresCertificate && !p.has_certificate)).map(p => p.id);
                       const allValidSelected = validIds.length > 0 && validIds.every(id => selectedStudentIds.includes(id));
@@ -1480,9 +1480,9 @@ export default function BulkIssuePage() {
                     })()}
                   </div>
 
-                  <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg flex items-center gap-2 mb-4">
-                    <Upload size={16} className="text-blue-400 shrink-0" />
-                    <p className="text-xs text-blue-200">
+                  <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg flex items-center gap-2 mb-4 shadow-sm">
+                    <Upload size={16} className="text-blue-600 shrink-0" strokeWidth={2.5} />
+                    <p className="text-xs text-blue-700 font-medium">
                       <strong>CSV Source:</strong> {csvFile?.name} · {csvParticipants.length} row{csvParticipants.length !== 1 && "s"} parsed
                     </p>
                   </div>
@@ -1490,8 +1490,8 @@ export default function BulkIssuePage() {
                   {(() => {
                     const disabledCount = csvParticipants.filter(p => csvErrorRowIndices.has(p._csvRowIndex) || (selectedTemplate?.requiresCertificate && !p.has_certificate)).length;
                     return disabledCount > 0 ? (
-                      <div className="flex items-center gap-2 mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-400 text-sm">
-                        <AlertTriangle size={14} className="shrink-0" />
+                      <div className="flex items-center gap-2 mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-sm font-bold shadow-sm">
+                        <AlertTriangle size={14} className="shrink-0" strokeWidth={2.5} />
                         {disabledCount} row{disabledCount !== 1 ? "s have" : " has"} validation errors or missing certificates and cannot be selected.
                       </div>
                     ) : null;
@@ -1503,10 +1503,10 @@ export default function BulkIssuePage() {
                       <p>No participants found in CSV data.</p>
                     </div>
                   ) : (
-                    <div className="bg-slate-950 rounded-xl overflow-hidden border border-slate-800">
+                    <div className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                          <thead className="bg-slate-900 text-slate-400 uppercase text-xs">
+                          <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-bold">
                             <tr>
                               <th className="px-3 py-3 w-10"></th>
                               <th className="px-3 py-3">ID</th>
@@ -1517,7 +1517,7 @@ export default function BulkIssuePage() {
                               <th className="px-3 py-3">Status</th>
                             </tr>
                           </thead>
-                          <tbody className="text-slate-300 divide-y divide-slate-800/60">
+                          <tbody className="text-slate-600 divide-y divide-slate-200">
                             {csvParticipants.map((p) => {
                               const hasError = csvErrorRowIndices.has(p._csvRowIndex);
                               const missingCert = !!(selectedTemplate?.requiresCertificate && !p.has_certificate);
@@ -1531,10 +1531,10 @@ export default function BulkIssuePage() {
                                   style={isDisabled ? { boxShadow: "inset 3px 0 0 0 rgb(239 68 68)" } : undefined}
                                   className={`transition-colors ${
                                     isDisabled
-                                      ? "bg-red-500/5 cursor-not-allowed opacity-60"
+                                      ? "bg-red-50 cursor-not-allowed opacity-60"
                                       : isSelected
-                                        ? "bg-emerald-500/5 cursor-pointer"
-                                        : "hover:bg-slate-800/30 cursor-pointer"
+                                        ? "bg-green-50 cursor-pointer"
+                                        : "hover:bg-slate-50 cursor-pointer"
                                   }`}
                                 >
                                   <td className="px-3 py-3">
@@ -1543,43 +1543,43 @@ export default function BulkIssuePage() {
                                       checked={isSelected}
                                       disabled={isDisabled}
                                       onChange={() => { if (!isDisabled) toggleStudent(p.id); }}
-                                      className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 disabled:opacity-30"
+                                      className="w-4 h-4 rounded border-slate-300 bg-white text-green-600 focus:ring-green-600 disabled:opacity-30"
                                     />
                                   </td>
-                                  <td className="px-3 py-3 font-mono text-xs text-blue-400">{p.student_id}</td>
-                                  <td className="px-3 py-3 font-medium text-white text-sm">{p.name}</td>
-                                  <td className="px-3 py-3 text-xs">{p.programme || "—"}</td>
+                                  <td className="px-3 py-3 font-mono text-xs text-blue-600 font-bold">{p.student_id}</td>
+                                  <td className="px-3 py-3 font-bold text-slate-900 text-sm">{p.name}</td>
+                                  <td className="px-3 py-3 text-xs font-medium">{p.programme || "—"}</td>
                                   <td className="px-3 py-3 font-mono text-xs">
                                     {p.wallet_address ? (
-                                      <span className="text-slate-300">{truncateAddress(p.wallet_address)}</span>
+                                      <span className="text-slate-600 font-medium">{truncateAddress(p.wallet_address)}</span>
                                     ) : (
-                                      <span className="text-red-400">Missing</span>
+                                      <span className="text-red-600 font-bold">Missing</span>
                                     )}
                                   </td>
                                   {selectedTemplate?.requiresCertificate && (
                                     <td className="px-3 py-3">
                                       {p.has_certificate ? (
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
-                                          <CheckCircle size={10} /> Matched
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-200">
+                                          <CheckCircle size={10} strokeWidth={2.5} /> Matched
                                         </span>
                                       ) : (
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/20">
-                                          <AlertTriangle size={10} /> Missing
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700 text-[10px] font-bold border border-yellow-200">
+                                          <AlertTriangle size={10} strokeWidth={2.5} /> Missing
                                         </span>
                                       )}
                                     </td>
                                   )}
                                   <td className="px-3 py-3">
                                     {hasError ? (
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 text-[10px] font-bold border border-red-500/20" title={rowErrors.map(e => `${e.field}: ${e.message}`).join("; ")}>
-                                        <AlertCircle size={10} /> {rowErrors.length} error{rowErrors.length !== 1 && "s"}
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-700 text-[10px] font-bold border border-red-200" title={rowErrors.map(e => `${e.field}: ${e.message}`).join("; ")}>
+                                        <AlertCircle size={10} strokeWidth={2.5} /> {rowErrors.length} error{rowErrors.length !== 1 && "s"}
                                       </span>
                                     ) : missingCert ? (
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 text-[10px] font-bold border border-red-500/20">
-                                        <AlertCircle size={10} /> Missing cert
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-700 text-[10px] font-bold border border-red-200">
+                                        <AlertCircle size={10} strokeWidth={2.5} /> Missing cert
                                       </span>
                                     ) : (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">Valid</span>
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-[10px] font-bold border border-green-200">Valid</span>
                                     )}
                                   </td>
                                 </tr>
@@ -1588,7 +1588,7 @@ export default function BulkIssuePage() {
                           </tbody>
                         </table>
                       </div>
-                      <div className="px-4 py-2.5 bg-slate-900 border-t border-slate-800 text-xs text-slate-500">
+                      <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200 text-xs font-bold text-slate-500">
                         {(() => {
                           const disabledCount = csvParticipants.filter(p => csvErrorRowIndices.has(p._csvRowIndex) || (selectedTemplate?.requiresCertificate && !p.has_certificate)).length;
                           return `${csvParticipants.length} rows from CSV · ${csvParticipants.length - disabledCount} valid · ${disabledCount} invalid · ${selectedStudentIds.length} selected`;
@@ -1598,7 +1598,7 @@ export default function BulkIssuePage() {
                   )}
 
                   <div className="mt-8 flex justify-between">
-                    <button onClick={() => setStep("upload")} className="text-slate-400 hover:text-white transition-colors">Back</button>
+                    <button onClick={() => setStep("upload")} className="text-slate-500 hover:text-slate-900 font-bold transition-colors">Back</button>
                     <button
                       onClick={() => setStep("review")}
                       disabled={selectedStudentIds.length === 0}
@@ -1613,59 +1613,59 @@ export default function BulkIssuePage() {
               {/* ────── REVIEW STEP ────── */}
               {step === "review" && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-                  <h2 className="text-2xl font-bold text-white mb-6">Confirm Issuance</h2>
+                  <h2 className="text-2xl font-heading font-extrabold text-slate-900 mb-6">Confirm Issuance</h2>
 
-                  <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl mb-6 flex items-start gap-3">
-                    <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={20} />
-                    <p className="text-sm text-amber-200">
+                  <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl mb-6 flex items-start gap-3 shadow-sm">
+                    <AlertTriangle className="text-yellow-600 shrink-0 mt-0.5" size={20} strokeWidth={2.5} />
+                    <p className="text-sm text-yellow-700 font-medium">
                       This action will permanently anchor <strong>{selectedStudentIds.length} credential{selectedStudentIds.length !== 1 && "s"}</strong> on the Ethereum blockchain. Each credential will be issued to the student&apos;s wallet address. This cannot be undone.
                     </p>
                   </div>
 
                   {selectedTemplate?.requiresCertificate && dataSource === "external" && studentsWithoutCert.length > 0 && (
-                    <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl mb-4 flex items-start gap-3">
-                      <AlertCircle className="text-amber-400 shrink-0 mt-0.5" size={16} />
-                      <p className="text-xs text-amber-200">
+                    <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-xl mb-4 flex items-start gap-3 shadow-sm">
+                      <AlertCircle className="text-yellow-600 shrink-0 mt-0.5" size={16} strokeWidth={2.5} />
+                      <p className="text-xs text-yellow-700 font-medium">
                         <strong>{studentsWithoutCert.length} of {selectedStudentIds.length}</strong> selected students have no certificate file. These will be issued without a certificate attachment.
                       </p>
                     </div>
                   )}
 
                   {/* Summary */}
-                  <div className="space-y-3 text-slate-300 mb-6 text-sm">
-                    <div className="flex justify-between border-b border-slate-800 pb-2">
+                  <div className="space-y-3 text-slate-600 font-medium mb-6 text-sm">
+                    <div className="flex justify-between border-b border-slate-200 pb-2">
                       <span>Template:</span>
-                      <span className="text-white font-bold">{selectedTemplate?.title} <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold uppercase ml-1 ${selectedTemplate ? TYPE_BADGE[selectedTemplate.type] : ""}`}>{selectedTemplate?.type}</span></span>
+                      <span className="text-slate-900 font-bold">{selectedTemplate?.title} <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold uppercase ml-1 ${selectedTemplate ? TYPE_BADGE[selectedTemplate.type] : ""}`}>{selectedTemplate?.type}</span></span>
                     </div>
-                    <div className="flex justify-between border-b border-slate-800 pb-2">
+                    <div className="flex justify-between border-b border-slate-200 pb-2">
                       <span>Data Source:</span>
                       {dataSource === "csv" ? (
-                        <span className="text-white font-medium flex items-center gap-1.5"><Upload size={13} className="text-blue-400" /> CSV Upload ({csvFile?.name})</span>
+                        <span className="text-slate-900 font-bold flex items-center gap-1.5"><Upload size={13} className="text-blue-600" strokeWidth={2.5} /> CSV Upload ({csvFile?.name})</span>
                       ) : (
-                        <span className="text-white font-medium flex items-center gap-1.5"><Database size={13} className="text-blue-400" /> {selectedConnection?.system_name}</span>
+                        <span className="text-slate-900 font-bold flex items-center gap-1.5"><Database size={13} className="text-blue-600" strokeWidth={2.5} /> {selectedConnection?.system_name}</span>
                       )}
                     </div>
-                    <div className="flex justify-between border-b border-slate-800 pb-2">
+                    <div className="flex justify-between border-b border-slate-200 pb-2">
                       <span>Total Recipients:</span>
-                      <span className="text-white font-bold">{selectedStudentIds.length}</span>
+                      <span className="text-slate-900 font-bold">{selectedStudentIds.length}</span>
                     </div>
                     {selectedTemplate?.requiresCertificate && dataSource === "external" && (
-                      <div className="flex justify-between border-b border-slate-800 pb-2">
+                      <div className="flex justify-between border-b border-slate-200 pb-2">
                         <span>Certificate Attachment:</span>
-                        <span className="text-emerald-400">
+                        <span className="text-green-700 font-bold">
                           Yes — {studentsWithCert.length} available, {studentsWithoutCert.length} missing
                         </span>
                       </div>
                     )}
-                    <div className="flex justify-between border-b border-slate-800 pb-2">
+                    <div className="flex justify-between border-b border-slate-200 pb-2">
                       <span>Issuer Authority:</span>
-                      <span className="text-emerald-400 flex items-center gap-1"><ShieldCheck size={14} /> Verified</span>
+                      <span className="text-green-700 font-bold flex items-center gap-1"><ShieldCheck size={14} strokeWidth={2.5} /> Verified</span>
                     </div>
                   </div>
 
                   {/* Certificate info banners */}
                   {!selectedTemplate?.requiresCertificate && (
-                    <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 mb-6">
+                    <div className="flex items-center gap-2 text-xs text-slate-600 font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 mb-6">
                       <FileText size={14} className="shrink-0 text-slate-500" />
                       <span>Certificate file attachment is not required for this credential type.</span>
                     </div>
@@ -1676,13 +1676,13 @@ export default function BulkIssuePage() {
                     return (
                       <>
                         {csvCertMatched > 0 && (
-                          <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2 mb-3">
+                          <div className="flex items-center gap-2 text-xs text-green-700 font-bold bg-green-50 border border-green-200 rounded-lg px-3 py-2 mb-3 shadow-sm">
                             <Paperclip size={14} className="shrink-0" />
                             <span>{csvCertMatched} of {selectedStudentObjects.length} credentials have certificate files attached</span>
                           </div>
                         )}
                         {csvCertMissing > 0 && (
-                          <div className="flex items-center gap-2 text-xs text-amber-400 bg-amber-500/5 border border-amber-500/10 rounded-lg px-3 py-2 mb-6">
+                          <div className="flex items-center gap-2 text-xs text-yellow-700 font-bold bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-6 shadow-sm">
                             <AlertTriangle size={14} className="shrink-0" />
                             <span>{csvCertMissing} credential{csvCertMissing !== 1 ? "s" : ""} will be issued without a certificate file.</span>
                           </div>
@@ -1692,9 +1692,9 @@ export default function BulkIssuePage() {
                   })()}
 
                   {/* Recipient table */}
-                  <div className="bg-slate-950 rounded-xl overflow-hidden border border-slate-800 mb-8 max-h-64 overflow-y-auto">
+                  <div className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm mb-8 max-h-64 overflow-y-auto">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-900 text-slate-400 uppercase sticky top-0">
+                      <thead className="bg-slate-50 text-slate-500 uppercase font-bold sticky top-0">
                         <tr>
                           <th className="px-3 py-2.5 w-8">#</th>
                           <th className="px-3 py-2.5">Student ID</th>
@@ -1704,21 +1704,21 @@ export default function BulkIssuePage() {
                           <th className="px-3 py-2.5">Credential Title</th>
                         </tr>
                       </thead>
-                      <tbody className="text-slate-300 divide-y divide-slate-800/40">
+                      <tbody className="text-slate-600 divide-y divide-slate-200">
                         {selectedStudentObjects.map((s, i) => (
-                          <tr key={s.id} className="hover:bg-slate-800/20">
-                            <td className="px-3 py-2 text-slate-500">{i + 1}</td>
-                            <td className="px-3 py-2 font-mono text-blue-400">{s.student_id}</td>
-                            <td className="px-3 py-2 text-white font-medium">{s.name}</td>
-                            <td className="px-3 py-2 font-mono text-slate-300">{truncateAddress(s.wallet_address)}</td>
+                          <tr key={s.id} className="hover:bg-slate-50">
+                            <td className="px-3 py-2 text-slate-400">{i + 1}</td>
+                            <td className="px-3 py-2 font-mono text-blue-600 font-bold">{s.student_id}</td>
+                            <td className="px-3 py-2 text-slate-900 font-bold">{s.name}</td>
+                            <td className="px-3 py-2 font-mono text-slate-600">{truncateAddress(s.wallet_address)}</td>
                             {(dataSource === "external" || (dataSource === "csv" && selectedTemplate?.requiresCertificate)) && (
                               <td className="px-3 py-2">
                                 {s.has_certificate
-                                  ? <span className="text-emerald-400">{dataSource === "csv" ? "Attached" : "Available"}</span>
+                                  ? <span className="text-green-600 font-bold">{dataSource === "csv" ? "Attached" : "Available"}</span>
                                   : <span className="text-slate-500">None</span>}
                               </td>
                             )}
-                            <td className="px-3 py-2 text-slate-400">{selectedTemplate?.title}</td>
+                            <td className="px-3 py-2 text-slate-500 font-bold">{selectedTemplate?.title}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1726,12 +1726,12 @@ export default function BulkIssuePage() {
                   </div>
 
                   <div className="flex justify-between">
-                    <button onClick={() => setStep(dataSource === "csv" ? "csvParticipants" : "participants")} className="text-slate-400 hover:text-white transition-colors">Back</button>
+                    <button onClick={() => setStep(dataSource === "csv" ? "csvParticipants" : "participants")} className="text-slate-500 hover:text-slate-900 font-bold transition-colors">Back</button>
                     <button
                       onClick={handleConfirmAndIssue}
-                      className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-900/20"
+                      className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-green-500/20"
                     >
-                      <ShieldCheck size={18} />
+                      <ShieldCheck size={18} strokeWidth={2.5} />
                       Sign & Issue {selectedStudentIds.length} Credential{selectedStudentIds.length !== 1 && "s"}
                     </button>
                   </div>
@@ -1742,22 +1742,22 @@ export default function BulkIssuePage() {
               {step === "processing" && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-8">
                   <div className="text-center mb-8">
-                    <div className="inline-flex p-4 bg-emerald-500/10 rounded-full text-emerald-500 mb-4">
-                      <Loader2 size={48} className="animate-spin" />
+                    <div className="inline-flex p-4 bg-green-100 rounded-full text-green-600 mb-4">
+                      <Loader2 size={48} className="animate-spin" strokeWidth={2.5} />
                     </div>
-                    <h2 className="text-2xl font-bold text-white mb-1">Issuing Credentials</h2>
-                    <p className="text-slate-400 text-sm">Do not close this page or switch tabs.</p>
+                    <h2 className="text-2xl font-heading font-extrabold text-slate-900 mb-1">Issuing Credentials</h2>
+                    <p className="text-slate-500 font-medium text-sm">Do not close this page or switch tabs.</p>
                   </div>
 
                   {/* Overall progress bar */}
                   <div className="max-w-md mx-auto mb-6">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Overall Progress</span>
-                      <span className="text-xs text-emerald-400 font-bold">{overallProgress}%</span>
+                      <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">Overall Progress</span>
+                      <span className="text-xs text-green-600 font-bold">{overallProgress}%</span>
                     </div>
-                    <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                       <motion.div
-                        className="h-full bg-emerald-500 rounded-full"
+                        className="h-full bg-green-500 rounded-full"
                         initial={{ width: 0 }}
                         animate={{ width: `${overallProgress}%` }}
                         transition={{ duration: 0.3 }}
@@ -1777,19 +1777,19 @@ export default function BulkIssuePage() {
                       const isActive = processingPhase === phase;
                       const isDone = processingPhase > phase;
                       return (
-                        <div key={phase} className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${isActive ? "bg-emerald-500/10 border border-emerald-500/20" : isDone ? "bg-slate-800/30" : "opacity-40"}`}>
+                        <div key={phase} className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${isActive ? "bg-green-50 border border-green-200 shadow-sm" : isDone ? "bg-slate-50" : "opacity-50"}`}>
                           {isDone ? (
-                            <CheckCircle size={16} className="text-emerald-400 shrink-0" />
+                            <CheckCircle size={16} className="text-green-500 shrink-0" strokeWidth={2.5} />
                           ) : isActive ? (
-                            <Loader2 size={16} className="text-emerald-400 animate-spin shrink-0" />
+                            <Loader2 size={16} className="text-green-600 animate-spin shrink-0" strokeWidth={2.5} />
                           ) : (
-                            <div className="w-4 h-4 rounded-full border border-slate-600 shrink-0" />
+                            <div className="w-4 h-4 rounded-full border border-slate-300 shrink-0" />
                           )}
-                          <span className={`text-sm ${isActive ? "text-white font-medium" : isDone ? "text-slate-400" : "text-slate-500"}`}>
+                          <span className={`text-sm ${isActive ? "text-slate-900 font-bold" : isDone ? "text-slate-500" : "text-slate-400 font-medium"}`}>
                             {label}
                           </span>
                           {isActive && processingProgress.total > 0 && (
-                            <span className="ml-auto text-xs text-emerald-400 font-mono">
+                            <span className="ml-auto text-xs text-green-600 font-bold font-mono">
                               {processingProgress.current}/{processingProgress.total}
                             </span>
                           )}
@@ -1798,39 +1798,39 @@ export default function BulkIssuePage() {
                     })}
                   </div>
 
-                  <p className="text-center text-xs text-slate-500 mt-6">{processingStatus}</p>
+                  <p className="text-center text-xs text-slate-500 font-medium mt-6">{processingStatus}</p>
                 </motion.div>
               )}
 
               {/* ────── ERROR STEP ────── */}
               {step === "error" && (
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="py-8 text-center">
-                  <div className="inline-flex p-4 bg-red-500/10 rounded-full text-red-500 mb-4">
-                    <XCircle size={56} />
+                  <div className="inline-flex p-4 bg-red-50 rounded-full text-red-600 mb-4 shadow-sm">
+                    <XCircle size={56} strokeWidth={2.5} />
                   </div>
-                  <h2 className="text-2xl font-bold text-white mb-2">Issuance Failed</h2>
-                  <p className="text-slate-400 text-sm mb-4">
-                    Failed during: <span className="text-red-400 font-medium">{errorPhase}</span>
+                  <h2 className="text-2xl font-heading font-extrabold text-slate-900 mb-2">Issuance Failed</h2>
+                  <p className="text-slate-500 text-sm mb-4 font-medium">
+                    Failed during: <span className="text-red-600 font-bold">{errorPhase}</span>
                   </p>
 
-                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 max-w-lg mx-auto mb-8 text-left">
-                    <p className="text-sm text-red-300 break-words">{error}</p>
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 max-w-lg mx-auto mb-8 text-left shadow-sm">
+                    <p className="text-sm text-red-700 font-bold break-words">{error}</p>
                   </div>
 
                   {batchTxHash && (
-                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 max-w-lg mx-auto mb-6 text-left">
-                      <p className="text-xs text-amber-200 mb-1"><strong>Important:</strong> Credentials may have been anchored on-chain.</p>
-                      <p className="text-xs text-amber-300 font-mono break-all">
-                        TX: <a href={`https://sepolia.etherscan.io/tx/${batchTxHash}`} target="_blank" rel="noopener noreferrer" className="underline hover:text-amber-100">{batchTxHash}</a>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 max-w-lg mx-auto mb-6 text-left shadow-sm">
+                      <p className="text-xs text-yellow-700 mb-1 font-bold"><strong>Important:</strong> Credentials may have been anchored on-chain.</p>
+                      <p className="text-xs text-yellow-700 font-mono break-all font-medium">
+                        TX: <a href={`https://sepolia.etherscan.io/tx/${batchTxHash}`} target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-800 font-bold">{batchTxHash}</a>
                       </p>
                     </div>
                   )}
 
                   <div className="flex gap-4 justify-center">
-                    <button onClick={() => setStep("review")} className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium border border-slate-700 transition-colors">
+                    <button onClick={() => setStep("review")} className="px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold shadow-sm transition-colors">
                       Try Again
                     </button>
-                    <button onClick={() => router.push("/issuer")} className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-xl font-medium border border-slate-700 transition-colors">
+                    <button onClick={() => router.push("/issuer")} className="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-bold border border-slate-200 shadow-sm transition-colors">
                       Back to Dashboard
                     </button>
                   </div>
@@ -1841,53 +1841,53 @@ export default function BulkIssuePage() {
               {step === "success" && (
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
                   <div className="text-center mb-8">
-                    <div className="inline-flex p-4 bg-emerald-500/10 rounded-full text-emerald-500 mb-4">
-                      <CheckCircle size={56} />
+                    <div className="inline-flex p-4 bg-green-100 rounded-full text-green-600 mb-4 shadow-sm">
+                      <CheckCircle size={56} strokeWidth={2.5} />
                     </div>
-                    <h2 className="text-3xl font-bold text-white mb-2">Credentials Issued Successfully</h2>
-                    <p className="text-slate-400 text-sm">
+                    <h2 className="text-3xl font-heading font-extrabold text-slate-900 mb-2">Credentials Issued Successfully</h2>
+                    <p className="text-slate-500 text-sm font-medium">
                       All {issuedCredentials.length} credentials have been anchored on-chain and saved.
                     </p>
                   </div>
 
                   {/* Summary stats */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
+                    <div className="bg-slate-50 border border-slate-200 shadow-sm rounded-xl p-4 text-center">
                       <p className="text-xs text-slate-500 uppercase font-bold mb-1">Total Issued</p>
-                      <p className="text-2xl font-bold text-emerald-400">{issuedCredentials.length}</p>
+                      <p className="text-2xl font-bold text-green-600">{issuedCredentials.length}</p>
                     </div>
-                    <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
+                    <div className="bg-slate-50 border border-slate-200 shadow-sm rounded-xl p-4 text-center">
                       <p className="text-xs text-slate-500 uppercase font-bold mb-1">Template</p>
-                      <p className="text-sm font-medium text-white truncate">{selectedTemplate?.title}</p>
+                      <p className="text-sm font-bold text-slate-900 truncate">{selectedTemplate?.title}</p>
                     </div>
-                    <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
+                    <div className="bg-slate-50 border border-slate-200 shadow-sm rounded-xl p-4 text-center">
                       <p className="text-xs text-slate-500 uppercase font-bold mb-1">Data Source</p>
-                      <p className="text-sm font-medium text-white truncate">{dataSource === "csv" ? "CSV Upload" : selectedConnection?.system_name}</p>
+                      <p className="text-sm font-bold text-slate-900 truncate">{dataSource === "csv" ? "CSV Upload" : selectedConnection?.system_name}</p>
                     </div>
-                    <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
+                    <div className="bg-slate-50 border border-slate-200 shadow-sm rounded-xl p-4 text-center">
                       <p className="text-xs text-slate-500 uppercase font-bold mb-1">With Certificate</p>
-                      <p className="text-2xl font-bold text-blue-400">{issuedCredentials.filter((c) => c.ipfsCid).length}</p>
+                      <p className="text-2xl font-bold text-blue-600">{issuedCredentials.filter((c) => c.ipfsCid).length}</p>
                     </div>
                   </div>
 
                   {/* Transaction link */}
-                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 mb-6">
+                  <div className="bg-slate-50 border border-slate-200 shadow-sm rounded-xl p-4 mb-6">
                     <p className="text-xs text-slate-500 uppercase font-bold mb-2">Blockchain Transaction</p>
                     <a
                       href={`https://sepolia.etherscan.io/tx/${batchTxHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-mono text-emerald-400 text-sm break-all hover:underline flex items-center gap-2"
+                      className="font-mono text-green-600 font-bold text-sm break-all hover:underline flex items-center gap-2"
                     >
                       {batchTxHash}
-                      <ExternalLink size={14} className="shrink-0" />
+                      <ExternalLink size={14} className="shrink-0" strokeWidth={2.5} />
                     </a>
                   </div>
 
                   {/* Credential details table */}
-                  <div className="bg-slate-950 rounded-xl overflow-hidden border border-slate-800 mb-8 max-h-72 overflow-y-auto">
+                  <div className="bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm mb-8 max-h-72 overflow-y-auto">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-900 text-slate-400 uppercase sticky top-0">
+                      <thead className="bg-slate-50 text-slate-500 uppercase font-bold sticky top-0">
                         <tr>
                           <th className="px-3 py-2.5 w-8">#</th>
                           <th className="px-3 py-2.5">Student</th>
@@ -1897,23 +1897,23 @@ export default function BulkIssuePage() {
                           <th className="px-3 py-2.5">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="text-slate-300 divide-y divide-slate-800/40">
+                      <tbody className="text-slate-600 divide-y divide-slate-200">
                         {issuedCredentials.map((cred, i) => (
-                          <tr key={cred.refId} className="hover:bg-slate-800/20">
-                            <td className="px-3 py-2 text-slate-500">{i + 1}</td>
+                          <tr key={cred.refId} className="hover:bg-slate-50">
+                            <td className="px-3 py-2 text-slate-400">{i + 1}</td>
                             <td className="px-3 py-2">
-                              <span className="text-white font-medium">{cred.studentName}</span>
-                              <span className="text-slate-500 ml-1.5">({cred.studentId})</span>
+                              <span className="text-slate-900 font-bold">{cred.studentName}</span>
+                              <span className="text-slate-500 ml-1.5 font-medium">({cred.studentId})</span>
                             </td>
-                            <td className="px-3 py-2 font-mono text-slate-300">{truncateAddress(cred.studentWallet)}</td>
-                            <td className="px-3 py-2 font-mono text-blue-400">{truncateId(cred.refId)}</td>
+                            <td className="px-3 py-2 font-mono text-slate-600">{truncateAddress(cred.studentWallet)}</td>
+                            <td className="px-3 py-2 font-mono text-blue-600 font-bold">{truncateId(cred.refId)}</td>
                             <td className="px-3 py-2">
                               {cred.ipfsCid
-                                ? <span className="text-emerald-400 flex items-center gap-1"><CheckCircle size={10} /> Pinned</span>
-                                : <span className="text-slate-500">None</span>}
+                                ? <span className="text-green-600 font-bold flex items-center gap-1"><CheckCircle size={10} strokeWidth={2.5} /> Pinned</span>
+                                : <span className="text-slate-500 font-medium">None</span>}
                             </td>
                             <td className="px-3 py-2">
-                              <span className="text-emerald-400 flex items-center gap-1"><CheckCircle size={10} /> Issued</span>
+                              <span className="text-green-600 font-bold flex items-center gap-1"><CheckCircle size={10} strokeWidth={2.5} /> Issued</span>
                             </td>
                           </tr>
                         ))}
@@ -1937,13 +1937,13 @@ export default function BulkIssuePage() {
                         setBatchTxHash("");
                         setError(null);
                       }}
-                      className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium border border-slate-700 transition-colors"
+                      className="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-bold border border-slate-200 shadow-sm transition-colors"
                     >
                       Issue Another Batch
                     </button>
                     <button
                       onClick={() => router.push("/issuer")}
-                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-colors"
+                      className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold shadow-sm transition-colors"
                     >
                       View Issued Credentials
                     </button>

@@ -108,18 +108,32 @@ export default function DashboardLayout({
 
   const toggleDrawer = useCallback(() => setDrawerOpen((v) => !v), []);
 
+  const getRoleColor = () => {
+    if (role === "issuer") return "emerald";
+    if (role === "student") return "blue";
+    if (role === "admin") return "purple";
+    return "teal";
+  };
+  const roleColor = getRoleColor();
+
+  const logoColorClass = 
+    role === "issuer" ? "text-emerald-600 bg-emerald-50" : 
+    role === "student" ? "text-blue-600 bg-blue-50" : 
+    role === "admin" ? "text-purple-600 bg-purple-50" : 
+    "text-teal-600 bg-teal-50";
+
   // ── Sidebar inner content (shared between desktop and mobile) ──
   const sidebarContent = (
     <>
       {/* 1. Header / Logo */}
       <div className="p-8 pb-4">
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="p-2 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
-            <ShieldCheck className="w-8 h-8 text-blue-500" />
+          <div className={clsx("p-2 rounded-xl transition-colors", logoColorClass)}>
+            <ShieldCheck className="w-8 h-8" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-white">IdenVault</h1>
-            <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <h1 className="font-heading text-xl font-semibold tracking-tight text-slate-900">IdenVault</h1>
+            <span className="text-[10px] bg-slate-100 text-slate-500 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider font-medium">
               {role} Mode
             </span>
           </div>
@@ -128,26 +142,26 @@ export default function DashboardLayout({
 
       {/* 2. Profile Card */}
       <div className="px-6 mb-2">
-        <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-2 opacity-10">
+        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 relative overflow-hidden transition-all duration-200 hover:border-slate-300">
+          <div className="absolute top-0 right-0 p-2 opacity-5 text-slate-900">
             {role === "student" ? <GraduationCap size={40} /> : <Building2 size={40} />}
           </div>
 
           {role === "student" && (
             <div>
-               <p className="text-xs text-blue-400 font-bold uppercase tracking-wide mb-1">Student Profile</p>
+               <p className="text-[11px] text-blue-600 font-bold uppercase tracking-wide mb-1">Student Profile</p>
                {holderData.name ? (
                  <>
-                   <h3 className="text-white font-semibold">{holderData.name}</h3>
-                   <p className="text-sm text-slate-400 font-mono mb-2">{holderData.student_id || "No Student ID"}</p>
-                   <div className="flex items-center gap-1 text-xs text-slate-500">
-                     <Building2 size={10} />
+                   <h3 className="text-slate-900 font-semibold">{holderData.name}</h3>
+                   <p className="text-xs text-slate-500 font-mono mb-2">{holderData.student_id || "No Student ID"}</p>
+                   <div className="flex items-center gap-1 text-xs text-slate-500 font-medium">
+                     <Building2 size={12} className="text-slate-400" />
                      {holderData.institution || "No institution set"}
                    </div>
                  </>
                ) : (
                  <p className="text-xs text-slate-500 leading-relaxed">
-                   Update your <Link href="/student/profile" className="text-blue-400 hover:underline">Holder Profile</Link> to display your identity here.
+                   Update your <Link href="/student/profile" className="text-blue-600 hover:underline font-medium">Holder Profile</Link> to display your identity here.
                  </p>
                )}
             </div>
@@ -155,15 +169,15 @@ export default function DashboardLayout({
 
           {role === "issuer" && (
              <div>
-                <p className="text-xs text-emerald-400 font-bold uppercase tracking-wide mb-1">Issuer ID</p>
+                <p className="text-[11px] text-emerald-600 font-bold uppercase tracking-wide mb-1">Issuer ID</p>
                 {issuerData.institution ? (
                   <>
-                    <h3 className="text-white font-semibold line-clamp-1">{issuerData.institution}</h3>
-                    <p className="text-xs text-slate-400 line-clamp-1">{issuerData.department || "No department set"}</p>
+                    <h3 className="text-slate-900 font-semibold line-clamp-1">{issuerData.institution}</h3>
+                    <p className="text-xs text-slate-500 line-clamp-1">{issuerData.department || "No department set"}</p>
                   </>
                 ) : (
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    Update your <Link href="/issuer/profile" className="text-emerald-400 hover:underline">Institution Profile</Link> to display your identity here.
+                    Update your <Link href="/issuer/profile" className="text-emerald-600 hover:underline font-medium">Institution Profile</Link> to display your identity here.
                   </p>
                 )}
              </div>
@@ -171,23 +185,24 @@ export default function DashboardLayout({
 
           {role === "admin" && (
              <div>
-                <p className="text-xs text-purple-400 font-bold uppercase tracking-wide mb-1">System Admin</p>
-                <h3 className="text-white font-semibold">Administrator</h3>
-                <p className="text-xs text-slate-400">Governance Panel</p>
+                <p className="text-[11px] text-purple-600 font-bold uppercase tracking-wide mb-1">System Admin</p>
+                <h3 className="text-slate-900 font-semibold">Administrator</h3>
+                <p className="text-xs text-slate-500">Governance Panel</p>
              </div>
           )}
         </div>
       </div>
 
       {/* 3. Navigation Links */}
-      <nav className="flex-1 px-4 py-4 space-y-2">
+      <nav className="flex-1 px-4 py-4 space-y-1">
 
         {role === "admin" && (
            <NavItem
              href="/admin"
-             icon={<Settings size={20} />}
+             icon={<Settings size={18} />}
              label="Admin Dashboard"
              active={isActive("/admin")}
+             role={role}
            />
         )}
 
@@ -195,15 +210,17 @@ export default function DashboardLayout({
           <>
             <NavItem
               href="/student"
-              icon={<LayoutDashboard size={20} />}
+              icon={<LayoutDashboard size={18} />}
               label="My Credentials"
               active={isActive("/student")}
+              role={role}
             />
             <NavItem
               href="/student/profile"
-              icon={<UserCog size={20} />}
+              icon={<UserCog size={18} />}
               label="Holder Profile"
               active={isActive("/student/profile")}
+              role={role}
             />
           </>
         )}
@@ -212,48 +229,53 @@ export default function DashboardLayout({
           <>
             <NavItem
               href="/issuer"
-              icon={<LayoutDashboard size={20} />}
+              icon={<LayoutDashboard size={18} />}
               label="Issued Credentials"
               active={isActive("/issuer")}
+              role={role}
             />
 
             <NavItem
               href="/issuer/templates"
-              icon={<FileBox size={20} />}
+              icon={<FileBox size={18} />}
               label="Credential Templates"
               active={isActive("/issuer/templates")}
+              role={role}
             />
 
             <NavItem
               href="/issuer/profile"
-              icon={<UserCog size={20} />}
+              icon={<UserCog size={18} />}
               label="Institution Profile"
               active={isActive("/issuer/profile")}
+              role={role}
             />
 
             <NavItem
               href="/issuer/issue"
-              icon={<FilePlus size={20} />}
+              icon={<FilePlus size={18} />}
               label="Issue Credential"
               active={isActive("/issuer/issue") || isActive("/issuer/issue/bulk")}
+              role={role}
             />
 
             <NavItem
               href="/issuer/external-systems"
-              icon={<Globe size={20} />}
+              icon={<Globe size={18} />}
               label="External Systems"
               active={isActive("/issuer/external-systems")}
+              role={role}
             />
           </>
         )}
       </nav>
 
       {/* 4. Wallet & Logout */}
-      <div className="p-6 border-t border-slate-800">
+      <div className="p-6 border-t border-slate-200">
         <div className="mb-4">
-          <p className="text-xs text-slate-500 mb-1">Connected Wallet</p>
-          <div className="flex items-center gap-2 font-mono text-xs text-slate-300 bg-black/20 p-2 rounded border border-slate-800">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+          <p className="text-xs text-slate-500 font-medium mb-2">Connected Wallet</p>
+          <div className="flex items-center gap-2 font-mono text-[13px] text-slate-500 bg-slate-100 px-3 py-2 rounded-lg border border-slate-200">
+            <div className={`w-2 h-2 rounded-full animate-pulse ${role === 'issuer' ? 'bg-emerald-500' : role === 'student' ? 'bg-blue-500' : role === 'admin' ? 'bg-purple-500' : 'bg-teal-500'}`}></div>
             {walletAddress ? (
               <span>{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
             ) : (
@@ -264,7 +286,7 @@ export default function DashboardLayout({
 
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-slate-600 font-medium hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 border border-transparent hover:border-red-100"
         >
           <LogOut size={16} />
           Disconnect
@@ -274,10 +296,10 @@ export default function DashboardLayout({
   );
 
   return (
-    <div className="min-h-screen flex bg-slate-950 text-slate-100 font-sans">
+    <div className="min-h-screen flex bg-[#F8F8F8] bg-dotgrid text-slate-900 font-sans">
 
       {/* ── Desktop Sidebar (lg+) ── */}
-      <aside className="hidden lg:flex w-72 bg-slate-900 border-r border-slate-800 flex-col fixed h-full z-20">
+      <aside className="hidden lg:flex w-72 bg-white border-r border-slate-200 flex-col fixed h-full z-20">
         {sidebarContent}
       </aside>
 
@@ -300,7 +322,7 @@ export default function DashboardLayout({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden"
               onClick={() => setDrawerOpen(false)}
             />
 
@@ -311,12 +333,12 @@ export default function DashboardLayout({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 border-r border-slate-800 flex flex-col overflow-y-auto lg:hidden"
+              className="fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col overflow-y-auto lg:hidden shadow-2xl"
             >
               {/* Close button inside drawer */}
               <button
                 onClick={() => setDrawerOpen(false)}
-                className="absolute top-6 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors z-10"
+                className="absolute top-6 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors z-10"
               >
                 <X size={20} />
               </button>
@@ -329,12 +351,10 @@ export default function DashboardLayout({
 
       {/* ── Main Content Area ── */}
       <main className="flex-1 lg:ml-72 pt-20 lg:pt-8 px-4 pb-4 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8 relative">
-        <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[100px] pointer-events-none" />
-
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
           className="relative z-10 max-w-6xl mx-auto"
         >
           {children}
@@ -357,31 +377,37 @@ function MobileTopBar({
   drawerOpen: boolean;
   onToggle: () => void;
 }) {
+  const logoColorClass = 
+    role === "issuer" ? "text-emerald-600" : 
+    role === "student" ? "text-blue-600" : 
+    role === "admin" ? "text-purple-600" : 
+    "text-teal-600";
+
   return (
-    <div className="fixed top-0 left-0 right-0 z-30 flex lg:hidden items-center justify-between px-4 h-14 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
+    <div className="fixed top-0 left-0 right-0 z-30 flex lg:hidden items-center justify-between px-4 h-14 bg-white/80 backdrop-blur-md border-b border-slate-200">
       {/* Left: hamburger + logo */}
       <div className="flex items-center gap-3">
         <button
           onClick={onToggle}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
           aria-label={drawerOpen ? "Close menu" : "Open menu"}
         >
           <Menu size={22} />
         </button>
 
         <Link href="/" className="flex items-center gap-2">
-          <ShieldCheck className="w-6 h-6 text-blue-500" />
-          <span className="text-base font-bold text-white tracking-tight">IdenVault</span>
+          <ShieldCheck className={clsx("w-6 h-6", logoColorClass)} />
+          <span className="font-heading text-base font-semibold text-slate-900 tracking-tight">IdenVault</span>
         </Link>
       </div>
 
       {/* Right: wallet pill */}
-      <div className="flex items-center gap-2 font-mono text-xs text-slate-300 bg-slate-800/60 px-3 py-1.5 rounded-full border border-slate-700">
-        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+      <div className="flex items-center gap-2 font-mono text-[11px] text-slate-500 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
+        <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${role === 'issuer' ? 'bg-emerald-500' : role === 'student' ? 'bg-blue-500' : role === 'admin' ? 'bg-purple-500' : 'bg-teal-500'}`} />
         {walletAddress ? (
           <span>{walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}</span>
         ) : (
-          <span className="text-slate-500">{role ?? "---"}</span>
+          <span className="text-slate-400 capitalize">{role ?? "---"}</span>
         )}
       </div>
     </div>
@@ -390,15 +416,20 @@ function MobileTopBar({
 
 // ── Nav Item ──────────────────────────────────────────────────────
 
-function NavItem({ href, icon, label, active }: { href: string; icon: React.ReactNode; label: string; active: boolean }) {
+function NavItem({ href, icon, label, active, role }: { href: string; icon: React.ReactNode; label: string; active: boolean; role?: string | null }) {
+  let activeStyles = "bg-teal-50 text-teal-700 font-semibold border-l-2 border-l-teal-600";
+  if (role === "issuer") activeStyles = "bg-emerald-50 text-emerald-700 font-semibold border-l-2 border-l-emerald-600";
+  if (role === "student") activeStyles = "bg-blue-50 text-blue-700 font-semibold border-l-2 border-l-blue-600";
+  if (role === "admin") activeStyles = "bg-purple-50 text-purple-700 font-semibold border-l-2 border-l-purple-600";
+
   return (
     <Link
       href={href}
       className={clsx(
-        "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150",
         active
-          ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-          : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+          ? activeStyles
+          : "text-slate-600 font-medium hover:text-slate-900 hover:bg-slate-100"
       )}
     >
       {icon}

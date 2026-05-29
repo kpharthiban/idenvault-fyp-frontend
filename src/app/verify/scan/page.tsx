@@ -25,31 +25,51 @@ export default function ScanPage() {
     const scanner = new Html5Qrcode(readerRef.current.id);
     scannerRef.current = scanner;
 
-    scanner
-      .start(
-        { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: (viewfinderWidth, viewfinderHeight) => {
-            const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.7;
-            return { width: size, height: size };
-          },
-          aspectRatio: 1.0,
+    const startScanner = async () => {
+      const config = {
+        fps: 10,
+        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+          const size = Math.min(viewfinderWidth, viewfinderHeight) * 0.7;
+          return { width: size, height: size };
         },
-        (decodedText: string) => {
-          scanner
-            .stop()
-            .then(() => {
-              window.location.href = decodedText;
-            })
-            .catch(() => {});
-        },
-        () => {}
-      )
-      .catch((err) => {
-        console.error(err);
-        setError("Unable to access camera. Please allow camera permissions.");
-      });
+        aspectRatio: 1.0,
+      };
+
+      const onSuccess = (decodedText: string) => {
+        scanner
+          .stop()
+          .then(() => {
+            window.location.href = decodedText;
+          })
+          .catch(() => {});
+      };
+      
+      const onScanError = () => {};
+
+      try {
+        await scanner.start({ facingMode: "environment" }, config, onSuccess, onScanError);
+      } catch (err1) {
+        console.warn("Environment camera failed, trying user camera...", err1);
+        try {
+          await scanner.start({ facingMode: "user" }, config, onSuccess, onScanError);
+        } catch (err2) {
+          console.warn("User camera failed, trying any available camera...", err2);
+          try {
+            const cameras = await Html5Qrcode.getCameras();
+            if (cameras && cameras.length > 0) {
+              await scanner.start(cameras[0].id, config, onSuccess, onScanError);
+            } else {
+              throw new Error("No cameras found.");
+            }
+          } catch (err3) {
+            console.error("All camera fallback options failed:", err3);
+            setError("Unable to access camera. Please allow permissions or ensure no other app is using it.");
+          }
+        }
+      }
+    };
+
+    startScanner();
 
     return () => {
       if (
@@ -79,7 +99,7 @@ export default function ScanPage() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-slate-950 p-6 relative">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-[#F8F8F8] bg-dotgrid p-6 relative">
       
       {/* GLOBAL STYLES FIX:
         1. Hide the library's internal canvas (removes the white white box/borders).
@@ -100,7 +120,7 @@ export default function ScanPage() {
 
       {/* Background Ambience */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[100px]" />
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-100/50 rounded-full blur-[100px]" />
       </div>
 
       <div className="w-full max-w-md relative z-10">
@@ -109,31 +129,31 @@ export default function ScanPage() {
         <div className="flex items-center justify-between mb-6">
             <button
             onClick={stopScannerAndGoBack}
-            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-slate-600 hover:text-slate-900 hover:bg-slate-50 hover:shadow-sm transition-all text-sm font-medium"
             >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={16} />
             <span className="text-sm font-medium">Cancel</span>
             </button>
-            <div className="flex items-center gap-2 px-3 py-1 bg-slate-900 rounded-full border border-slate-800">
+            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-slate-200 shadow-sm">
                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                <span className="text-xs text-slate-300 font-mono uppercase">Live Feed</span>
+                <span className="text-xs text-slate-700 font-mono uppercase font-semibold">Live Feed</span>
             </div>
         </div>
 
         {/* Scanner Card */}
-        <div className="bg-black border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative h-[400px] w-full flex items-center justify-center">
+        <div className="bg-slate-900 border-2 border-white rounded-3xl overflow-hidden shadow-xl relative h-[400px] w-full flex items-center justify-center">
             
             {/* Title Overlay */}
-            <div className="absolute top-0 left-0 w-full p-4 bg-gradient-to-b from-black/80 to-transparent z-20 flex justify-center">
-                <p className="text-white/90 text-sm font-medium flex items-center gap-2">
+            <div className="absolute top-0 left-0 w-full p-4 bg-gradient-to-b from-black/60 to-transparent z-20 flex justify-center">
+                <p className="text-white text-sm font-medium flex items-center gap-2">
                     <Camera size={16} /> Scan QR Code
                 </p>
             </div>
 
             {error ? (
-                <div className="h-full w-full flex flex-col items-center justify-center p-8 text-center text-red-400">
+                <div className="h-full w-full flex flex-col items-center justify-center p-8 text-center text-red-500 bg-white">
                     <AlertCircle size={40} className="mb-4 opacity-80" />
-                    <p>{error}</p>
+                    <p className="font-medium">{error}</p>
                 </div>
             ) : (
                 <div className="w-full h-full relative">
@@ -146,23 +166,23 @@ export default function ScanPage() {
                            - Removed 'shadow' classes to eliminate the weird white lines.
                            - Kept pure blue borders.
                         */}
-                        <div className="absolute top-10 left-10 w-12 h-12 border-t-4 border-l-4 border-blue-500 rounded-tl-xl" />
-                        <div className="absolute top-10 right-10 w-12 h-12 border-t-4 border-r-4 border-blue-500 rounded-tr-xl" />
-                        <div className="absolute bottom-10 left-10 w-12 h-12 border-b-4 border-l-4 border-blue-500 rounded-bl-xl" />
-                        <div className="absolute bottom-10 right-10 w-12 h-12 border-b-4 border-r-4 border-blue-500 rounded-br-xl" />
+                        <div className="absolute top-10 left-10 w-12 h-12 border-t-4 border-l-4 border-purple-500 rounded-tl-xl" />
+                        <div className="absolute top-10 right-10 w-12 h-12 border-t-4 border-r-4 border-purple-500 rounded-tr-xl" />
+                        <div className="absolute bottom-10 left-10 w-12 h-12 border-b-4 border-l-4 border-purple-500 rounded-bl-xl" />
+                        <div className="absolute bottom-10 right-10 w-12 h-12 border-b-4 border-r-4 border-purple-500 rounded-br-xl" />
 
                         {/* Moving Laser */}
                         <motion.div
                             animate={{ top: ["15%", "85%", "15%"] }}
                             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                            className="absolute left-[15%] w-[70%] h-0.5 bg-blue-400 shadow-[0_0_15px_rgba(96,165,250,1)]"
+                            className="absolute left-[15%] w-[70%] h-0.5 bg-purple-400 shadow-[0_0_15px_rgba(168,85,247,1)]"
                         />
                     </div>
                 </div>
             )}
         </div>
 
-        <p className="text-center text-slate-500 text-xs mt-6">
+        <p className="text-center text-slate-500 text-sm mt-6 font-medium">
           Align the QR code within the frame to verify automatically.
         </p>
       </div>

@@ -1,39 +1,42 @@
 @import "tailwindcss";
 
-:root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 2, 6, 23; /* slate-950 */
-  --background-end-rgb: 15, 23, 42; /* slate-900 */
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-heading: "Sora", "Inter", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
 }
 
-/* The @layer directive helps organize custom styles in v4 */
 @layer base {
   body {
-    color: rgb(var(--foreground-rgb));
-    background: linear-gradient(
-        to bottom right,
-        rgb(var(--background-start-rgb)),
-        rgb(var(--background-end-rgb))
-      )
-      no-repeat fixed;
-    /* Ensure the font is applied */
-    font-family: var(--font-geist-sans), sans-serif;
+    @apply bg-[#F8F8F8] text-slate-900;
   }
 }
 
-/* Custom Scrollbar */
 @layer utilities {
+  .bg-dotgrid {
+    background-color: #F8F8F8;
+    background-image: radial-gradient(circle, #D1D5DB 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .bg-dotgrid-subtle {
+    background-color: #F8F8F8;
+    background-image: radial-gradient(circle, #E2E8F0 0.8px, transparent 0.8px);
+    background-size: 20px 20px;
+  }
+
+  /* Custom Scrollbar Light Mode */
   ::-webkit-scrollbar {
     width: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: #0f172a;
+    background: #F8F8F8;
   }
   ::-webkit-scrollbar-thumb {
-    background: #334155;
+    background: #CBD5E1;
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #475569;
+    background: #94A3B8;
   }
 }

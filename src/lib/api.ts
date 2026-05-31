@@ -194,4 +194,59 @@ export function deleteTemplate(walletAddress: string, id: string) {
   return apiDelete<void>(`/api/templates/${id}`, walletAddress);
 }
 
+/* ------------------------------------------------------------------ */
+/*  Presentation token helpers (time-bound QR verification)            */
+/* ------------------------------------------------------------------ */
+
+export function requestPresentationToken(
+  walletAddress: string,
+  refId: string,
+) {
+  return apiPost<{ token: string; expiresAt: number }>(
+    `/api/credentials/${refId}/present`,
+    {},
+    walletAddress,
+  );
+}
+
+export async function verifyPresentationToken(
+  token: string,
+): Promise<ApiResponse<unknown>> {
+  const url = `${BASE_URL}/api/verify/token`;
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+
+    let parsed: Record<string, unknown> | undefined;
+    const text = await res.text();
+    try {
+      parsed = text ? JSON.parse(text) : undefined;
+    } catch {
+      if (!res.ok) throw new ApiError(res.status, res.statusText, text);
+      return { success: true, data: undefined };
+    }
+
+    if (!res.ok) {
+      const msg = String(
+        parsed?.error ?? parsed?.message ?? res.statusText,
+      );
+      const code = parsed?.code ? String(parsed.code) : undefined;
+      return { success: false, error: msg, code };
+    }
+
+    return { success: true, data: parsed };
+  } catch (err) {
+    if (err instanceof ApiError) {
+      return { success: false, error: `${err.status}: ${err.body || err.statusText}` };
+    }
+    const message =
+      err instanceof Error ? err.message : "An unexpected error occurred";
+    return { success: false, error: message };
+  }
+}
+
 export { ApiError, BASE_URL };

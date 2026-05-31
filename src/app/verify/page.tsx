@@ -6,9 +6,10 @@ import Link from "next/link";
 import {
   ShieldCheck, ArrowLeft, CheckCircle, XCircle, Loader2,
   Building2, User, Calendar, Clock, Bot, RefreshCw,
-  Copy, AlertCircle, ExternalLink, FileText, Database
+  Copy, AlertCircle, ExternalLink, FileText, Database, Radio
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { verifyPresentationToken } from "@/lib/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -52,6 +53,7 @@ interface IpfsMetadata {
 export default function VerifyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const tokenParam = searchParams.get("token");
   const refParam = searchParams.get("ref");
 
   const [credentialId, setCredentialId] = useState("");
@@ -69,6 +71,8 @@ export default function VerifyPage() {
   const [aiQuestions, setAiQuestions] = useState<string[]>([]);
   const [aiError, setAiError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [presentedBy, setPresentedBy] = useState<string | null>(null);
+  const [tokenError, setTokenError] = useState<"expired" | "invalid" | null>(null);
 
   const handleVerify = useCallback(async (idToVerify: string) => {
     if (!idToVerify.trim()) return;
@@ -175,13 +179,118 @@ export default function VerifyPage() {
     }
   }, []);
 
-  // Auto-verify from URL param
+  const handleTokenVerify = useCallback(async (token: string) => {
+    setStatus("loading");
+    setRecord(null);
+    setTrustChecks([]);
+    setMetadata(null);
+    setShowAI(false);
+    setAiQuestions([]);
+    setTokenError(null);
+    setPresentedBy(null);
+
+    const res = await verifyPresentationToken(token);
+
+    if (!res.success) {
+      if (res.code === "TOKEN_EXPIRED") {
+        setTokenError("expired");
+        setStatus("idle");
+      } else {
+        setTokenError("invalid");
+        setStatus("idle");
+      }
+      return;
+    }
+
+    const data = res.data as Record<string, unknown>;
+
+    // The backend may return the credential nested under a `credential` key
+    // or directly at the top level alongside `presentedBy` and `blockchain`.
+    const cred: CredentialRecord = (data.credential as CredentialRecord) ?? (data as unknown as CredentialRecord);
+
+    if (data.blockchain && typeof data.blockchain === "object") {
+      cred.blockchain = data.blockchain as CredentialRecord["blockchain"];
+    }
+    if (data.presentedBy && typeof data.presentedBy === "string") {
+      setPresentedBy(data.presentedBy);
+    }
+
+    const now = new Date();
+    const isExpired = cred.expires_at ? new Date(cred.expires_at) < now : false;
+    const isRevoked = cred.status === "revoked" || cred.blockchain?.revoked === true;
+    const hashValid = cred.blockchain?.valid ?? false;
+    const issuerTrusted = !!cred.blockchain?.issuer &&
+      cred.blockchain.issuer.toLowerCase() === cred.issuer_wallet.toLowerCase();
+
+    const checks: TrustCheck[] = [
+      {
+        label: "Existence",
+        pass: true,
+        detail: "Credential record found on-chain and in database",
+      },
+      {
+        label: "Integrity",
+        pass: hashValid,
+        detail: hashValid
+          ? "On-chain hash matches stored credential data"
+          : "Hash mismatch — credential data may have been tampered",
+      },
+      {
+        label: "Revocation",
+        pass: !isRevoked,
+        detail: isRevoked
+          ? "This credential has been revoked by the issuer"
+          : "Credential is not revoked",
+      },
+      {
+        label: "Issuer Trust",
+        pass: issuerTrusted,
+        detail: issuerTrusted
+          ? `Issuer ${cred.issuer_wallet.slice(0, 8)}... is registered in IssuerRegistry`
+          : "Issuer is not a trusted institution",
+      },
+      {
+        label: "Expiry",
+        pass: !isExpired,
+        detail: isExpired
+          ? `Credential expired on ${new Date(cred.expires_at!).toLocaleDateString("en-GB")}`
+          : cred.expires_at
+          ? `Valid until ${new Date(cred.expires_at).toLocaleDateString("en-GB")}`
+          : "No expiry — credential is permanent",
+      },
+    ];
+
+    setRecord(cred);
+    setTrustChecks(checks);
+    setStatus(checks.every((c) => c.pass) ? "valid" : "invalid");
+
+    if (cred.metadata_cid) {
+      setMetadataLoading(true);
+      try {
+        const metaRes = await fetch(
+          `https://gateway.pinata.cloud/ipfs/${cred.metadata_cid}`
+        );
+        if (metaRes.ok) {
+          const metaJson: IpfsMetadata = await metaRes.json();
+          setMetadata(metaJson);
+        }
+      } catch {
+        // Non-critical
+      } finally {
+        setMetadataLoading(false);
+      }
+    }
+  }, []);
+
+  // Auto-verify from URL param — token takes priority over ref
   useEffect(() => {
-    if (refParam) {
+    if (tokenParam) {
+      handleTokenVerify(tokenParam);
+    } else if (refParam) {
       setCredentialId(refParam);
       handleVerify(refParam);
     }
-  }, [refParam, handleVerify]);
+  }, [tokenParam, refParam, handleTokenVerify, handleVerify]);
 
   const handleGenerateQuestions = async () => {
     if (!record) return;
@@ -224,6 +333,8 @@ export default function VerifyPage() {
     setMetadata(null);
     setShowAI(false);
     setAiQuestions([]);
+    setPresentedBy(null);
+    setTokenError(null);
     router.replace("/verify");
   };
 
@@ -268,8 +379,78 @@ export default function VerifyPage() {
         <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm relative">
           <AnimatePresence mode="wait">
 
+            {/* ── STATE: Token Expired ── */}
+            {tokenError === "expired" && status === "idle" && (
+              <motion.div
+                key="expired"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-5"
+              >
+                <div className="flex flex-col items-center text-center py-6">
+                  <div className="p-4 bg-amber-50 rounded-full border border-amber-200 mb-4">
+                    <Clock size={32} className="text-amber-600" strokeWidth={2} />
+                  </div>
+                  <h2 className="font-heading text-xl font-bold text-slate-900 mb-2">QR Code Expired</h2>
+                  <p className="text-slate-500 font-medium text-sm max-w-sm">
+                    This QR code has expired. Please ask the credential holder to present a fresh QR code.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Link
+                    href="/verify/scan"
+                    className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold transition-all hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 active:shadow-none"
+                  >
+                    <FileText size={18} /> Scan Another QR
+                  </Link>
+                  <button
+                    onClick={resetVerification}
+                    className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 py-3 rounded-xl font-semibold transition-all border border-slate-200"
+                  >
+                    <RefreshCw size={18} /> Enter Ref ID Instead
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── STATE: Token Invalid ── */}
+            {tokenError === "invalid" && status === "idle" && (
+              <motion.div
+                key="token-invalid"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-5"
+              >
+                <div className="flex flex-col items-center text-center py-6">
+                  <div className="p-4 bg-red-50 rounded-full border border-red-200 mb-4">
+                    <XCircle size={32} className="text-red-600" strokeWidth={2} />
+                  </div>
+                  <h2 className="font-heading text-xl font-bold text-slate-900 mb-2">Invalid Verification Code</h2>
+                  <p className="text-slate-500 font-medium text-sm max-w-sm">
+                    This verification code is not valid. It may have been tampered with or is malformed.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Link
+                    href="/verify/scan"
+                    className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold transition-all hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 active:shadow-none"
+                  >
+                    <FileText size={18} /> Scan Another QR
+                  </Link>
+                  <button
+                    onClick={resetVerification}
+                    className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 py-3 rounded-xl font-semibold transition-all border border-slate-200"
+                  >
+                    <RefreshCw size={18} /> Enter Ref ID Instead
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* ── STATE: Input ── */}
-            {(status === "idle" || status === "loading") && (
+            {(status === "idle" || status === "loading") && !tokenError && (
               <motion.div
                 key="input"
                 initial={{ opacity: 0, y: 10 }}
@@ -335,6 +516,17 @@ export default function VerifyPage() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-5"
               >
+                {/* Live Presentation badge */}
+                {presentedBy && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <Radio size={14} className="text-emerald-600 shrink-0" strokeWidth={2.5} />
+                    <span className="text-xs font-bold text-emerald-700">Live Presentation</span>
+                    <span className="text-xs text-slate-500 font-medium ml-auto">
+                      Presented by <span className="font-mono text-slate-700">{presentedBy.slice(0, 8)}...{presentedBy.slice(-6)}</span>
+                    </span>
+                  </div>
+                )}
+
                 {/* Overall result banner */}
                 <div className={`flex items-center gap-4 p-4 rounded-xl border ${
                   allPass

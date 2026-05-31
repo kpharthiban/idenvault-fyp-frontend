@@ -7,7 +7,8 @@ import RequireAuth from "@/lib/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import {
   ArrowLeft, User, Calendar, Shield, FileText, Ban, CheckCircle,
-  AlertTriangle, Award, ExternalLink, Download, Loader2, AlertCircle
+  AlertTriangle, Award, ExternalLink, Download, Loader2, AlertCircle,
+  Database
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -29,12 +30,25 @@ interface CredentialDetail {
   issued_at: string;
   expires_at: string | null;
   ipfs_cid: string | null;
+  metadata_cid: string | null;
   tx_hash: string | null;
   blockchain?: {
     valid: boolean;
     revoked: boolean;
     issuer: string;
   };
+}
+
+interface IpfsMetadata {
+  refId: string;
+  templateId: string;
+  issuerWallet: string;
+  studentWallet: string;
+  title: string;
+  type: string;
+  fields: Record<string, string>;
+  ipfsCid: string | null;
+  issuedAt: string;
 }
 
 export default function IssuerCredentialDetail() {
@@ -49,6 +63,8 @@ export default function IssuerCredentialDetail() {
   const [showRevokeModal, setShowRevokeModal] = useState(false);
   const [revoking, setRevoking] = useState(false);
   const [revokeError, setRevokeError] = useState<string | null>(null);
+  const [metadata, setMetadata] = useState<IpfsMetadata | null>(null);
+  const [metadataLoading, setMetadataLoading] = useState(false);
 
   useEffect(() => {
     const fetchCredential = async () => {
@@ -57,6 +73,23 @@ export default function IssuerCredentialDetail() {
         if (!res.ok) throw new Error("Credential not found");
         const data = await res.json();
         setCredential(data);
+
+        if (data.metadata_cid) {
+          setMetadataLoading(true);
+          try {
+            const metaRes = await fetch(
+              `https://gateway.pinata.cloud/ipfs/${data.metadata_cid}`
+            );
+            if (metaRes.ok) {
+              const metaJson: IpfsMetadata = await metaRes.json();
+              setMetadata(metaJson);
+            }
+          } catch {
+            // Non-critical — metadata display is best-effort
+          } finally {
+            setMetadataLoading(false);
+          }
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -125,6 +158,12 @@ export default function IssuerCredentialDetail() {
     ? `https://gateway.pinata.cloud/ipfs/${credential.ipfs_cid}`
     : null;
 
+  const formatFieldKey = (key: string): string =>
+    key
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
   // ── Main render ─────────────────────────────────────────────────
   return (
     <RequireAuth allowedRole="issuer">
@@ -132,21 +171,27 @@ export default function IssuerCredentialDetail() {
 
         <button
           onClick={() => router.push("/issuer")}
-          className="flex items-center gap-2 text-slate-500 hover:text-slate-900 mb-6 transition-colors text-sm font-bold group"
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-900 mb-6 transition-all duration-200 text-sm font-bold group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" strokeWidth={2.5} />
           Back to List
         </button>
 
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xl">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xl"
+        >
 
           {/* Status bar */}
           <div className={`w-full h-1.5 ${isRevoked ? "bg-red-500" : "bg-green-500"}`} />
 
           <div className="p-8">
             {/* Header */}
-            <div className="flex justify-between items-start mb-8">
-              <div>
+            <div className="relative flex justify-between items-start mb-8">
+              <div className={`absolute -top-8 -left-8 w-40 h-40 rounded-full blur-[50px] pointer-events-none ${isRevoked ? "bg-red-500/8" : "bg-green-500/8"}`} />
+              <div className="relative">
                 <h1 className="text-3xl font-heading font-extrabold text-slate-900 mb-2">Issued Credential Details</h1>
                 <p className="text-slate-600 text-sm flex items-center gap-2 font-medium">
                   Reference ID:
@@ -155,12 +200,12 @@ export default function IssuerCredentialDetail() {
                   </span>
                 </p>
               </div>
-              <div className={`px-4 py-1.5 rounded-full border text-sm font-bold uppercase tracking-wider flex items-center gap-2 ${
+              <div className={`px-5 py-2 rounded-full border text-sm font-bold uppercase tracking-wider flex items-center gap-2 ${
                 isRevoked
                   ? "bg-red-50 text-red-700 border-red-200"
                   : "bg-green-50 text-green-700 border-green-200"
               }`}>
-                {isRevoked ? <Ban size={14} strokeWidth={2.5} /> : <CheckCircle size={14} strokeWidth={2.5} />}
+                {isRevoked ? <Ban size={15} strokeWidth={2.5} /> : <CheckCircle size={15} strokeWidth={2.5} />}
                 {isRevoked ? "Revoked" : "Active"}
               </div>
             </div>
@@ -168,7 +213,12 @@ export default function IssuerCredentialDetail() {
             {/* Details grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 
-              <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-slate-50 rounded-xl p-5 border border-slate-200 shadow-sm space-y-4"
+              >
                 <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">Credential Info</h3>
                 <div className="flex items-start gap-3">
                   <Award size={16} className="text-green-600 mt-0.5 shrink-0" strokeWidth={2.5} />
@@ -210,9 +260,14 @@ export default function IssuerCredentialDetail() {
                     </div>
                   </div>
                 )}
-              </div>
+              </motion.div>
 
-              <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="bg-slate-50 rounded-xl p-5 border border-slate-200 shadow-sm space-y-4"
+              >
                 <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">Parties</h3>
                 <div className="flex items-start gap-3">
                   <User size={16} className="text-blue-600 mt-0.5 shrink-0" strokeWidth={2.5} />
@@ -237,7 +292,7 @@ export default function IssuerCredentialDetail() {
                         href={`https://sepolia.etherscan.io/tx/${credential.tx_hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-purple-600 font-mono text-xs break-all hover:underline font-medium"
+                        className="text-purple-600 font-mono text-xs break-all hover:underline font-medium transition-all duration-200"
                       >
                         {credential.tx_hash.slice(0, 20)}...
                       </a>
@@ -246,34 +301,82 @@ export default function IssuerCredentialDetail() {
                 )}
                 {/* Blockchain status */}
                 {credential.blockchain && (
-                  <div className="pt-2 border-t border-slate-200">
-                    <p className="text-xs text-slate-500 mb-2 font-bold">Blockchain Status</p>
+                  <div className="pt-3 border-t border-slate-200">
+                    <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mb-2">On-Chain Status</p>
                     <div className="flex gap-2 flex-wrap">
-                      <span className={`text-xs px-2 py-0.5 rounded-full border font-bold ${credential.blockchain.valid ? "text-green-700 border-green-200 bg-green-50" : "text-red-700 border-red-200 bg-red-50"}`}>
-                        {credential.blockchain.valid ? "✓ Hash Valid" : "✗ Hash Invalid"}
+                      <span className={`text-xs px-3 py-1 rounded-full border font-bold flex items-center gap-1.5 ${credential.blockchain.valid ? "text-green-700 border-green-200 bg-green-50" : "text-red-700 border-red-200 bg-red-50"}`}>
+                        {credential.blockchain.valid ? <CheckCircle size={12} strokeWidth={2.5} /> : <AlertCircle size={12} strokeWidth={2.5} />}
+                        {credential.blockchain.valid ? "Hash Valid" : "Hash Invalid"}
                       </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full border font-bold ${credential.blockchain.revoked ? "text-red-700 border-red-200 bg-red-50" : "text-green-700 border-green-200 bg-green-50"}`}>
-                        {credential.blockchain.revoked ? "✗ Revoked On-Chain" : "✓ Not Revoked"}
+                      <span className={`text-xs px-3 py-1 rounded-full border font-bold flex items-center gap-1.5 ${credential.blockchain.revoked ? "text-red-700 border-red-200 bg-red-50" : "text-green-700 border-green-200 bg-green-50"}`}>
+                        {credential.blockchain.revoked ? <Ban size={12} strokeWidth={2.5} /> : <Shield size={12} strokeWidth={2.5} />}
+                        {credential.blockchain.revoked ? "Revoked On-Chain" : "Not Revoked"}
                       </span>
                     </div>
                   </div>
                 )}
-              </div>
+              </motion.div>
             </div>
 
             {/* Description */}
             {credential.description && (
-              <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 shadow-sm mb-6">
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-slate-50 rounded-xl p-5 border border-slate-200 shadow-sm mb-6"
+              >
                 <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">Description</h3>
                 <p className="text-slate-700 text-sm leading-relaxed font-medium">{credential.description}</p>
-              </div>
+              </motion.div>
+            )}
+
+            {/* Credential Details from IPFS */}
+            {metadataLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-blue-50/50 rounded-xl p-5 border border-blue-200 mb-6 flex items-center gap-3 text-blue-700"
+              >
+                <Loader2 size={18} className="animate-spin" strokeWidth={2.5} />
+                <span className="text-sm font-medium">Loading credential details from IPFS...</span>
+              </motion.div>
+            )}
+            {!metadataLoading && metadata && metadata.fields && Object.keys(metadata.fields).length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="bg-blue-50/50 rounded-xl p-5 border border-blue-200 shadow-sm mb-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">Credential Details</h3>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold uppercase tracking-wider">
+                    <Database size={12} strokeWidth={2.5} />
+                    IPFS Verified
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {Object.entries(metadata.fields).map(([key, value]) => (
+                    <div key={key} className="bg-white/70 rounded-lg p-3 border border-blue-100">
+                      <p className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mb-1">{formatFieldKey(key)}</p>
+                      <p className="text-sm text-slate-900 font-medium">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
             )}
 
             {/* IPFS Document */}
-            <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 shadow-sm">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-slate-50 rounded-xl p-5 border border-slate-200 shadow-sm"
+            >
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-start gap-3">
-                  <div className={`p-2 rounded-lg ${ipfsUrl ? "bg-green-50 text-green-600 border border-green-100" : "bg-slate-100 text-slate-400 border border-slate-200"}`}>
+                  <div className={`p-2 rounded-lg transition-all duration-200 ${ipfsUrl ? "bg-green-50 text-green-600 border border-green-100 hover:bg-green-100" : "bg-slate-100 text-slate-400 border border-slate-200"}`}>
                     <FileText size={20} strokeWidth={2.5} />
                   </div>
                   <div>
@@ -293,21 +396,21 @@ export default function IssuerCredentialDetail() {
                       href={ipfsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-sm"
+                      className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-2 shadow-sm"
                     >
                       <ExternalLink size={16} strokeWidth={2.5} /> View
                     </a>
                     <a
                       href={ipfsUrl}
                       download
-                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-sm"
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-2 shadow-sm"
                     >
                       <Download size={16} strokeWidth={2.5} /> Download
                     </a>
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Danger Zone */}
@@ -321,13 +424,13 @@ export default function IssuerCredentialDetail() {
               </div>
               <button
                 onClick={() => setShowRevokeModal(true)}
-                className="px-6 py-2.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-bold transition-colors flex items-center gap-2 shadow-sm"
+                className="px-6 py-2.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 shadow-sm"
               >
                 <Ban size={18} strokeWidth={2.5} /> Revoke Credential
               </button>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
 
       {/* Revocation Modal */}

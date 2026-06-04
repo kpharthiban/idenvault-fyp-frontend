@@ -1207,7 +1207,7 @@ export default function BulkIssuePage() {
                                 value={csvColumnMap["wallet_address"] || ""}
                                 onChange={(e) => {
                                   const newMap = { ...csvColumnMap, wallet_address: e.target.value };
-                                  if (!e.target.value) delete newMap["wallet_address"];
+                                  if (!e.target.value) delete (newMap as Partial<typeof newMap>)["wallet_address"];
                                   setCsvColumnMap(newMap);
                                   setCsvErrors(validateCsvData(csvData, newMap));
                                 }}
@@ -1232,7 +1232,7 @@ export default function BulkIssuePage() {
                                   value={csvColumnMap["certificate"] || ""}
                                   onChange={(e) => {
                                     const newMap = { ...csvColumnMap, certificate: e.target.value };
-                                    if (!e.target.value) delete newMap["certificate"];
+                                    if (!e.target.value) delete (newMap as Partial<typeof newMap>)["certificate"];
                                     setCsvColumnMap(newMap);
                                   }}
                                   className="bg-white border border-slate-300 text-slate-900 text-sm font-medium rounded-lg px-3 py-1.5 min-w-[180px] shadow-sm outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"

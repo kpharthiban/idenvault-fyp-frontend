@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { ethers } from "ethers";
+import { isMobile } from "@/lib/isMobile";
 
 export type UserRole = "student" | "issuer" | "admin";
 
@@ -53,7 +54,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     connectingRef.current = true;
 
     try {
-      if (!window.ethereum) throw new Error("MetaMask not installed");
+      if (!window.ethereum) {
+        if (isMobile()) {
+          const dappUrl = window.location.href.replace(/^https?:\/\//, "");
+          window.location.href = `https://metamask.app.link/dapp/${dappUrl}`;
+          return;
+        }
+        throw new Error("MetaMask is not installed. Please install the MetaMask browser extension.");
+      }
 
       const provider = new ethers.BrowserProvider(window.ethereum);
 

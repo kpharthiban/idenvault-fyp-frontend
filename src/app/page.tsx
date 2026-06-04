@@ -50,62 +50,93 @@ export default function Home() {
             The decentralized standard for academic credentials. Secure, verifiable, and owned by you.
           </p>
 
-          {/* Role Selection Grid */}
-          <div className="flex flex-wrap justify-center gap-4 md:gap-6 w-full">
-            
+          {/* Role Selection — Mobile: compact vertical list */}
+          <div className="flex flex-col gap-3 w-full max-w-sm mx-auto md:hidden">
+            <Link href="/connect?role=issuer" className="group">
+              <div className="flex items-center gap-4 px-4 py-3.5 bg-white rounded-xl border border-slate-200 border-l-4 border-l-emerald-300 shadow-sm hover:shadow-md transition-all">
+                <div className="w-9 h-9 shrink-0 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center justify-center text-emerald-500">
+                  <Building2 className="w-[18px] h-[18px]" strokeWidth={2.5} />
+                </div>
+                <span className="font-heading text-sm font-bold text-slate-800">Institution Portal</span>
+                <ArrowRight className="ml-auto w-4 h-4 text-emerald-400 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+            <Link href="/connect?role=student" className="group">
+              <div className="flex items-center gap-4 px-4 py-3.5 bg-white rounded-xl border border-slate-200 border-l-4 border-l-blue-300 shadow-sm hover:shadow-md transition-all">
+                <div className="w-9 h-9 shrink-0 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-center text-blue-500">
+                  <GraduationCap className="w-[18px] h-[18px]" strokeWidth={2.5} />
+                </div>
+                <span className="font-heading text-sm font-bold text-slate-800">Student Portal</span>
+                <ArrowRight className="ml-auto w-4 h-4 text-blue-400 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+            <Link href="/verify" className="group">
+              <div className="flex items-center gap-4 px-4 py-3.5 bg-white rounded-xl border border-slate-200 border-l-4 border-l-purple-300 shadow-sm hover:shadow-md transition-all">
+                <div className="w-9 h-9 shrink-0 bg-purple-50 border border-purple-100 rounded-lg flex items-center justify-center text-purple-500">
+                  <ScanLine className="w-[18px] h-[18px]" strokeWidth={2.5} />
+                </div>
+                <span className="font-heading text-sm font-bold text-slate-800">Verify Credential</span>
+                <ArrowRight className="ml-auto w-4 h-4 text-purple-400 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+          </div>
+
+          {/* Role Selection — Desktop: 3-column grid */}
+          <div className="hidden md:flex flex-wrap justify-center gap-6 w-full">
+
             {/* Issuer Card */}
-            <Link href="/connect?role=issuer" className="group w-[calc(50%-0.5rem)] md:w-[calc(33.333%-1rem)]">
+            <Link href="/connect?role=issuer" className="group w-[calc(33.333%-1rem)]">
               <motion.div
                 whileHover={{ y: -2 }}
-                className="h-full p-4 sm:p-5 md:p-8 bg-white rounded-2xl border border-slate-200 border-l-4 border-l-emerald-300 shadow-sm text-left hover:border-emerald-300 hover:border-l-emerald-500 hover:shadow-emerald-500/10 transition-all duration-200 flex flex-col"
+                className="h-full p-8 bg-white rounded-2xl border border-slate-200 border-l-4 border-l-emerald-300 shadow-sm text-left hover:border-emerald-300 hover:border-l-emerald-500 hover:shadow-emerald-500/10 transition-all duration-200 flex flex-col"
               >
-                <div className="w-10 h-10 md:w-14 md:h-14 bg-emerald-50/50 border border-emerald-100 rounded-xl flex items-center justify-center mb-4 md:mb-6 text-emerald-400 group-hover:bg-emerald-50 group-hover:border-emerald-200 group-hover:text-emerald-600 group-hover:scale-110 transition-all duration-200">
-                  <Building2 className="w-5 h-5 md:w-7 md:h-7" strokeWidth={2.5} />
+                <div className="w-14 h-14 bg-emerald-50/50 border border-emerald-100 rounded-xl flex items-center justify-center mb-6 text-emerald-400 group-hover:bg-emerald-50 group-hover:border-emerald-200 group-hover:text-emerald-600 group-hover:scale-110 transition-all duration-200">
+                  <Building2 className="w-7 h-7" strokeWidth={2.5} />
                 </div>
-                <h2 className="font-heading text-base md:text-xl font-bold text-slate-800 mb-2">Institution Portal</h2>
-                <p className="text-xs md:text-[15px] text-slate-600 mb-6 leading-relaxed">
+                <h2 className="font-heading text-xl font-bold text-slate-800 mb-2">Institution Portal</h2>
+                <p className="text-[15px] text-slate-600 mb-6 leading-relaxed">
                   Issue tamper-proof certificates directly to student wallets on the blockchain.
                 </p>
-                <div className="mt-auto flex items-center text-[11px] md:text-sm font-bold text-emerald-400 group-hover:text-emerald-600 transition-colors duration-200">
-                  Connect Wallet <ArrowRight className="ml-1 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-1 transition-transform" />
+                <div className="mt-auto flex items-center text-sm font-bold text-emerald-400 group-hover:text-emerald-600 transition-colors duration-200">
+                  Connect Wallet <ArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </motion.div>
             </Link>
 
             {/* Student Card */}
-            <Link href="/connect?role=student" className="group w-[calc(50%-0.5rem)] md:w-[calc(33.333%-1rem)]">
+            <Link href="/connect?role=student" className="group w-[calc(33.333%-1rem)]">
               <motion.div
                 whileHover={{ y: -2 }}
-                className="h-full p-4 sm:p-5 md:p-8 bg-white rounded-2xl border border-slate-200 border-l-4 border-l-blue-300 shadow-sm text-left hover:border-blue-300 hover:border-l-blue-500 hover:shadow-blue-500/10 transition-all duration-200 flex flex-col"
+                className="h-full p-8 bg-white rounded-2xl border border-slate-200 border-l-4 border-l-blue-300 shadow-sm text-left hover:border-blue-300 hover:border-l-blue-500 hover:shadow-blue-500/10 transition-all duration-200 flex flex-col"
               >
-                <div className="w-10 h-10 md:w-14 md:h-14 bg-blue-50/50 border border-blue-100 rounded-xl flex items-center justify-center mb-4 md:mb-6 text-blue-400 group-hover:bg-blue-50 group-hover:border-blue-200 group-hover:text-blue-600 group-hover:scale-110 transition-all duration-200">
-                  <GraduationCap className="w-5 h-5 md:w-7 md:h-7" strokeWidth={2.5} />
+                <div className="w-14 h-14 bg-blue-50/50 border border-blue-100 rounded-xl flex items-center justify-center mb-6 text-blue-400 group-hover:bg-blue-50 group-hover:border-blue-200 group-hover:text-blue-600 group-hover:scale-110 transition-all duration-200">
+                  <GraduationCap className="w-7 h-7" strokeWidth={2.5} />
                 </div>
-                <h2 className="font-heading text-base md:text-xl font-bold text-slate-800 mb-2">Student Portal</h2>
-                <p className="text-xs md:text-[15px] text-slate-600 mb-6 leading-relaxed">
+                <h2 className="font-heading text-xl font-bold text-slate-800 mb-2">Student Portal</h2>
+                <p className="text-[15px] text-slate-600 mb-6 leading-relaxed">
                   Access your wallet to view, manage, and share your earned academic credentials.
                 </p>
-                <div className="mt-auto flex items-center text-[11px] md:text-sm font-bold text-blue-400 group-hover:text-blue-600 transition-colors duration-200">
-                  Connect Wallet <ArrowRight className="ml-1 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-1 transition-transform" />
+                <div className="mt-auto flex items-center text-sm font-bold text-blue-400 group-hover:text-blue-600 transition-colors duration-200">
+                  Connect Wallet <ArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </motion.div>
             </Link>
 
             {/* Verifier Card */}
-            <Link href="/verify" className="group w-[calc(50%-0.5rem)] md:w-[calc(33.333%-1rem)]">
+            <Link href="/verify" className="group w-[calc(33.333%-1rem)]">
               <motion.div
                 whileHover={{ y: -2 }}
-                className="h-full p-4 sm:p-5 md:p-8 bg-white rounded-2xl border border-slate-200 border-l-4 border-l-purple-300 shadow-sm text-left hover:border-purple-300 hover:border-l-purple-500 hover:shadow-purple-500/10 transition-all duration-200 flex flex-col"
+                className="h-full p-8 bg-white rounded-2xl border border-slate-200 border-l-4 border-l-purple-300 shadow-sm text-left hover:border-purple-300 hover:border-l-purple-500 hover:shadow-purple-500/10 transition-all duration-200 flex flex-col"
               >
-                <div className="w-10 h-10 md:w-14 md:h-14 bg-purple-50/50 border border-purple-100 rounded-xl flex items-center justify-center mb-4 md:mb-6 text-purple-400 group-hover:bg-purple-50 group-hover:border-purple-200 group-hover:text-purple-600 group-hover:scale-110 transition-all duration-200">
-                  <ScanLine className="w-5 h-5 md:w-7 md:h-7" strokeWidth={2.5} />
+                <div className="w-14 h-14 bg-purple-50/50 border border-purple-100 rounded-xl flex items-center justify-center mb-6 text-purple-400 group-hover:bg-purple-50 group-hover:border-purple-200 group-hover:text-purple-600 group-hover:scale-110 transition-all duration-200">
+                  <ScanLine className="w-7 h-7" strokeWidth={2.5} />
                 </div>
-                <h2 className="font-heading text-base md:text-xl font-bold text-slate-800 mb-2">Verify Credential</h2>
-                <p className="text-xs md:text-[15px] text-slate-600 mb-6 leading-relaxed">
+                <h2 className="font-heading text-xl font-bold text-slate-800 mb-2">Verify Credential</h2>
+                <p className="text-[15px] text-slate-600 mb-6 leading-relaxed">
                   Instantly verify the authenticity of a digital certificate using its reference ID or QR.
                 </p>
-                <div className="mt-auto flex items-center text-[11px] md:text-sm font-bold text-purple-400 group-hover:text-purple-600 transition-colors duration-200">
-                  Verify Now <ArrowRight className="ml-1 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-1 transition-transform" />
+                <div className="mt-auto flex items-center text-sm font-bold text-purple-400 group-hover:text-purple-600 transition-colors duration-200">
+                  Verify Now <ArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </motion.div>
             </Link>

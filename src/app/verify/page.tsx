@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ShieldCheck, ArrowLeft, CheckCircle, XCircle, Loader2,
-  Building2, User, Calendar, Clock, Bot, RefreshCw,
-  Copy, AlertCircle, ExternalLink, FileText, Database, Radio
+  Building2, User, Calendar, Clock, RefreshCw,
+  ExternalLink, FileText, Database, Radio
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { verifyPresentationToken } from "@/lib/api";
@@ -50,7 +50,7 @@ interface IpfsMetadata {
   issuedAt: string;
 }
 
-export default function VerifyPage() {
+function VerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tokenParam = searchParams.get("token");
@@ -65,12 +65,6 @@ export default function VerifyPage() {
   const [metadata, setMetadata] = useState<IpfsMetadata | null>(null);
   const [metadataLoading, setMetadataLoading] = useState(false);
 
-  // AI state
-  const [showAI, setShowAI] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiQuestions, setAiQuestions] = useState<string[]>([]);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [presentedBy, setPresentedBy] = useState<string | null>(null);
   const [tokenError, setTokenError] = useState<"expired" | "invalid" | null>(null);
 
@@ -91,10 +85,6 @@ export default function VerifyPage() {
     setRecord(null);
     setTrustChecks([]);
     setMetadata(null);
-    setShowAI(false);
-    setAiQuestions([]);
-
-
     try {
       const res = await fetch(`${API_URL}/api/credentials/${refId}`);
       if (!res.ok) throw new Error("not_found");
@@ -184,8 +174,6 @@ export default function VerifyPage() {
     setRecord(null);
     setTrustChecks([]);
     setMetadata(null);
-    setShowAI(false);
-    setAiQuestions([]);
     setTokenError(null);
     setPresentedBy(null);
 
@@ -292,47 +280,12 @@ export default function VerifyPage() {
     }
   }, [tokenParam, refParam, handleTokenVerify, handleVerify]);
 
-  const handleGenerateQuestions = async () => {
-    if (!record) return;
-    setAiLoading(true);
-    setAiError(null);
-    setAiQuestions([]);
-
-    try {
-        const res = await fetch(`${API_URL}/api/ai/interview-questions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            title: record.title,
-            issuer: record.issuer_wallet,
-            fields: metadata?.fields ?? undefined,
-        }),
-        });
-        if (!res.ok) throw new Error("AI service failed");
-        const data = await res.json();
-        setAiQuestions(data.questions || []);
-    } catch {
-        setAiError("Failed to generate questions. Please try again.");
-    } finally {
-        setAiLoading(false);
-    }
-  };
-
-  const handleCopyQuestions = () => {
-    if (!aiQuestions.length) return;
-    navigator.clipboard.writeText(aiQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n"));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   const resetVerification = () => {
     setStatus("idle");
     setCredentialId("");
     setRecord(null);
     setTrustChecks([]);
     setMetadata(null);
-    setShowAI(false);
-    setAiQuestions([]);
     setPresentedBy(null);
     setTokenError(null);
     router.replace("/verify");
@@ -341,7 +294,7 @@ export default function VerifyPage() {
   const allPass = trustChecks.length > 0 && trustChecks.every((c) => c.pass);
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-[#F8F8F8] bg-dotgrid">
+    <main className="min-h-screen flex flex-col px-4 sm:px-6 pt-4 sm:pt-6 pb-6 relative overflow-hidden bg-[#F8F8F8] bg-dotgrid">
 
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -350,7 +303,7 @@ export default function VerifyPage() {
       </div>
 
       {/* Back nav */}
-      <div className="absolute top-6 left-6 z-20">
+      <div className="self-start relative z-20">
         <Link
           href="/"
           className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-slate-600 hover:text-slate-900 hover:bg-slate-50 hover:shadow-sm transition-all text-sm font-medium group"
@@ -360,7 +313,7 @@ export default function VerifyPage() {
         </Link>
       </div>
 
-      <div className="w-full max-w-2xl relative z-10">
+      <div className="w-full max-w-2xl relative z-10 mx-auto mt-4 sm:mt-6 flex-1 flex flex-col sm:justify-center">
 
         {/* Header */}
         <div className="text-center mb-8">
@@ -572,7 +525,7 @@ export default function VerifyPage() {
 
                 {/* Credential metadata */}
                 {record && (
-                  <div className="bg-green-50/50 rounded-xl border border-green-200 p-5 space-y-4 shadow-sm relative overflow-hidden">
+                  <div className="bg-green-50/50 rounded-xl border border-green-200 p-4 sm:p-5 space-y-3 sm:space-y-4 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-[40px] -z-10 pointer-events-none" />
                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] -z-10 pointer-events-none" />
                     <h3 className="text-slate-900 font-heading text-lg font-bold">{record.title}</h3>
@@ -607,13 +560,13 @@ export default function VerifyPage() {
                       </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 mt-2">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-3 sm:pt-4 border-t border-slate-100 mt-2">
                       <div>
                         <p className="text-xs text-slate-500 flex items-center gap-1 mb-1 font-medium">
                           <User size={12} /> Holder
                         </p>
                         <p className="text-[13px] text-slate-900 font-mono bg-white px-1.5 py-0.5 rounded-md inline-block border border-green-100 shadow-sm">
-                          {record.holder_wallet.slice(0, 8)}...{record.holder_wallet.slice(-6)}
+                          {record.holder_wallet.slice(0, 8)}...{record.holder_wallet.slice(-4)}
                         </p>
                       </div>
                       <div>
@@ -621,7 +574,7 @@ export default function VerifyPage() {
                           <Building2 size={12} /> Issuer
                         </p>
                         <p className="text-[13px] text-slate-900 font-mono bg-white px-1.5 py-0.5 rounded-md inline-block border border-green-100 shadow-sm">
-                          {record.issuer_wallet.slice(0, 8)}...{record.issuer_wallet.slice(-6)}
+                          {record.issuer_wallet.slice(0, 8)}...{record.issuer_wallet.slice(-4)}
                         </p>
                       </div>
                       <div>
@@ -661,76 +614,6 @@ export default function VerifyPage() {
                   </div>
                 )}
 
-                {/* AI Interview Questions — only if all checks pass */}
-                {allPass && (
-                  <div className="border border-purple-200 rounded-xl overflow-hidden bg-white shadow-sm">
-                    <button
-                      onClick={() => {
-                        setShowAI(!showAI);
-                        if (!showAI && aiQuestions.length === 0) handleGenerateQuestions();
-                      }}
-                      className="w-full py-3.5 px-4 bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold transition-all flex items-center justify-center gap-2"
-                    >
-                      <Bot size={18} strokeWidth={2.5} />
-                      {showAI ? "Hide AI Questions" : "Generate Interview Questions with AI"}
-                    </button>
-
-                    <AnimatePresence>
-                      {showAI && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="p-5 border-t border-purple-100 space-y-4">
-                            {aiLoading ? (
-                              <div className="flex items-center gap-3 text-slate-500 py-4 justify-center font-medium">
-                                <Loader2 size={18} className="animate-spin text-purple-600" />
-                                Gemini is generating questions...
-                              </div>
-                            ) : aiError ? (
-                              <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-100">
-                                <AlertCircle size={16} /> {aiError}
-                              </div>
-                            ) : aiQuestions.length > 0 ? (
-                              <>
-                                <ol className="space-y-4">
-                                  {aiQuestions.map((q, i) => (
-                                    <li key={i} className="flex gap-3 text-sm text-slate-700 font-medium">
-                                      <span className="text-purple-600 font-bold shrink-0">{i + 1}.</span>
-                                      <span className="leading-relaxed">{q}</span>
-                                    </li>
-                                  ))}
-                                </ol>
-                                <p className="text-xs text-slate-400 pt-4 border-t border-slate-100 mt-2">
-                                  ⚠️ AI-generated questions are suggestions only. Use professional discretion.
-                                </p>
-                                <div className="flex gap-2 pt-2">
-                                  <button
-                                    onClick={handleGenerateQuestions}
-                                    className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold transition-colors shadow-sm"
-                                  >
-                                    <RefreshCw size={14} /> Regenerate
-                                  </button>
-                                  <button
-                                    onClick={handleCopyQuestions}
-                                    className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold transition-colors shadow-sm"
-                                  >
-                                    {copied
-                                      ? <><CheckCircle size={14} className="text-green-600" /> Copied!</>
-                                      : <><Copy size={14} /> Copy All</>}
-                                  </button>
-                                </div>
-                              </>
-                            ) : null}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )}
-
                 {/* Reset */}
                 <button
                   onClick={resetVerification}
@@ -744,5 +627,17 @@ export default function VerifyPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen flex items-center justify-center bg-[#F8F8F8]">
+        <Loader2 size={24} className="animate-spin text-slate-400" />
+      </main>
+    }>
+      <VerifyContent />
+    </Suspense>
   );
 }

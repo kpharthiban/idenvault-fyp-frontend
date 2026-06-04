@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth, UserRole } from "@/context/AuthContext";
-import { 
-  ArrowLeft, 
-  Wallet, 
-  ShieldCheck, 
-  Loader2, 
-  AlertCircle 
+import { isMobile } from "@/lib/isMobile";
+import {
+  ArrowLeft,
+  Wallet,
+  ShieldCheck,
+  Loader2,
+  AlertCircle,
+  Smartphone
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function ConnectPage() {
+function ConnectContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const roleParam = searchParams.get("role");
@@ -20,8 +22,14 @@ export default function ConnectPage() {
   const { connectWallet, isConnected, role } = useAuth();
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
 
   const selectedRole = roleParam as UserRole;
+  const needsDeepLink = isMobileDevice && typeof window !== "undefined" && !window.ethereum;
+
+  useEffect(() => {
+    setIsMobileDevice(isMobile());
+  }, []);
 
   // Validate role from query
   useEffect(() => {
@@ -98,7 +106,14 @@ export default function ConnectPage() {
                     </span>
                 </p>
 
-                {error && (
+                {needsDeepLink && (
+                    <div className="w-full mb-6 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-3 text-sm text-blue-700 text-left">
+                        <Smartphone size={18} className="shrink-0" />
+                        <p>Tap the button below to open this page in MetaMask&apos;s browser.</p>
+                    </div>
+                )}
+
+                {error && !needsDeepLink && (
                     <div className="w-full mb-6 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-sm text-red-700 text-left">
                         <AlertCircle size={18} className="shrink-0" />
                         <p>{error}</p>
@@ -109,8 +124,8 @@ export default function ConnectPage() {
                     onClick={handleConnect}
                     disabled={isConnecting}
                     className={`w-full py-3.5 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 active:shadow-none
-                    ${isStudent 
-                        ? 'bg-blue-600 hover:bg-blue-700' 
+                    ${isStudent
+                        ? 'bg-blue-600 hover:bg-blue-700'
                         : 'bg-emerald-600 hover:bg-emerald-700'
                     }`}
                 >
@@ -118,6 +133,11 @@ export default function ConnectPage() {
                         <>
                             <Loader2 size={18} className="animate-spin" />
                             Establishing Connection...
+                        </>
+                    ) : needsDeepLink ? (
+                        <>
+                            <Smartphone size={18} strokeWidth={2.5} />
+                            Open in MetaMask
                         </>
                     ) : (
                         <>
@@ -134,5 +154,17 @@ export default function ConnectPage() {
         </div>
       </motion.div>
     </main>
+  );
+}
+
+export default function ConnectPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen flex items-center justify-center bg-[#F8F8F8]">
+        <Loader2 size={24} className="animate-spin text-slate-400" />
+      </main>
+    }>
+      <ConnectContent />
+    </Suspense>
   );
 }

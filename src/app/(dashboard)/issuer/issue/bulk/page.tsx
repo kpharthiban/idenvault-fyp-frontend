@@ -653,6 +653,9 @@ export default function BulkIssuePage() {
       setProcessingStatus("Saving credentials to database...");
       setProcessingProgress({ current: 0, total: 1 });
 
+      const expiryFieldName = selectedTemplate.fields?.find(
+        (f) => f.name === "expiryDate"
+      )?.name;
       const credentials = built.map((b) => ({
         ref_id: b.refId,
         template_id: selectedTemplate.id,
@@ -663,6 +666,7 @@ export default function BulkIssuePage() {
         metadata_cid: b.metadataCid,
         tx_hash: txHash,
         data_hash: b.dataHash,
+        expires_at: expiryFieldName ? (b.credentialData.fields[expiryFieldName] || null) : null,
       }));
 
       const saveRes = await fetch(`${API_URL}/api/credentials/batch`, {

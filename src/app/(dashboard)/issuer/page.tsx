@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import RequireAuth from "@/lib/RequireAuth";
-import { Search, ShieldCheck, FileText, Ban, Plus, Loader2, AlertCircle } from "lucide-react";
+import { Search, ShieldCheck, FileText, Ban, Plus, Loader2, AlertCircle, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
@@ -16,6 +16,7 @@ interface Credential {
   title: string;
   status: string;
   issued_at: string;
+  expires_at: string | null;
 }
 
 export default function IssuerDashboard() {
@@ -50,7 +51,7 @@ export default function IssuerDashboard() {
 
   const filteredCredentials = credentials.filter((cred) =>
     cred.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cred.student_wallet.toLowerCase().includes(searchTerm.toLowerCase())
+    (cred.student_wallet ?? "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -130,14 +131,25 @@ export default function IssuerDashboard() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 ${
-                    cred.status === "revoked"
-                      ? "bg-red-50 text-red-700 border-red-200"
-                      : "bg-green-50 text-green-700 border-green-200"
-                  }`}>
-                    {cred.status === "revoked" ? <Ban size={12} strokeWidth={2.5} /> : <ShieldCheck size={12} strokeWidth={2.5} />}
-                    {cred.status === "revoked" ? "REVOKED" : "ACTIVE"}
-                  </div>
+                  {(() => {
+                    const isExpired = cred.expires_at ? new Date(cred.expires_at) < new Date() : false;
+                    return (
+                      <div className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 ${
+                        cred.status === "revoked"
+                          ? "bg-red-50 text-red-700 border-red-200"
+                          : isExpired
+                            ? "bg-amber-50 text-amber-700 border-amber-200"
+                            : "bg-green-50 text-green-700 border-green-200"
+                      }`}>
+                        {cred.status === "revoked"
+                          ? <Ban size={12} strokeWidth={2.5} />
+                          : isExpired
+                            ? <Clock size={12} strokeWidth={2.5} />
+                            : <ShieldCheck size={12} strokeWidth={2.5} />}
+                        {cred.status === "revoked" ? "REVOKED" : isExpired ? "EXPIRED" : "ACTIVE"}
+                      </div>
+                    );
+                  })()}
                   <button
                     onClick={() => router.push(`/issuer/credentials/${cred.ref_id}`)}
                     className="px-4 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 rounded-xl transition-all border border-slate-200 shadow-sm"

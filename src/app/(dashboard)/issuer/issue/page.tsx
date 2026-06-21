@@ -318,6 +318,10 @@ export default function IssueCredentialPage() {
 
       // ── Step 4: Save to Supabase via backend ─────────────────────
       setStatus("saving");
+      const expiryFieldName = selectedTemplate.fields?.find(
+        (f: TemplateField) => f.name === "expiryDate"
+      )?.name;
+      const expiresAt = expiryFieldName ? (fieldValues[expiryFieldName] || null) : null;
       const savePayload: Record<string, any> = {
         ref_id: refId,
         template_id: selectedTemplate.id,
@@ -328,6 +332,7 @@ export default function IssueCredentialPage() {
         metadata_cid: metadataCid,
         tx_hash: txHash,
         data_hash: dataHash,
+        expires_at: expiresAt,
       };
 
       if (useSisCertificate && selectedSisStudent && selectedConnection) {
@@ -713,6 +718,7 @@ export default function IssueCredentialPage() {
                       type="submit"
                       disabled={isSubmitting}
                       className="w-full py-4 bg-green-600 hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-3 transition-all shadow-sm hover:-translate-y-[1px] active:translate-y-0 active:shadow-none mt-2"
+                      data-testid="issue-credential-btn"
                     >
                       {isSubmitting ? (
                         <><Loader2 size={20} className="animate-spin" /> Processing...</>

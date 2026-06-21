@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import RequireAuth from "@/lib/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
-import { Search, Eye, CheckCircle, Shield, Award, User, Clock, Loader2, AlertCircle, FileText } from "lucide-react";
+import { Search, Eye, CheckCircle, Shield, Award, User, Clock, Loader2, AlertCircle, FileText, Ban } from "lucide-react";
 import { motion } from "framer-motion";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -124,14 +124,25 @@ export default function StudentDashboard() {
                     <div className={`p-2.5 rounded-xl ${getTypeColor(cred.title)}`}>
                       {getTypeIcon(cred.title)}
                     </div>
-                    <div className={`px-2.5 py-1 rounded-full border text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
-                      cred.status === "revoked"
-                        ? "bg-red-50 border-red-200 text-red-700"
-                        : "bg-green-50 border-green-200 text-green-700"
-                    }`}>
-                      <CheckCircle size={11} strokeWidth={2.5} />
-                      {cred.status === "revoked" ? "REVOKED" : "ACTIVE"}
-                    </div>
+                    {(() => {
+                      const isExpired = cred.expires_at ? new Date(cred.expires_at) < new Date() : false;
+                      return (
+                        <div className={`px-2.5 py-1 rounded-full border text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                          cred.status === "revoked"
+                            ? "bg-red-50 border-red-200 text-red-700"
+                            : isExpired
+                              ? "bg-amber-50 border-amber-200 text-amber-700"
+                              : "bg-green-50 border-green-200 text-green-700"
+                        }`}>
+                          {cred.status === "revoked"
+                            ? <Ban size={11} strokeWidth={2.5} />
+                            : isExpired
+                              ? <Clock size={11} strokeWidth={2.5} />
+                              : <CheckCircle size={11} strokeWidth={2.5} />}
+                          {cred.status === "revoked" ? "REVOKED" : isExpired ? "EXPIRED" : "ACTIVE"}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Title */}

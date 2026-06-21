@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import {
   ArrowLeft, User, Calendar, Shield, FileText, Ban, CheckCircle,
   AlertTriangle, Award, ExternalLink, Download, Loader2, AlertCircle,
-  Database
+  Database, Clock
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -154,6 +154,7 @@ export default function IssuerCredentialDetail() {
   }
 
   const isRevoked = credential.status === "revoked";
+  const isExpired = !isRevoked && (credential.expires_at ? new Date(credential.expires_at) < new Date() : false);
   const ipfsUrl = credential.ipfs_cid
     ? `https://gateway.pinata.cloud/ipfs/${credential.ipfs_cid}`
     : null;
@@ -185,12 +186,12 @@ export default function IssuerCredentialDetail() {
         >
 
           {/* Status bar */}
-          <div className={`w-full h-1.5 ${isRevoked ? "bg-red-500" : "bg-green-500"}`} />
+          <div className={`w-full h-1.5 ${isRevoked ? "bg-red-500" : isExpired ? "bg-amber-500" : "bg-green-500"}`} />
 
           <div className="p-8">
             {/* Header */}
             <div className="relative flex justify-between items-start mb-8">
-              <div className={`absolute -top-8 -left-8 w-40 h-40 rounded-full blur-[50px] pointer-events-none ${isRevoked ? "bg-red-500/8" : "bg-green-500/8"}`} />
+              <div className={`absolute -top-8 -left-8 w-40 h-40 rounded-full blur-[50px] pointer-events-none ${isRevoked ? "bg-red-500/8" : isExpired ? "bg-amber-500/8" : "bg-green-500/8"}`} />
               <div className="relative">
                 <h1 className="text-3xl font-heading font-extrabold text-slate-900 mb-2">Issued Credential Details</h1>
                 <p className="text-slate-600 text-sm flex items-center gap-2 font-medium">
@@ -203,10 +204,12 @@ export default function IssuerCredentialDetail() {
               <div className={`px-5 py-2 rounded-full border text-sm font-bold uppercase tracking-wider flex items-center gap-2 ${
                 isRevoked
                   ? "bg-red-50 text-red-700 border-red-200"
-                  : "bg-green-50 text-green-700 border-green-200"
-              }`}>
-                {isRevoked ? <Ban size={15} strokeWidth={2.5} /> : <CheckCircle size={15} strokeWidth={2.5} />}
-                {isRevoked ? "Revoked" : "Active"}
+                  : isExpired
+                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : "bg-green-50 text-green-700 border-green-200"
+              }`} data-testid="credential-status-badge">
+                {isRevoked ? <Ban size={15} strokeWidth={2.5} /> : isExpired ? <Clock size={15} strokeWidth={2.5} /> : <CheckCircle size={15} strokeWidth={2.5} />}
+                {isRevoked ? "Revoked" : isExpired ? "Expired" : "Active"}
               </div>
             </div>
 
@@ -425,6 +428,7 @@ export default function IssuerCredentialDetail() {
               <button
                 onClick={() => setShowRevokeModal(true)}
                 className="px-6 py-2.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 shadow-sm"
+                data-testid="revoke-credential-btn"
               >
                 <Ban size={18} strokeWidth={2.5} /> Revoke Credential
               </button>

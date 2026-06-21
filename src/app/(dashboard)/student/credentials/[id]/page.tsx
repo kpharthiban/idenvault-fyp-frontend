@@ -158,6 +158,7 @@ export default function StudentCredentialDetail() {
   }
 
   const isRevoked = credential.status === "revoked";
+  const isExpired = !isRevoked && (credential.expires_at ? new Date(credential.expires_at) < new Date() : false);
   const ipfsUrl = credential.ipfs_cid
     ? `https://gateway.pinata.cloud/ipfs/${credential.ipfs_cid}`
     : null;
@@ -192,9 +193,9 @@ export default function StudentCredentialDetail() {
               transition={{ duration: 0.35, ease: "easeOut" }}
               className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xl"
             >
-              <div className={`w-full h-1.5 ${isRevoked ? "bg-red-500" : "bg-green-500"}`} />
+              <div className={`w-full h-1.5 ${isRevoked ? "bg-red-500" : isExpired ? "bg-amber-500" : "bg-green-500"}`} />
               <div className="p-6 relative">
-                <div className={`absolute -top-6 -left-6 w-36 h-36 rounded-full blur-[50px] pointer-events-none ${isRevoked ? "bg-red-500/8" : "bg-blue-500/10"}`} />
+                <div className={`absolute -top-6 -left-6 w-36 h-36 rounded-full blur-[50px] pointer-events-none ${isRevoked ? "bg-red-500/8" : isExpired ? "bg-amber-500/8" : "bg-blue-500/10"}`} />
 
                 {/* Title + status */}
                 <div className="relative flex items-start justify-between gap-3 mb-6">
@@ -207,10 +208,12 @@ export default function StudentCredentialDetail() {
                   <div className={`shrink-0 px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm ${
                     isRevoked
                       ? "bg-red-50 text-red-700 border-red-200"
-                      : "bg-green-50 text-green-700 border-green-200"
+                      : isExpired
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : "bg-green-50 text-green-700 border-green-200"
                   }`}>
-                    {isRevoked ? <Ban size={13} strokeWidth={2.5} /> : <ShieldCheck size={13} strokeWidth={2.5} />}
-                    {isRevoked ? "Revoked" : "Active"}
+                    {isRevoked ? <Ban size={13} strokeWidth={2.5} /> : isExpired ? <Clock size={13} strokeWidth={2.5} /> : <ShieldCheck size={13} strokeWidth={2.5} />}
+                    {isRevoked ? "Revoked" : isExpired ? "Expired" : "Active"}
                   </div>
                 </div>
 

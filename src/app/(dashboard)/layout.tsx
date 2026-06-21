@@ -133,7 +133,7 @@ export default function DashboardLayout({
           </div>
           <div>
             <h1 className="font-heading text-xl font-semibold tracking-tight text-slate-900">IdenVault</h1>
-            <span className="text-[10px] bg-slate-100 text-slate-500 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider font-medium">
+            <span className="text-[10px] bg-slate-100 text-slate-500 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider font-medium" data-testid="role-badge">
               {role} Mode
             </span>
           </div>

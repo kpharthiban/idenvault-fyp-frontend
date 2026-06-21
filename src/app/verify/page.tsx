@@ -340,6 +340,7 @@ function VerifyContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-5"
+                data-testid="token-expired-message"
               >
                 <div className="flex flex-col items-center text-center py-6">
                   <div className="p-4 bg-amber-50 rounded-full border border-amber-200 mb-4">
@@ -419,6 +420,7 @@ function VerifyContent() {
                     placeholder="Enter Credential Reference ID (UUID)"
                     disabled={status === "loading"}
                     className="w-full bg-white border border-slate-200 rounded-xl py-3.5 pl-4 pr-12 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all disabled:opacity-50"
+                    data-testid="ref-id-input"
                   />
                   {status === "loading" && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -432,6 +434,7 @@ function VerifyContent() {
                     onClick={() => handleVerify(credentialId)}
                     disabled={status === "loading" || !credentialId.trim()}
                     className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-semibold transition-all hover:-translate-y-[1px] hover:shadow-md active:translate-y-0 active:shadow-none"
+                    data-testid="verify-button"
                   >
                     {status === "loading" ? (
                       <><Loader2 size={18} className="animate-spin" /> Verifying...</>
@@ -485,7 +488,7 @@ function VerifyContent() {
                   allPass
                     ? "bg-green-50 border-green-200"
                     : "bg-red-50 border-red-200"
-                }`}>
+                }`} data-testid="status-badge">
                   {allPass
                     ? <CheckCircle size={32} className="text-green-600 shrink-0" />
                     : <XCircle size={32} className="text-red-600 shrink-0" />}
@@ -502,9 +505,9 @@ function VerifyContent() {
                 </div>
 
                 {/* 5 Trust Checks */}
-                <div className="bg-slate-50 rounded-xl border border-slate-200 divide-y divide-slate-200 overflow-hidden">
+                <div className="bg-slate-50 rounded-xl border border-slate-200 divide-y divide-slate-200 overflow-hidden" data-testid="trust-checks">
                   {trustChecks.map((check, i) => (
-                    <div key={i} className="flex items-center gap-4 px-4 py-3">
+                    <div key={i} className="flex items-center gap-4 px-4 py-3" data-testid={`trust-check-${check.label.split(' ')[0].toLowerCase()}`}>
                       {check.pass
                         ? <CheckCircle size={18} className="text-green-600 shrink-0" />
                         : <XCircle size={18} className="text-red-600 shrink-0" />}

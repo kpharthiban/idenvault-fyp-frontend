@@ -17,6 +17,9 @@ jobs:
         run: |
           cat > .env << 'ENVEOF'
           NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_CREDENTIAL_ANCHOR_ADDRESS=${{ secrets.NEXT_PUBLIC_CREDENTIAL_ANCHOR_ADDRESS }}
+          NEXT_PUBLIC_ISSUER_REGISTRY_ADDRESS=${{ secrets.NEXT_PUBLIC_ISSUER_REGISTRY_ADDRESS }}
+          NEXT_PUBLIC_INFURA_KEY=${{ secrets.NEXT_PUBLIC_INFURA_KEY }}
           ENVEOF
 
       - name: Stop existing container

@@ -1,0 +1,36 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Build & Deploy to Droplet
+    runs-on: [self-hosted, Linux, X64, idenvault-frontend]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file from GitHub Secrets
+        run: |
+          cat > .env << 'ENVEOF'
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          ENVEOF
+
+      - name: Stop existing container
+        run: docker compose down --remove-orphans || true
+
+      - name: Build & start container
+        # NEXT_PUBLIC_API_URL passed as build arg via docker-compose.yml
+        run: docker compose up -d --build
+
+      - name: Clean up unused Docker images
+        run: docker image prune -f
+
+      - name: Verify container is running
+        run: |
+          sleep 5
+          docker compose ps
+          docker compose logs --tail=20

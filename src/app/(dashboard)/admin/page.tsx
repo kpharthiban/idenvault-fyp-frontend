@@ -9,7 +9,7 @@ import {
   Wallet, Activity, Plus, Loader2, AlertCircle, AlertTriangle
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { REGISTRY_ADDRESS, REGISTRY_ABI, SEPOLIA_RPC_URL } from "@/config/contracts";
+import { REGISTRY_ADDRESS, REGISTRY_ABI, SEPOLIA_RPC_URL, REGISTRY_DEPLOY_BLOCK, LOG_QUERY_CHUNK } from "@/config/contracts";
 
 interface IssuerEntry {
   wallet: string;
@@ -17,11 +17,43 @@ interface IssuerEntry {
   action?: "registering" | "revoking";
 }
 
+// Cache the discovered issuer wallets + last scanned block per registry, so
+// only the first visit pays the full-history log scan; later visits scan just
+// the new blocks and merge. Bump the key if the registry address changes.
+const SCAN_CACHE_KEY = `idenvault:issuerScan:${(REGISTRY_ADDRESS || "").toLowerCase()}`;
+interface ScanCache { lastBlock: number; wallets: string[]; }
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// eth_getLogs on public RPC tiers is both range-capped (handled by chunking)
+// and rate-limited. Retry a chunk with exponential backoff when the provider
+// answers "Too Many Requests" (-32005 / surfaced by ethers as BAD_DATA).
+async function queryChunkWithRetry(
+  contract: ethers.Contract,
+  filter: any,
+  from: number,
+  to: number,
+  tries = 5,
+): Promise<any[]> {
+  for (let i = 0; i < tries; i++) {
+    try {
+      return await contract.queryFilter(filter, from, to);
+    } catch (e: any) {
+      const blob = JSON.stringify(e?.value ?? "") + (e?.code ?? "") + (e?.message ?? "");
+      const rateLimited = /Too Many Requests|-32005|429|BAD_DATA/.test(blob);
+      if (!rateLimited || i === tries - 1) throw e;
+      await sleep(500 * 2 ** i); // 0.5s, 1s, 2s, 4s
+    }
+  }
+  return [];
+}
+
 export default function AdminDashboard() {
   const { walletAddress } = useAuth();
 
   const [issuers, setIssuers] = useState<IssuerEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [scanProgress, setScanProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [newWallet, setNewWallet] = useState("");
@@ -35,22 +67,46 @@ export default function AdminDashboard() {
     const loadIssuers = async () => {
       try {
         setLoading(true);
-        const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC_URL);
+        setError(null);
+        // batchMaxCount:1 stops ethers bundling calls into one request, which
+        // the free RPC tier is quicker to rate-limit.
+        const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC_URL, undefined, { batchMaxCount: 1 });
         const contract = new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_ABI, provider);
-
-        // Read all IssuerRegistered events to build the list
         const registerFilter = contract.filters.IssuerRegistered();
-        const events = await contract.queryFilter(registerFilter);
+        const latestBlock = await provider.getBlockNumber();
 
-        // Deduplicate wallet addresses
-        const wallets = [...new Set(events.map((e: any) => e.args.issuer.toLowerCase()))];
+        // Resume from the last scanned block if cached, so only the first ever
+        // visit pays the full-history scan (~600k blocks); later visits scan
+        // just the small delta of new blocks.
+        let cache: ScanCache | null = null;
+        try { cache = JSON.parse(localStorage.getItem(SCAN_CACHE_KEY) || "null"); } catch { /* ignore */ }
+        const wallets = new Set<string>(cache?.wallets ?? []);
+        const startBlock = cache && cache.lastBlock >= REGISTRY_DEPLOY_BLOCK
+          ? cache.lastBlock + 1
+          : REGISTRY_DEPLOY_BLOCK;
 
-        // Check current trust status for each
+        // Scan IssuerRegistered events in bounded, rate-limit-friendly chunks.
+        const totalChunks = Math.max(1, Math.ceil((latestBlock - startBlock + 1) / LOG_QUERY_CHUNK));
+        let done = 0;
+        for (let from = startBlock; from <= latestBlock; from += LOG_QUERY_CHUNK) {
+          const to = Math.min(from + LOG_QUERY_CHUNK - 1, latestBlock);
+          const chunk = await queryChunkWithRetry(contract, registerFilter, from, to);
+          chunk.forEach((e: any) => wallets.add(e.args.issuer.toLowerCase()));
+          setScanProgress(Math.round((++done / totalChunks) * 100));
+          await sleep(120); // pace requests to stay under the RPC rate limit
+        }
+
+        // Persist merged wallet set + latest scanned block for next visit.
+        try {
+          localStorage.setItem(SCAN_CACHE_KEY, JSON.stringify({ lastBlock: latestBlock, wallets: [...wallets] }));
+        } catch { /* ignore */ }
+
+        // Check current trust status for each (small N, safe to parallelize).
         const entries: IssuerEntry[] = await Promise.all(
-          wallets.map(async (wallet) => {
-            const trusted = await contract.isIssuerTrusted(wallet);
-            return { wallet, trusted };
-          })
+          [...wallets].map(async (wallet) => ({
+            wallet,
+            trusted: await contract.isIssuerTrusted(wallet),
+          }))
         );
 
         setIssuers(entries);
@@ -231,7 +287,8 @@ export default function AdminDashboard() {
 
           {loading ? (
             <div className="flex items-center justify-center py-16 text-slate-500 gap-3 font-medium">
-              <Loader2 size={20} className="animate-spin text-purple-600" /> Reading from blockchain...
+              <Loader2 size={20} className="animate-spin text-purple-600" />
+              Reading from blockchain{scanProgress > 0 && scanProgress < 100 ? ` — ${scanProgress}%` : "..."}
             </div>
           ) : error ? (
             <div className="flex items-center gap-3 m-5 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 font-medium">

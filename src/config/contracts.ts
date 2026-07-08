@@ -4,6 +4,15 @@
 
 export const REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_ISSUER_REGISTRY_ADDRESS!;
 
+// Block at which the IssuerRegistry was deployed on Sepolia. Used as the
+// starting point for event log scans so we don't query from genesis (Infura
+// caps eth_getLogs at a 10,000-block range — see queryFilter chunking).
+export const REGISTRY_DEPLOY_BLOCK = 10581905;
+
+// Max block span per eth_getLogs request accepted by public RPC providers
+// (Infura/Alchemy free tiers reject anything wider than 10,000 blocks).
+export const LOG_QUERY_CHUNK = 9000;
+
 export const REGISTRY_ABI = [
   "function registerIssuer(address issuer) external",
   "function revokeIssuer(address issuer) external",

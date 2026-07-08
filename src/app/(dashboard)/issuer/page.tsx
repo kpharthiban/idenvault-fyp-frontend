@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
 
+import { isExpired as checkExpired } from "@/lib/expiry";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 interface Credential {
@@ -132,7 +134,7 @@ export default function IssuerDashboard() {
 
                 <div className="flex items-center gap-3">
                   {(() => {
-                    const isExpired = cred.expires_at ? new Date(cred.expires_at) < new Date() : false;
+                    const isExpired = checkExpired(cred.expires_at);
                     return (
                       <div className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 ${
                         cred.status === "revoked"

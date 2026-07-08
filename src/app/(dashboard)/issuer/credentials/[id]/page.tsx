@@ -6,6 +6,7 @@ import { ethers } from "ethers";
 import RequireAuth from "@/lib/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import { useIpfsMetadata } from "@/hooks/useIpfsMetadata";
+import { resolveExpiryValue, isExpired as checkExpired } from "@/lib/expiry";
 import CredentialFieldsSkeleton from "@/components/CredentialFieldsSkeleton";
 import {
   ArrowLeft, User, Calendar, Shield, FileText, Ban, CheckCircle,
@@ -129,7 +130,10 @@ export default function IssuerCredentialDetail() {
   }
 
   const isRevoked = credential.status === "revoked";
-  const isExpired = !isRevoked && (credential.expires_at ? new Date(credential.expires_at) < new Date() : false);
+  // Prefer the DB column; fall back to the IPFS metadata expiry field for older
+  // credentials that were issued before expires_at was populated correctly.
+  const effectiveExpiresAt = credential.expires_at ?? resolveExpiryValue(metadata?.fields);
+  const isExpired = !isRevoked && checkExpired(effectiveExpiresAt);
   const ipfsUrl = credential.ipfs_cid
     ? `https://gateway.pinata.cloud/ipfs/${credential.ipfs_cid}`
     : null;
@@ -225,13 +229,13 @@ export default function IssuerCredentialDetail() {
                     </p>
                   </div>
                 </div>
-                {credential.expires_at && (
+                {effectiveExpiresAt && (
                   <div className="flex items-start gap-3">
-                    <Calendar size={16} className="text-slate-400 mt-0.5 shrink-0" strokeWidth={2.5} />
+                    <Calendar size={16} className={`mt-0.5 shrink-0 ${isExpired ? "text-amber-500" : "text-slate-400"}`} strokeWidth={2.5} />
                     <div>
                       <p className="text-xs text-slate-500 font-bold">Expires On</p>
-                      <p className="text-slate-900 font-bold">
-                        {new Date(credential.expires_at).toLocaleDateString("en-GB", {
+                      <p className={`font-bold ${isExpired ? "text-amber-700" : "text-slate-900"}`}>
+                        {new Date(effectiveExpiresAt).toLocaleDateString("en-GB", {
                           day: "2-digit", month: "long", year: "numeric"
                         })}
                       </p>

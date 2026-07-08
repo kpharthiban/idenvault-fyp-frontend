@@ -6,6 +6,7 @@ import RequireAuth from "@/lib/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import { requestPresentationToken } from "@/lib/api";
 import { useIpfsMetadata } from "@/hooks/useIpfsMetadata";
+import { resolveExpiryValue, isExpired as checkExpired } from "@/lib/expiry";
 import CredentialFieldsSkeleton from "@/components/CredentialFieldsSkeleton";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -151,7 +152,10 @@ export default function StudentCredentialDetail() {
   }
 
   const isRevoked = credential.status === "revoked";
-  const isExpired = !isRevoked && (credential.expires_at ? new Date(credential.expires_at) < new Date() : false);
+  // Prefer the DB column; fall back to the IPFS metadata expiry field for older
+  // credentials that were issued before expires_at was populated correctly.
+  const effectiveExpiresAt = credential.expires_at ?? resolveExpiryValue(metadata?.fields);
+  const isExpired = !isRevoked && checkExpired(effectiveExpiresAt);
   const ipfsUrl = credential.ipfs_cid
     ? `https://gateway.pinata.cloud/ipfs/${credential.ipfs_cid}`
     : null;
@@ -228,12 +232,12 @@ export default function StudentCredentialDetail() {
                       })}
                     </span>
                   </div>
-                  {credential.expires_at && (
+                  {effectiveExpiresAt && (
                     <div className="flex items-center gap-3 text-sm">
                       <Clock size={15} className="text-slate-500 shrink-0" strokeWidth={2.5} />
                       <span className="text-slate-500 font-bold">Expires:</span>
-                      <span className="text-slate-900 font-medium">
-                        {new Date(credential.expires_at).toLocaleDateString("en-GB", {
+                      <span className={`font-medium ${isExpired ? "text-amber-700" : "text-slate-900"}`}>
+                        {new Date(effectiveExpiresAt).toLocaleDateString("en-GB", {
                           day: "2-digit", month: "long", year: "numeric"
                         })}
                       </span>

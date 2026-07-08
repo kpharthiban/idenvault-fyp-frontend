@@ -7,6 +7,8 @@ import { useAuth } from "@/context/AuthContext";
 import { Search, Eye, CheckCircle, Shield, Award, User, Clock, Loader2, AlertCircle, FileText, Ban } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { isExpired as checkExpired } from "@/lib/expiry";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 interface Credential {
@@ -125,7 +127,7 @@ export default function StudentDashboard() {
                       {getTypeIcon(cred.title)}
                     </div>
                     {(() => {
-                      const isExpired = cred.expires_at ? new Date(cred.expires_at) < new Date() : false;
+                      const isExpired = checkExpired(cred.expires_at);
                       return (
                         <div className={`px-2.5 py-1 rounded-full border text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
                           cred.status === "revoked"

@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { CREDENTIAL_TEMPLATES, CredentialTemplate, TemplateField } from "@/lib/credentialTemplates";
 import { fetchTemplates } from "@/lib/api";
+import { resolveExpiryValue } from "@/lib/expiry";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const ANCHOR_ADDRESS = process.env.NEXT_PUBLIC_CREDENTIAL_ANCHOR_ADDRESS!;
@@ -318,10 +319,9 @@ export default function IssueCredentialPage() {
 
       // ── Step 4: Save to Supabase via backend ─────────────────────
       setStatus("saving");
-      const expiryFieldName = selectedTemplate.fields?.find(
-        (f: TemplateField) => f.name === "expiryDate"
-      )?.name;
-      const expiresAt = expiryFieldName ? (fieldValues[expiryFieldName] || null) : null;
+      // Expiry field name varies by template (expiryDate, validUntil, validTo…),
+      // so match by keyword rather than a single hard-coded name.
+      const expiresAt = resolveExpiryValue(fieldValues);
       const savePayload: Record<string, any> = {
         ref_id: refId,
         template_id: selectedTemplate.id,

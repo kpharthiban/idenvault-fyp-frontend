@@ -9,15 +9,7 @@ import {
   Wallet, Activity, Plus, Loader2, AlertCircle, AlertTriangle
 } from "lucide-react";
 import { motion } from "framer-motion";
-
-const REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_ISSUER_REGISTRY_ADDRESS!;
-const REGISTRY_ABI = [
-  "function registerIssuer(address issuer) external",
-  "function revokeIssuer(address issuer) external",
-  "function isIssuerTrusted(address issuer) external view returns (bool)",
-  "event IssuerRegistered(address indexed issuer)",
-  "event IssuerRevoked(address indexed issuer)",
-];
+import { REGISTRY_ADDRESS, REGISTRY_ABI, SEPOLIA_RPC_URL } from "@/config/contracts";
 
 interface IssuerEntry {
   wallet: string;
@@ -43,9 +35,7 @@ export default function AdminDashboard() {
     const loadIssuers = async () => {
       try {
         setLoading(true);
-        const provider = new ethers.JsonRpcProvider(
-          `https://sepolia.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_KEY}`
-        );
+        const provider = new ethers.JsonRpcProvider(SEPOLIA_RPC_URL);
         const contract = new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_ABI, provider);
 
         // Read all IssuerRegistered events to build the list
@@ -65,6 +55,7 @@ export default function AdminDashboard() {
 
         setIssuers(entries);
       } catch (err: any) {
+        console.error("Failed to load issuer registry:", err);
         setError("Failed to load issuer registry from blockchain.");
       } finally {
         setLoading(false);

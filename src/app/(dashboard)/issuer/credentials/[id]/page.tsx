@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { ethers } from "ethers";
 import RequireAuth from "@/lib/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
+import { useIpfsMetadata } from "@/hooks/useIpfsMetadata";
+import CredentialFieldsSkeleton from "@/components/CredentialFieldsSkeleton";
 import {
   ArrowLeft, User, Calendar, Shield, FileText, Ban, CheckCircle,
   AlertTriangle, Award, ExternalLink, Download, Loader2, AlertCircle,
@@ -39,18 +41,6 @@ interface CredentialDetail {
   };
 }
 
-interface IpfsMetadata {
-  refId: string;
-  templateId: string;
-  issuerWallet: string;
-  studentWallet: string;
-  title: string;
-  type: string;
-  fields: Record<string, string>;
-  ipfsCid: string | null;
-  issuedAt: string;
-}
-
 export default function IssuerCredentialDetail() {
   const router = useRouter();
   const params = useParams();
@@ -63,8 +53,10 @@ export default function IssuerCredentialDetail() {
   const [showRevokeModal, setShowRevokeModal] = useState(false);
   const [revoking, setRevoking] = useState(false);
   const [revokeError, setRevokeError] = useState<string | null>(null);
-  const [metadata, setMetadata] = useState<IpfsMetadata | null>(null);
-  const [metadataLoading, setMetadataLoading] = useState(false);
+
+  // IPFS field data is hydrated in the background (deferred-hydrate) so it never
+  // blocks first paint of the fast DB data below.
+  const { metadata, loading: metadataLoading } = useIpfsMetadata(credential?.metadata_cid);
 
   useEffect(() => {
     const fetchCredential = async () => {
@@ -73,23 +65,6 @@ export default function IssuerCredentialDetail() {
         if (!res.ok) throw new Error("Credential not found");
         const data = await res.json();
         setCredential(data);
-
-        if (data.metadata_cid) {
-          setMetadataLoading(true);
-          try {
-            const metaRes = await fetch(
-              `https://gateway.pinata.cloud/ipfs/${data.metadata_cid}`
-            );
-            if (metaRes.ok) {
-              const metaJson: IpfsMetadata = await metaRes.json();
-              setMetadata(metaJson);
-            }
-          } catch {
-            // Non-critical — metadata display is best-effort
-          } finally {
-            setMetadataLoading(false);
-          }
-        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -334,16 +309,11 @@ export default function IssuerCredentialDetail() {
               </motion.div>
             )}
 
-            {/* Credential Details from IPFS */}
+            {/* Credential Details from IPFS — deferred-hydrated */}
             {metadataLoading && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-blue-50/50 rounded-xl p-5 border border-blue-200 mb-6 flex items-center gap-3 text-blue-700"
-              >
-                <Loader2 size={18} className="animate-spin" strokeWidth={2.5} />
-                <span className="text-sm font-medium">Loading credential details from IPFS...</span>
-              </motion.div>
+              <div className="mb-6">
+                <CredentialFieldsSkeleton />
+              </div>
             )}
             {!metadataLoading && metadata && metadata.fields && Object.keys(metadata.fields).length > 0 && (
               <motion.div

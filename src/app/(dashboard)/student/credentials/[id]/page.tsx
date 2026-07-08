@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import RequireAuth from "@/lib/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import { requestPresentationToken } from "@/lib/api";
+import { useIpfsMetadata } from "@/hooks/useIpfsMetadata";
+import CredentialFieldsSkeleton from "@/components/CredentialFieldsSkeleton";
 import { QRCodeSVG } from "qrcode.react";
 import {
   ArrowLeft, ShieldCheck, Calendar, Fingerprint,
   ExternalLink, Building2, FileCheck, Copy, CheckCircle,
   Clock, Loader2, AlertCircle, Download, Ban, RefreshCw,
-  Database
+  Database, Maximize2, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -32,18 +34,6 @@ interface CredentialDetail {
   tx_hash: string | null;
 }
 
-interface IpfsMetadata {
-  refId: string;
-  templateId: string;
-  issuerWallet: string;
-  studentWallet: string;
-  title: string;
-  type: string;
-  fields: Record<string, string>;
-  ipfsCid: string | null;
-  issuedAt: string;
-}
-
 export default function StudentCredentialDetail() {
   const router = useRouter();
   const params = useParams();
@@ -56,9 +46,13 @@ export default function StudentCredentialDetail() {
   const [secondsLeft, setSecondsLeft] = useState(25);
   const [presentationToken, setPresentationToken] = useState<string | null>(null);
   const [tokenError, setTokenError] = useState<string | null>(null);
+  const [isQrEnlarged, setIsQrEnlarged] = useState(false);
+  const qrTriggerRef = useRef<HTMLButtonElement>(null);
   const { walletAddress } = useAuth();
-  const [metadata, setMetadata] = useState<IpfsMetadata | null>(null);
-  const [metadataLoading, setMetadataLoading] = useState(false);
+
+  // IPFS field data is hydrated in the background (deferred-hydrate) so it never
+  // blocks first paint of the fast DB data below.
+  const { metadata, loading: metadataLoading } = useIpfsMetadata(credential?.metadata_cid);
 
   useEffect(() => {
     const fetchCredential = async () => {
@@ -67,23 +61,6 @@ export default function StudentCredentialDetail() {
         if (!res.ok) throw new Error("Credential not found");
         const data = await res.json();
         setCredential(data);
-
-        if (data.metadata_cid) {
-          setMetadataLoading(true);
-          try {
-            const metaRes = await fetch(
-              `https://gateway.pinata.cloud/ipfs/${data.metadata_cid}`
-            );
-            if (metaRes.ok) {
-              const metaJson: IpfsMetadata = await metaRes.json();
-              setMetadata(metaJson);
-            }
-          } catch {
-            // Non-critical — metadata display is best-effort
-          } finally {
-            setMetadataLoading(false);
-          }
-        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -122,6 +99,22 @@ export default function StudentCredentialDetail() {
     }, 1000);
     return () => clearInterval(tick);
   }, [presentationToken]);
+
+  // Enlarged QR overlay: Esc to close, lock body scroll, restore focus on close
+  useEffect(() => {
+    if (!isQrEnlarged) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsQrEnlarged(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
+      qrTriggerRef.current?.focus();
+    };
+  }, [isQrEnlarged]);
 
   const verifyUrl = typeof window !== "undefined"
     ? `${window.location.origin}/verify?ref=${refId}`
@@ -283,16 +276,9 @@ export default function StudentCredentialDetail() {
               </div>
             </motion.div>
 
-            {/* Credential Details from IPFS */}
+            {/* Credential Details from IPFS — deferred-hydrated */}
             {metadataLoading && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 rounded-2xl p-5 border border-blue-200/60 flex items-center gap-3 text-blue-700"
-              >
-                <Loader2 size={18} className="animate-spin" strokeWidth={2.5} />
-                <span className="text-sm font-medium">Loading credential details from IPFS...</span>
-              </motion.div>
+              <CredentialFieldsSkeleton className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 rounded-2xl p-5 border border-blue-200/60 shadow-sm" />
             )}
             {!metadataLoading && metadata && metadata.fields && Object.keys(metadata.fields).length > 0 && (
               <motion.div
@@ -385,7 +371,7 @@ export default function StudentCredentialDetail() {
                           <Clock size={11} strokeWidth={2.5} /> QR refreshes in {secondsLeft}s
                         </div>
                       )}
-                      <div className="relative mt-8 flex items-center justify-center" style={{ width: 140, height: 140 }}>
+                      <div className="relative mt-8 flex w-full max-w-[260px] aspect-square items-center justify-center">
                         {tokenError ? (
                           <div className="flex flex-col items-center gap-3 text-center">
                             <AlertCircle size={28} className="text-red-400" strokeWidth={2} />
@@ -400,18 +386,27 @@ export default function StudentCredentialDetail() {
                         ) : !qrUrl ? (
                           <Loader2 size={28} className="animate-spin text-slate-400" strokeWidth={2} />
                         ) : (
-                          <>
+                          <button
+                            ref={qrTriggerRef}
+                            type="button"
+                            onClick={() => setIsQrEnlarged(true)}
+                            aria-label="Enlarge QR code for easier scanning"
+                            className="group relative flex w-full h-full items-center justify-center overflow-hidden rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 cursor-zoom-in"
+                          >
                             <motion.div
                               animate={{ top: ["0%", "100%", "0%"] }}
                               transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                               className="absolute left-0 w-full h-0.5 bg-green-500/50 pointer-events-none z-10"
                             />
-                            <QRCodeSVG value={qrUrl} size={140} />
-                          </>
+                            <QRCodeSVG value={qrUrl} size={260} className="w-full h-full" />
+                            <span className="absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded-md bg-slate-900/80 px-1.5 py-0.5 text-[9px] font-bold text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+                              <Maximize2 size={10} strokeWidth={2.5} /> Enlarge
+                            </span>
+                          </button>
                         )}
                       </div>
                       <p className="text-xs text-slate-500 font-medium text-center mt-6">
-                        {tokenError ? "Unable to generate QR" : "Scan to verify instantly"}
+                        {tokenError ? "Unable to generate QR" : "Tap the QR to enlarge · Scan to verify instantly"}
                       </p>
                  </div>
 
@@ -441,6 +436,61 @@ export default function StudentCredentialDetail() {
           </motion.div>
         </div>
       </div>
+
+      {/* Enlarged QR overlay — reads the same live token/countdown state as the inline QR */}
+      <AnimatePresence>
+        {isQrEnlarged && qrUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Enlarged QR code"
+            onClick={() => setIsQrEnlarged(false)}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative flex w-full max-w-[min(92vw,92vh,520px)] flex-col items-center rounded-2xl bg-white p-6 sm:p-8 shadow-2xl"
+            >
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setIsQrEnlarged(false)}
+                aria-label="Close enlarged QR code"
+                className="absolute top-3 right-3 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors"
+              >
+                <X size={22} strokeWidth={2.5} />
+              </button>
+
+              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold mb-6 transition-colors ${
+                secondsLeft < 5
+                  ? "bg-red-50 border border-red-200 text-red-600"
+                  : "bg-blue-50 border border-blue-200 text-blue-700"
+              }`}>
+                <Clock size={13} strokeWidth={2.5} /> QR refreshes in {secondsLeft}s
+              </div>
+
+              <div className="relative flex w-full aspect-square items-center justify-center overflow-hidden rounded-xl">
+                <motion.div
+                  animate={{ top: ["0%", "100%", "0%"] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="absolute left-0 w-full h-0.5 bg-green-500/50 pointer-events-none z-10"
+                />
+                <QRCodeSVG value={qrUrl} size={512} className="w-full h-full" />
+              </div>
+
+              <p className="text-sm text-slate-500 font-medium text-center mt-6">
+                Scan to verify instantly · press Esc or tap outside to close
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </RequireAuth>
   );
 }

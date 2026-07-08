@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import RequireAuth from "@/lib/RequireAuth";
 import { useAuth } from "@/context/AuthContext";
 import { apiGet, apiPut } from "@/lib/api";
+import { useIssuerTrust } from "@/hooks/useIssuerTrust";
+import TrustBadge from "@/components/TrustBadge";
 import {
   Building2,
   Save,
@@ -36,6 +38,7 @@ const EMPTY_PROFILE: ProfileData = {
 
 export default function InstitutionProfilePage() {
   const { walletAddress } = useAuth();
+  const issuerTrust = useIssuerTrust(walletAddress);
   const [formData, setFormData] = useState<ProfileData>(EMPTY_PROFILE);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -186,9 +189,7 @@ export default function InstitutionProfilePage() {
                 <code className="text-slate-700 font-bold font-mono text-sm break-all">
                   {walletAddress}
                 </code>
-                <span className="ml-auto flex items-center gap-1 text-[10px] text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 uppercase font-bold shadow-sm">
-                  <CheckCircle size={10} strokeWidth={2.5} /> Verified
-                </span>
+                <TrustBadge status={issuerTrust} size="sm" className="ml-auto rounded" />
               </div>
             </div>
 

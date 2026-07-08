@@ -5,6 +5,8 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import { apiGet } from "@/lib/api";
+import { useIssuerTrust } from "@/hooks/useIssuerTrust";
+import TrustBadge from "@/components/TrustBadge";
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -43,6 +45,9 @@ export default function DashboardLayout({
     institution: "",
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // On-chain trust status for the signed-in issuer (authoritative registry read)
+  const issuerTrust = useIssuerTrust(role === "issuer" ? walletAddress : null);
 
   const fetchIssuerProfile = useCallback(async () => {
     if (role !== "issuer" || !walletAddress) return;
@@ -180,6 +185,9 @@ export default function DashboardLayout({
                     Update your <Link href="/issuer/profile" className="text-emerald-600 hover:underline font-medium">Institution Profile</Link> to display your identity here.
                   </p>
                 )}
+                <div className="mt-3">
+                  <TrustBadge status={issuerTrust} size="sm" />
+                </div>
              </div>
           )}
 

@@ -42,7 +42,7 @@ export default function Home() {
               <ShieldCheck className="w-10 h-10 md:w-12 md:h-12 text-teal-600" strokeWidth={2.5} />
             </div>
             <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight">
-              Iden<span className="text-teal-600">Vault</span>
+              Creds<span className="text-teal-600">Chain</span>
             </h1>
           </div>
           

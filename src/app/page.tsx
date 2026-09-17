@@ -154,7 +154,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* SECTION 2 — What is IdenVault? */}
+      {/* SECTION 2 — What is CredsChain? */}
       <motion.section 
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -162,9 +162,9 @@ export default function Home() {
         transition={{ duration: 0.6 }}
         className="py-14 md:py-20 lg:py-24 w-full max-w-5xl mx-auto px-4 md:px-6 text-center z-10 relative"
       >
-        <h2 className="font-heading text-2xl md:text-3xl font-extrabold text-slate-900 mb-4 md:mb-6">What is IdenVault?</h2>
+        <h2 className="font-heading text-2xl md:text-3xl font-extrabold text-slate-900 mb-4 md:mb-6">What is CredsChain?</h2>
         <p className="text-slate-600 text-sm md:text-[15px] font-medium max-w-2xl mx-auto mb-10 md:mb-16 leading-relaxed">
-          IdenVault is a Self-Sovereign Identity (SSI) framework that puts academic credentials back in the hands of their rightful owners. Built on Ethereum and IPFS, it lets institutions issue tamper-proof digital credentials that students truly own and verifiers can instantly trust — no middleman required.
+          CredsChain is a Self-Sovereign Identity (SSI) framework that puts academic credentials back in the hands of their rightful owners. Built on Ethereum and IPFS, it lets institutions issue tamper-proof digital credentials that students truly own and verifiers can instantly trust — no middleman required.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
@@ -286,7 +286,7 @@ export default function Home() {
             </div>
             <div className="p-6 text-left px-8">
               <span className="font-heading font-bold text-teal-700 flex items-center justify-start gap-2 text-base">
-                <ShieldCheck size={18} /> IdenVault
+                <ShieldCheck size={18} /> CredsChain
               </span>
             </div>
           </div>
@@ -305,7 +305,7 @@ export default function Home() {
                 <div className="mt-0.5 min-w-5 text-slate-400"><X className="w-[18px] h-[18px]" strokeWidth={2.5} /></div>
                 <span className="text-sm font-medium text-slate-600">{row[0]}</span>
               </div>
-              {/* IdenVault (Desktop) */}
+              {/* CredsChain (Desktop) */}
               <div className="p-6 px-8 flex items-start gap-3">
                 <div className="mt-0.5 min-w-5 text-teal-500"><Check className="w-[18px] h-[18px]" strokeWidth={2.5} /></div>
                 <span className="text-sm font-medium text-slate-800">{row[1]}</span>
@@ -329,7 +329,7 @@ export default function Home() {
                 <div className="mt-0.5 min-w-4 text-slate-400"><X className="w-4 h-4" strokeWidth={2.5} /></div>
                 <span className="text-slate-500 text-sm">{row[0]}</span>
               </div>
-              {/* IdenVault Row */}
+              {/* CredsChain Row */}
               <div className="bg-white px-4 py-3 flex items-start gap-3">
                 <div className="mt-0.5 min-w-4 text-teal-600"><Check className="w-4 h-4" strokeWidth={2.5} /></div>
                 <span className="text-slate-800 text-sm font-bold">{row[1]}</span>
@@ -371,7 +371,7 @@ export default function Home() {
       <footer className="border-t border-slate-200 py-6 md:py-8 text-center text-slate-400 text-xs w-full mt-auto z-10 relative bg-[#F8F8F8]">
         <div className="flex items-center justify-center gap-1 mb-2">
           <ShieldCheck size={14} className="text-slate-400" />
-          <span className="font-heading font-bold text-slate-500">IdenVault</span>
+          <span className="font-heading font-bold text-slate-500">CredsChain</span>
         </div>
         <p>Built by Pharthiban Kumarhesan</p>
       </footer>

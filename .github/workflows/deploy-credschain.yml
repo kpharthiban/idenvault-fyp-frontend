@@ -1,0 +1,39 @@
+name: Deploy CredsChain Frontend
+
+on:
+  push:
+    branches: [credschain]
+
+jobs:
+  deploy:
+    name: Build & Deploy CredsChain to Droplet
+    runs-on: [self-hosted, Linux, X64, idenvault-frontend]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file from GitHub Secrets
+        run: |
+          cat > .env << 'ENVEOF'
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_CREDENTIAL_ANCHOR_ADDRESS=${{ secrets.NEXT_PUBLIC_CREDENTIAL_ANCHOR_ADDRESS }}
+          NEXT_PUBLIC_ISSUER_REGISTRY_ADDRESS=${{ secrets.NEXT_PUBLIC_ISSUER_REGISTRY_ADDRESS }}
+          NEXT_PUBLIC_INFURA_KEY=${{ secrets.NEXT_PUBLIC_INFURA_KEY }}
+          ENVEOF
+
+      # -p credschain keeps this stack separate from the IdenVault one
+      - name: Stop existing CredsChain container
+        run: docker compose -p credschain -f docker-compose.credschain.yml down --remove-orphans || true
+
+      - name: Build & start container
+        run: docker compose -p credschain -f docker-compose.credschain.yml up -d --build
+
+      - name: Clean up unused Docker images
+        run: docker image prune -f
+
+      - name: Verify container is running
+        run: |
+          sleep 5
+          docker compose -p credschain -f docker-compose.credschain.yml ps
+          docker compose -p credschain -f docker-compose.credschain.yml logs --tail=20

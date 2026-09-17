@@ -137,7 +137,7 @@ export default function DashboardLayout({
             <ShieldCheck className="w-8 h-8" />
           </div>
           <div>
-            <h1 className="font-heading text-xl font-semibold tracking-tight text-slate-900">IdenVault</h1>
+            <h1 className="font-heading text-xl font-semibold tracking-tight text-slate-900">CredsChain</h1>
             <span className="text-[10px] bg-slate-100 text-slate-500 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider font-medium" data-testid="role-badge">
               {role} Mode
             </span>
@@ -405,7 +405,7 @@ function MobileTopBar({
 
         <Link href="/" className="flex items-center gap-2">
           <ShieldCheck className={clsx("w-6 h-6", logoColorClass)} />
-          <span className="font-heading text-base font-semibold text-slate-900 tracking-tight">IdenVault</span>
+          <span className="font-heading text-base font-semibold text-slate-900 tracking-tight">CredsChain</span>
         </Link>
       </div>
 

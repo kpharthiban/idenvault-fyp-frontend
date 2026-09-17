@@ -507,7 +507,7 @@ export default function ExternalSystemsPage() {
                         <div className="mx-5 mt-4 mb-3 p-3 bg-purple-50 border border-purple-200 rounded-lg flex items-center gap-3 shadow-sm">
                           <ShieldCheck className="text-purple-600 shrink-0" size={16} strokeWidth={2.5} />
                           <p className="text-xs text-purple-800 font-medium">
-                            <strong>Data Governance:</strong> Data retrieved from this external system is treated as authoritative. It cannot be modified within IdenVault.
+                            <strong>Data Governance:</strong> Data retrieved from this external system is treated as authoritative. It cannot be modified within CredsChain.
                           </p>
                         </div>
 

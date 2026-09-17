@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IdenVault",
+  title: "CredsChain",
   description: "Digital Academic Identity Wallet",
 };
 
